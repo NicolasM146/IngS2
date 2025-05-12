@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "web"
+version = "0.1.0"
+description = ""
+authors = ["Nicolas Agustin Muñoz <nam.2013.oct@gmail.com>"]
+readme = "README.md"
+packages = [{include = "web", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+flask = "^3.1.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
