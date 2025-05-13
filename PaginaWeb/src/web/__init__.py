@@ -2,9 +2,9 @@ import os
 from flask import Flask, render_template
 from src.core.database import db
 from src.web.config import Config
-from flask_bcrypt import Bcrypt
+from src.core.bcrypt import bcrypt
+from src.web import route
 
-bcrypt = Bcrypt()
 
 def create_app(env="development"):
     base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -19,9 +19,7 @@ def create_app(env="development"):
     
     from . import commands
     commands.register(app)
-    @app.route('/')
-    def home():
-        return render_template("home.html")
+    route.register(app)
     
     print("Template folder cargado:", app.template_folder)
     return app
