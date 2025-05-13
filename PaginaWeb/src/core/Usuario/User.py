@@ -1,8 +1,10 @@
+# src/core/Usuario/User.py
+
 from src.core.database import db
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.core.Usuario.Roles_y_Permisos import Permiso
-
+from src.core.Usuario.Card import Card  # Importa la clase Card
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -24,7 +26,8 @@ class User(db.Model):
     rol_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     rol = db.relationship("Rol", back_populates="usuarios")
 
-    tarjeta = db.relationship("Tarjeta", back_populates="usuario", uselist=False)
+    # Relación con la clase Card
+    cards = db.relationship('Card', back_populates='user', cascade='all, delete-orphan')
 
     def es_mayor_de_edad(self):
         today = date.today()
@@ -45,7 +48,6 @@ class User(db.Model):
     def desbloquear(self):
         self.is_locked = False
 
-    
     def tiene_permiso(self, nombre_permiso):
         if self.es_sysadmin:
             permiso = Permiso.query.filter_by(nombre=nombre_permiso).first()

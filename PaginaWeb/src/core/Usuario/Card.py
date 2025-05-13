@@ -1,15 +1,17 @@
 from src.core.database import db
+from datetime import date
 
 class Card(db.Model):
-    __tablename__ = 'tarjetas'
+    __tablename__ = 'cards'
 
     id = db.Column(db.Integer, primary_key=True)
-    numero = db.Column(db.String(20), nullable=False)
-    codigo = db.Column(db.String(4), nullable=False)
-    fecha_vencimiento = db.Column(db.Date, nullable=False)
+    number = db.Column(db.String(20), unique=True, nullable=False)
+    expiration_date = db.Column(db.Date, nullable=False)
+    cvv = db.Column(db.String(4), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    usuario = db.relationship("User", back_populates="tarjeta")
+    # Relación inversa
+    user = db.relationship('User', back_populates='cards')
 
     def __repr__(self):
-        return f'<Tarjeta {self.numero}>'
+        return f'<Card {self.number}>'

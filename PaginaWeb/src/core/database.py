@@ -28,6 +28,9 @@ def reset():
     print(" Eliminando base de datos...")
     db.drop_all()
     print("Creando base nuevamente...")
+    from src.core.Usuario import User
+    from src.core.Usuario.Roles_y_Permisos import Rol, Permiso
+    from src.core.Usuario.Roles_y_Permisos import Rol, Permiso
     db.create_all()
     print("¡Listo! Se han creado las siguientes tablas: ")
     print(db.metadata.tables.keys())
