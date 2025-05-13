@@ -67,14 +67,11 @@ def crear_y_asignar_permisos(sesion: Session, permisos):
 def crear_roles_y_permisos(tabla, coneccion, **kw):
     """
     Esto correrá al hacer reset-db.
-    Crea los 4 roles por defecto y les asigna todos los permisos.
+    Crea los roles por defecto y les asigna todos los permisos.
     """
     with Session(coneccion) as sesion:
-        Técnica = crear_rol(tabla, sesion, "Técnica")
-        Ecuestre = crear_rol(tabla, sesion, "Ecuestre")
-        Voluntariado = crear_rol(tabla, sesion, "Voluntariado")
-        Administración = crear_rol(tabla, sesion, "Administración")
-        Editor = crear_rol(tabla, sesion, "Editor")
+        check_in_out = crear_rol(tabla, sesion, "CheckInOut") 
+        client = crear_rol(tabla, sesion, "client") 
         # Al crear nuevos permisos, agréguenlos a la lista
         # (siempre dejen una coma en el último item, así hay menos posibilidades de errores al mergear)
         crear_y_asignar_permisos(
@@ -85,45 +82,21 @@ def crear_roles_y_permisos(tabla, coneccion, **kw):
                 "user_update": [],
                 "user_create": [],
                 "user_destroy": [],
-                "waiting_index": [Administración],
-                "waiting_accept": [Administración],
-                "waiting_destroy": [Administración],
-                "equipo_index": [Administración],
-                "equipo_show": [Administración],
-                "equipo_update": [Administración],
-                "equipo_create": [Administración],
-                "equipo_destroy": [Administración],
-                "rdp_index": [Administración],
-                "rdp_show": [Administración],
-                "rdp_update": [Administración],
-                "rdp_create": [Administración],
-                "rdp_destroy": [Administración],
-                "j&a_index": [Administración, Técnica, Ecuestre],
-                "j&a_show": [Administración, Técnica, Ecuestre],
-                "j&a_update": [Administración, Técnica],
-                "j&a_create": [Administración, Técnica],
-                "j&a_destroy": [Administración, Técnica],
-                "cobros_index": [Administración, Técnica],
-                "cobros_show": [Administración, Técnica],
-                "cobros_update": [Administración],
-                "cobros_create": [Administración],
-                "cobros_destroy": [Administración],
-                "ecuestre_index": [Ecuestre, Administración, Técnica],
-                "ecuestre_show": [Ecuestre, Administración, Técnica],
-                "ecuestre_update": [Ecuestre],
-                "ecuestre_create": [Ecuestre],
-                "ecuestre_destroy": [Ecuestre],
-                "reportes_index": [Administración, Técnica],
-                "reportes_show": [Administración, Técnica],
-                "contact_index": [Administración],
-                "contact_show": [Administración],
-                "contact_update": [Administración],
-                "contact_destroy": [Administración],
-                "publicaciones_index": [Administración, Editor],
-                "publicaciones_show": [Administración, Editor],
-                "publicaciones_update": [Administración, Editor],
-                "publicaciones_create": [Administración, Editor],
-                "publicaciones_destroy": [Administración],
+                
+                "properties_index": [],
+                "properties_show": [],
+                "properties_update": [],
+                "properties_create": [],
+                "properties_destroy": [],
+                
+                "rentals_index": [],
+                "rentals_show": [],
+                "rentals_update": [],
+                "rentals_create": [],
+                "rentals_destroy": [],
+                
+                "properties_check_in": [check_in_out],  # Asignando permisos específicos al rol
+                "properties_check_out": [check_in_out],  # Lo mismo aquí
             },
         )
 

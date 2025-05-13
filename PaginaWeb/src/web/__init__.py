@@ -1,18 +1,27 @@
-from flask import Flask
-from flask import render_template
+import os
+from flask import Flask, render_template
 from src.core.database import db
-from src.core.bcrypt import bcrypt
+from src.web.config import Config
+from flask_bcrypt import Bcrypt
 
-def create_app(env="development", static_folder="../static", template_folder="../templates"):
-    app = Flask(__name__, static_folder=static_folder, template_folder=template_folder)
+bcrypt = Bcrypt()
 
+def create_app(env="development"):
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    template_folder = os.path.join(base_dir, "templates")
+    static_folder = os.path.abspath(os.path.join(base_dir, "../../../static"))  # si la carpeta existe afuera
 
-    # Inicializar la base de datos con la app
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+    app.config.from_object(Config)
+
     db.init_app(app)
     bcrypt.init_app(app)
     
+    from . import commands
+    commands.register(app)
     @app.route('/')
     def home():
         return render_template("home.html")
-
+    
+    print("Template folder cargado:", app.template_folder)
     return app
