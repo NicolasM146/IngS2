@@ -47,17 +47,14 @@ class User(db.Model):
 
     
     def tiene_permiso(self, nombre_permiso):
-        """
-        Returna True/False dependiendo de si el Rol del usuario está asociado al permiso con el nombre dado. Si el usuario no tiene un rol asignado, retorna False.
-        Si no existe un permiso con ese nombre, lanza una excepción (útil para no equivocarse de nombre al crear nuestro código)
-        """
         if self.es_sysadmin:
-            if not Permiso.query.filter_by(nombre=nombre_permiso).first():
-                raise Exception(f"El permiso {nombre_permiso} no existe")
+            permiso = Permiso.query.filter_by(nombre=nombre_permiso).first()
+            if not permiso:
+                raise ValueError(f"El permiso {nombre_permiso} no existe")
             return True
         if self.rol is None:
             return False
         return self.rol.tiene_permiso(nombre_permiso)
-    
+
     def __repr__(self):
         return f'<User {self.username}>'

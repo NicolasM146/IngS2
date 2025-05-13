@@ -1,6 +1,6 @@
 from src.core.database import db
 
-class Tarjeta(db.Model):
+class Card(db.Model):
     __tablename__ = 'tarjetas'
 
     id = db.Column(db.Integer, primary_key=True)
