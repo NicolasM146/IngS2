@@ -4,6 +4,9 @@ from src.core.database import db
 from src.core.Usuario.Roles_y_Permisos import Rol
 from src.core.Usuario.User import User, Card
 from datetime import datetime, date
+from flask_mail import Message
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
 
 bp = Blueprint("register", __name__, url_prefix="/register")
 

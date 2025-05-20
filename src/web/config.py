@@ -20,4 +20,7 @@ class Config(object):
         "pool_pre_ping": True,
     }
     print(SQLALCHEMY_DATABASE_URI)
+    
+    
+    
 config = Config()
