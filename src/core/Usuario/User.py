@@ -19,7 +19,8 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     es_sysadmin = db.Column(db.Boolean, nullable=False)
-
+    # Campo para indicar si el usuario confirmo su email
+    email_confirmed = db.Column(db.Boolean, default=False)
     # Campo para indicar si el usuario está bloqueado
     is_locked = db.Column(db.Boolean, default=False, nullable=False)
 

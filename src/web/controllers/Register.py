@@ -1,23 +1,26 @@
 import re
-from flask import Blueprint, request, render_template, redirect, flash, url_for
+from flask import Blueprint, request, render_template, redirect, flash, url_for, current_app
 from src.core.database import db
 from src.core.Usuario.Roles_y_Permisos import Rol
 from src.core.Usuario.User import User, Card
 from datetime import datetime, date
-from flask_mail import Message
-from itsdangerous import URLSafeTimedSerializer
-from flask import current_app
+from src.utils.token import confirm_token
+from src.utils.email import send_confirmation_email  # Función para enviar email
 
 bp = Blueprint("register", __name__, url_prefix="/register")
+
 
 def es_nombre_valido(nombre):
     return bool(re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]+", nombre))
 
+
 def es_telefono_valido(telefono):
     return bool(re.fullmatch(r"\d{6,15}", telefono))
 
+
 def es_email_valido(email):
     return bool(re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email))
+
 
 @bp.route("/", methods=["GET", "POST"])
 def register():
@@ -39,12 +42,12 @@ def register():
             "cvv": request.form.get("cvv", "").strip()
         } if request.form.get("number") else None
 
-        # Validaciones
         rol_cliente = Rol.query.filter_by(nombre="client").first()
         if not rol_cliente:
             flash("El rol 'client' no está definido en la base de datos.", "error")
             return render_template('auth/register.html', datos=data_usuario, datos_tarjeta=data_tarjeta)
 
+        # Validaciones básicas
         if not es_nombre_valido(data_usuario["nombre"]):
             flash("El nombre solo debe contener letras y acentos.", "error")
             return render_template('auth/register.html', datos=data_usuario, datos_tarjeta=data_tarjeta)
@@ -61,9 +64,15 @@ def register():
             flash("El email no tiene un formato válido.", "error")
             return render_template('auth/register.html', datos=data_usuario, datos_tarjeta=data_tarjeta)
 
-        if User.query.filter_by(email=data_usuario["email"]).first():
-            flash("El email ya está registrado.", "error")
-            return render_template('auth/register.html', datos=data_usuario, datos_tarjeta=data_tarjeta)
+        usuario_existente = User.query.filter_by(email=data_usuario["email"]).first()
+        if usuario_existente:
+            if usuario_existente.email_confirmed:
+                flash("El email ya está registrado.", "error")
+                return render_template('auth/register.html', datos=data_usuario, datos_tarjeta=data_tarjeta)
+            else:
+                send_confirmation_email(usuario_existente.email)
+                flash("Tu cuenta no está confirmada. Te reenviamos el correo de confirmación.", "info")
+                return render_template('auth/register.html', datos=data_usuario, datos_tarjeta=data_tarjeta)
 
         if len(data_usuario["password"]) < 6:
             flash("La contraseña debe tener al menos 6 caracteres.", "error")
@@ -73,6 +82,7 @@ def register():
             flash("El nombre de usuario ya está en uso.", "error")
             return render_template('auth/register.html', datos=data_usuario, datos_tarjeta=data_tarjeta)
 
+        # Validar fecha de nacimiento
         try:
             fecha_nacimiento = datetime.strptime(data_usuario["fecha_nacimiento"], "%Y-%m-%d").date()
             if fecha_nacimiento >= date.today():
@@ -92,6 +102,7 @@ def register():
             username=data_usuario["username"],
             es_sysadmin=False,
             rol=rol_cliente,
+            email_confirmed=False
         )
         nuevo_usuario.set_password(data_usuario["password"])
 
@@ -99,6 +110,7 @@ def register():
             flash("El usuario debe ser mayor de edad para registrarse.", "error")
             return render_template('auth/register.html', datos=data_usuario, datos_tarjeta=data_tarjeta)
 
+        # Manejo de tarjeta (opcional)
         if data_tarjeta:
             try:
                 expiration = datetime.strptime(data_tarjeta.get("expiration_date"), "%Y-%m-%d").date()
@@ -117,8 +129,27 @@ def register():
         db.session.add(nuevo_usuario)
         db.session.commit()
 
-        flash("Usuario registrado correctamente.", "success")
-        return redirect(url_for('home'))
+        send_confirmation_email(nuevo_usuario.email)
+        flash("Usuario registrado. Por favor revisa tu correo para confirmar tu cuenta.", "info")
+        return redirect(url_for('login.login'))
 
-    # GET
-    return render_template('auth/register.html')
+    return  render_template("home.html")
+
+
+@bp.route('/confirm/<token>')
+def confirm_email(token):
+    email = confirm_token(token)
+    if not email:
+        flash("El enlace de confirmación es inválido o ha expirado.", "error")
+        return redirect(url_for('register.register'))
+
+    user = User.query.filter_by(email=email).first_or_404()
+
+    if user.email_confirmed:
+        flash("La cuenta ya fue confirmada. Por favor inicia sesión.", "info")
+    else:
+        user.email_confirmed = True
+        db.session.commit()
+        flash("¡Gracias por confirmar tu cuenta!", "success")
+
+    return render_template("home.html")

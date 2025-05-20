@@ -22,8 +22,8 @@ def create_app(env="development"):
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
     app.config['MAIL_PORT'] = 587
     app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = 'tu_correo@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'jugm embt cqqf gxpx'  # usa contraseña de aplicación de Google
+    app.config['MAIL_USERNAME'] = 'nam.2013.oct@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'fumcbxqtbeodlkhb'  # usa contraseña de aplicación de Google
 
     db.init_app(app)
     bcrypt.init_app(app)
