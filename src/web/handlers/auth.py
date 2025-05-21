@@ -1,62 +1,41 @@
-from flask import session
-from flask import redirect
-from flask import url_for
 from functools import wraps
-from flask import flash
-from src.core.Usuario import User
+from flask import redirect, url_for, flash
+from flask_login import current_user
 
-
-def is_authenticated(session):
+def login_required_custom(f):
     """
-    Retorna True/False dependiendo de si la sesión está asociada a un usuario.
+    Decorador para proteger rutas. Si no hay usuario logueado, redirige a login con mensaje.
     """
-    return session.get("user") is not None
-
-
-def login_required(f):
-    """
-    Versión decorator de is_authenticated. Redirige a login si no hay un usuario asociado a la sesión.
-    """
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not is_authenticated(session):
+        if not current_user.is_authenticated:
             flash("Debes iniciar sesión para acceder a esta página", "info")
-            return redirect(url_for("auth.login"))
-
+            return redirect(url_for("login.login"))  # Cambia "login.login" por tu endpoint real
         return f(*args, **kwargs)
-
     return decorated_function
 
 
-def tiene_permiso(session, permiso):
+def tiene_permiso(permiso):
     """
-    Retorna True si el usuario de la sesión actual tiene el permiso dado. False en caso contrario.
-    Lanza una excepción si el permiso no existe (a no ser que no haya un usuario en la sesión).
+    Verifica si el usuario logueado tiene un permiso dado.
+    Retorna True o False.
     """
-    if not is_authenticated(session):
+    if not current_user.is_authenticated:
         return False
-    user_id = session.get("user")
-    user = User.query.get(user_id)
-    if user is not None:
-        return user.tiene_permiso(permiso)
-    else:
-        return False
+    return current_user.tiene_permiso(permiso)
 
 
 def permiso_required(permiso):
     """
-    Versión decorator de tiene_permiso. Redirige a home si el usuario asociado a la sesión no tiene el permiso dado.
+    Decorador para proteger rutas según permiso.
+    Si el usuario no tiene permiso, redirige a home con mensaje.
     """
-
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if not tiene_permiso(session, permiso):
+            if not tiene_permiso(permiso):
                 flash("No tienes permiso para acceder a esta página", "info")
-                return redirect(url_for("home"))
+                return redirect(url_for("home"))  # Cambia "home" por tu endpoint real
             return f(*args, **kwargs)
-
         return decorated_function
-
     return decorator

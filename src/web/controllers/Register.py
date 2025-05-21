@@ -133,7 +133,8 @@ def register():
         flash("Usuario registrado. Por favor revisa tu correo para confirmar tu cuenta.", "info")
         return redirect(url_for('login.login'))
 
-    return  render_template("home.html")
+    return render_template("auth/register.html")
+
 
 
 @bp.route('/confirm/<token>')
@@ -152,4 +153,4 @@ def confirm_email(token):
         db.session.commit()
         flash("¡Gracias por confirmar tu cuenta!", "success")
 
-    return render_template("home.html")
+    return render_template("auth/login.html")

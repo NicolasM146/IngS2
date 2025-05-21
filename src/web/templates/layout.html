@@ -14,33 +14,40 @@
     </header>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Alquilando</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('home') }}">Alquilando</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('home') }}">Inicio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Alquileres</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contacto</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('users.index') }}">Usuarios</a>
+                </li>
+
+                {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Inicio</a>
+                        <a class="btn btn-danger" href="{{ url_for('login.logout') }}">Cerrar sesión</a>
                     </li>
+                {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Alquileres</a>
+                        <a class="btn btn-primary" href="{{ url_for('login.login') }}">Iniciar sesión</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Contacto</a>
-                    </li>
-                    <!-- Enlace al índice de usuarios -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('users.index') }}">Usuarios</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-primary" href="#">Alquilar</a>
-                    </li>
-                </ul>
-            </div>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
+    </div>
+</nav>
 
     {% block content %}
     <!-- Contenido específico de cada página irá aquí -->
