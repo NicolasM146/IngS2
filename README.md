@@ -9,12 +9,31 @@ Web-> controllers : va a estar todos nuestors .py de los html
 
 web -> handlers : es mas que nada una carpeta de verificacion para ver si estas Iniciado sesion o no, o si tener permisos para estar en cierta ventana(no tocar por ahora)
 
+#   Comandos en CMDR o terminal de VisualStudio
 
 Comando para Iniciar la aplicacion
 Flask run
 
 Comando para resetear la base de datos
 Flask reset-db
+
+# Todo esto en CMDR
+
+Para ver donde estas parado en cmdr y ver todas las ramas
+
+git branch -a 
+
+Para ir a una rama es 
+
+git checkout <nombre>
+
+Para empezar a crear rama lo que tiene que hacer es posicionarse en DEVELOPMENT
+
+git branch feature/<nombreDeLaRama>   -> Esto te lo crea, pero luego con el CHECKOUT vas a tener que ir a posicionarte en ella para empezar a trabajar
+
+Luego de haber terminado en tu RAMA, lo que podes hacer es MERGEAR, lo que va a traer las cosas de TU rama al development
+
+git merge feature/<nombreDeLaRama>   -> Posicionado en DEVELOPMENT
 
 ## Instalación
 Este proyecto utiliza las siguientes dependencias
