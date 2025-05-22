@@ -35,7 +35,7 @@ def login():
         flash(f"Bienvenido {user.username}!", "success")
 
         # Redirigí a donde quieras (por ej: home, dashboard)
-        return redirect(url_for("home.html"))
+        return redirect(url_for("home"))
 
     return render_template("auth/login.html")
 
