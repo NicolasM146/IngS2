@@ -29,8 +29,10 @@ def reset():
     db.drop_all()
     print("Creando base nuevamente...")
     from src.core.Usuario import User
+    from src.core.Usuario import Card
     from src.core.Usuario.Roles_y_Permisos import Rol, Permiso
-    from src.core.Usuario.Roles_y_Permisos import Rol, Permiso
+    from src.core.Inmueble.property import Property
+    from src.core.Alquiler.Rental import Rental
     db.create_all()
     print("¡Listo! Se han creado las siguientes tablas: ")
     print(db.metadata.tables.keys())
