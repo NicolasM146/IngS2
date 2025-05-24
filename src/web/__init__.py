@@ -40,6 +40,9 @@ def create_app(env="development"):
     commands.register(app)
     route.register(app)
 
+    import stripe
+    stripe.api_key = app.config["STRIPE_SECRET_KEY"]
+    
     print("Template folder cargado:", app.template_folder)
 
     return app

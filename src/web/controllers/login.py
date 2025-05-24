@@ -43,5 +43,4 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash("Sesión cerrada exitosamente.", "info")
     return redirect(url_for("login.login"))
