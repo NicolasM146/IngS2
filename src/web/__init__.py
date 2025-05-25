@@ -14,7 +14,7 @@ login_manager = LoginManager()
 def create_app(env="development"):
     base_dir = os.path.abspath(os.path.dirname(__file__))
     template_folder = os.path.join(base_dir, "templates")
-    static_folder = os.path.abspath(os.path.join(base_dir, "../../../static"))
+    static_folder = os.path.abspath(os.path.join(base_dir, "../../static"))
 
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(Config)

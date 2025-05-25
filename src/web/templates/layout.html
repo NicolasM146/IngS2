@@ -1,59 +1,96 @@
-<!-- layout.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Alquilando - Tu sitio de alquileres{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --azul-oscuro: #1A3D7C;
+            --celeste: #49B6F2;
+            --gris-claro: #F2F2F2;
+        }
+
+        body {
+            background-color: white;
+        }
+
+        header {
+            background-color: var(--azul-oscuro);
+        }
+
+        .navbar {
+            background-color: var(--azul-oscuro);
+        }
+
+        .navbar-brand,
+        .nav-link,
+        footer {
+            color: white !important;
+        }
+
+        .btn-primary {
+            background-color: var(--celeste);
+            border-color: var(--celeste);
+        }
+
+        .btn-primary:hover {
+            background-color: #3aa1dd;
+            border-color: #3aa1dd;
+        }
+
+        footer {
+            background-color: var(--azul-oscuro);
+        }
+    </style>
 </head>
 <body>
-    <header class="bg-dark text-white text-center py-4">
-        <h1>Bienvenido a Alquilando</h1>
-        <p>Encuentra el lugar perfecto para tu estadía.</p>
-    </header>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('home') }}">Alquilando</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('home') }}">Inicio</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Alquileres</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Contacto</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('users.index') }}">Usuarios</a>
-                </li>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='img/logo_alquiloando.png') }}" alt="Logo Alquilando" width="40" height="40" class="me-2 rounded" />
+                Alquilando
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('home') }}">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Alquileres</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Contacto</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('users.index') }}">Usuarios</a>
+                    </li>
 
-                {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="btn btn-danger" href="{{ url_for('login.logout') }}">Cerrar sesión</a>
-                    </li>
-                {% else %}
-                    <li class="nav-item">
-                        <a class="btn btn-primary" href="{{ url_for('login.login') }}">Iniciar sesión</a>
-                    </li>
-                {% endif %}
-            </ul>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="btn btn-danger" href="{{ url_for('login.logout') }}">Cerrar sesión</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="btn btn-primary" href="{{ url_for('login.login') }}">Iniciar sesión</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     {% block content %}
-    <!-- Contenido específico de cada página irá aquí -->
+    <!-- Aquí va el contenido específico de cada página -->
     {% endblock %}
 
-    <footer class="bg-dark text-white text-center py-3">
+    <footer class="text-center py-3">
         <p>&copy; 2025 Alquilando. Todos los derechos reservados.</p>
     </footer>
 
