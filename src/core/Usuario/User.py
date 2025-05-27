@@ -4,7 +4,6 @@ from src.core.database import db
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.core.Usuario.Roles_y_Permisos import Permiso
-from src.core.Usuario.Card import Card  # Importa la clase Card
 from flask_login import UserMixin
 
 class User(UserMixin,db.Model):
