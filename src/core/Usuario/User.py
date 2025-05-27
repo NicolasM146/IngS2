@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from src.core.Usuario.Roles_y_Permisos import Permiso
 from src.core.Usuario.Card import Card  # Importa la clase Card
 from flask_login import UserMixin
+from src.core.Resenia import Review
 
 class User(UserMixin,db.Model):
     __tablename__ = 'users'
@@ -30,6 +31,13 @@ class User(UserMixin,db.Model):
 
     # Relación con la clase Card
     cards = db.relationship('Card', back_populates='user', cascade='all, delete-orphan')
+    
+    # Relacion con la clase Property
+    
+    properties = db.relationship('Property', back_populates='user')
+    
+    # Relacion con la clase Review
+    reviews = db.relationship('Review', back_populates='user')
 
     def es_mayor_de_edad(self):
         today = date.today()
