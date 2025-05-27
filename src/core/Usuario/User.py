@@ -5,6 +5,7 @@ from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.core.Usuario.Roles_y_Permisos import Permiso
 from flask_login import UserMixin
+from src.core.Resenia import Review
 
 class User(UserMixin,db.Model):
     __tablename__ = 'users'
@@ -26,9 +27,17 @@ class User(UserMixin,db.Model):
 
     rol_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     rol = db.relationship("Rol", back_populates="usuarios")
-
+    
+    # Relacion con la clase Property
+    
+    properties = db.relationship('Property', back_populates='user')
+    
+    # Relacion con la clase Review
+    reviews = db.relationship('Review', back_populates='user')
     stripe_payment_method_id = db.Column(db.String(255), unique=True, nullable=True)
-
+    
+    # Relaion con reservation
+    reservations = db.relationship('Reservation', back_populates='user', lazy='dynamic')
 
     def es_mayor_de_edad(self):
         today = date.today()
