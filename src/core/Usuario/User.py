@@ -4,7 +4,6 @@ from src.core.database import db
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.core.Usuario.Roles_y_Permisos import Permiso
-from src.core.Usuario.Card import Card  # Importa la clase Card
 from flask_login import UserMixin
 from src.core.Resenia import Review
 
@@ -38,6 +37,8 @@ class User(UserMixin,db.Model):
     
     # Relacion con la clase Review
     reviews = db.relationship('Review', back_populates='user')
+    stripe_payment_method_id = db.Column(db.String(255), unique=True, nullable=True)
+
 
     def es_mayor_de_edad(self):
         today = date.today()
