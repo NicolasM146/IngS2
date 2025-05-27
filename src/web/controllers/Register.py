@@ -33,55 +33,51 @@ def register():
             "fecha_nacimiento": request.form.get("fecha_nacimiento", "")
         }
 
-        data_tarjeta = None
-        if request.form.get("number"):
-            data_tarjeta = {
-                "number": request.form.get("number", "").strip(),
-                "expiration_date": request.form.get("expiration_date", "").strip(),
-                "cvv": request.form.get("cvv", "").strip()
-            }
+        # En esta versión se espera recibir un payment_method_id token desde frontend (Stripe Elements)
+        payment_method_id = request.form.get("payment_method_id")
 
         rol_cliente = Rol.query.filter_by(nombre="client").first()
         if not rol_cliente:
             flash("El rol 'client' no está definido en la base de datos.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
+        # Validaciones usuario
         if not es_nombre_valido(data_usuario["nombre"]):
             flash("El nombre solo debe contener letras y acentos.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if not data_usuario["dni"].isdigit():
             flash("El DNI debe contener solo números.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if not es_telefono_valido(data_usuario["telefono"]):
             flash("El teléfono debe contener solo números (mínimo 6 dígitos).", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if not es_email_valido(data_usuario["email"]):
             flash("El email no tiene un formato válido.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if User.query.filter_by(email=data_usuario["email"]).first():
             flash("El email ya está registrado.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if User.query.filter_by(username=data_usuario["username"]).first():
             flash("El nombre de usuario ya está en uso.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if len(data_usuario["password"]) < 6:
             flash("La contraseña debe tener al menos 6 caracteres.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         try:
             fecha_nacimiento = datetime.strptime(data_usuario["fecha_nacimiento"], "%Y-%m-%d").date()
             if fecha_nacimiento >= date.today():
                 flash("La fecha de nacimiento no puede ser en el futuro.", "error")
-                return render_template('auth/register.html', datos=data_usuario)
+                return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
         except ValueError:
             flash("Fecha de nacimiento inválida.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         nuevo_usuario = User(
             nombre=data_usuario["nombre"],
@@ -99,28 +95,21 @@ def register():
 
         if not nuevo_usuario.es_mayor_de_edad():
             flash("El usuario debe ser mayor de edad para registrarse.", "error")
-            return render_template('auth/register.html', datos=data_usuario)
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
-        if data_tarjeta:
+        if payment_method_id:
             stripe.api_key = current_app.config['STRIPE_SECRET_KEY']
             try:
-                exp_year, exp_month = map(int, data_tarjeta["expiration_date"].split("-"))
-                payment_method = stripe.PaymentMethod.create(
-                    type="card",
-                    card={
-                        "number": data_tarjeta["number"],
-                        "exp_month": exp_month,
-                        "exp_year": exp_year,
-                        "cvc": data_tarjeta["cvv"],
-                    },
-                )
-                nuevo_usuario.stripe_payment_method_id = payment_method.id
-            except stripe.error.CardError as e:
-                flash("Datos de tarjeta inválidos: " + e.user_message, "error")
-                return render_template('auth/register.html', datos=data_usuario)
-            except Exception as e:
-                flash("Error al procesar la tarjeta: " + str(e), "error")
-                return render_template('auth/register.html', datos=data_usuario)
+                # Asociamos el payment method al cliente (en este caso usuario aún no tiene id Stripe Customer, 
+                # pero podrías crear uno aquí y guardarlo)
+                nuevo_usuario.stripe_payment_method_id = payment_method_id
+                # Aquí podrías crear un customer en Stripe y asociarlo si lo deseas.
+                # Ejemplo (opcional):
+                # customer = stripe.Customer.create(email=nuevo_usuario.email, payment_method=payment_method_id)
+                # nuevo_usuario.stripe_customer_id = customer.id
+            except stripe.error.StripeError as e:
+                flash("Error con Stripe: " + e.user_message, "error")
+                return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         db.session.add(nuevo_usuario)
         db.session.commit()
@@ -129,7 +118,9 @@ def register():
         flash("Usuario registrado. Por favor revisa tu correo para confirmar tu cuenta.", "info")
         return redirect(url_for('login.login'))
 
-    return render_template("auth/register.html")
+    # GET
+    return render_template("auth/register.html", stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
+
 
 @bp.route('/confirm/<token>')
 def confirm_email(token):
