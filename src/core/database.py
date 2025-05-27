@@ -32,6 +32,7 @@ def reset():
     from src.core.Usuario.Roles_y_Permisos import Rol, Permiso
     from src.core.Inmueble.property import Property
     from src.core.Alquiler.Rental import Rental
+    from src.core.Reserva.reservation import Reservation
     db.create_all()
     print("¡Listo! Se han creado las siguientes tablas: ")
     print(db.metadata.tables.keys())

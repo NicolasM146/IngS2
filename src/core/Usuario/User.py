@@ -27,9 +27,6 @@ class User(UserMixin,db.Model):
 
     rol_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     rol = db.relationship("Rol", back_populates="usuarios")
-
-    # Relación con la clase Card
-    cards = db.relationship('Card', back_populates='user', cascade='all, delete-orphan')
     
     # Relacion con la clase Property
     
@@ -38,7 +35,9 @@ class User(UserMixin,db.Model):
     # Relacion con la clase Review
     reviews = db.relationship('Review', back_populates='user')
     stripe_payment_method_id = db.Column(db.String(255), unique=True, nullable=True)
-
+    
+    # Relaion con reservation
+    reservations = db.relationship('Reservation', back_populates='user', lazy='dynamic')
 
     def es_mayor_de_edad(self):
         today = date.today()

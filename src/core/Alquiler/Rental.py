@@ -12,15 +12,10 @@ class Rental(db.Model):
 
     property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), unique=True, nullable=False)
     property = db.relationship("Property", back_populates="rental", foreign_keys=[property_id])
-    
-    # Relacion con Resenia
+
     reviews = db.relationship('Review', back_populates='rental', cascade='all, delete-orphan')
 
-    #   reservations = db.relationship(
-  ##       backref='rental',
-  #      lazy='dynamic',
-  #      cascade='all, delete-orphan'
-  #  )
+    reservations = db.relationship('Reservation', back_populates='rental', lazy='dynamic', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<Rental ID: {self.id}, Property: {self.property_id}>'
