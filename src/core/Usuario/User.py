@@ -1,11 +1,12 @@
-# src/core/Usuario/User.py
+
 
 from src.core.database import db
 from datetime import date
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.core.Usuario.Roles_y_Permisos import Permiso
 from flask_login import UserMixin
-from src.core.Resenia import Review
+from src.core.Inmueble.property import Property
+
 
 class User(UserMixin,db.Model):
     __tablename__ = 'users'
@@ -34,6 +35,8 @@ class User(UserMixin,db.Model):
     
     # Relacion con la clase Review
     reviews = db.relationship('Review', back_populates='user')
+    
+    
     stripe_payment_method_id = db.Column(db.String(255), unique=True, nullable=True)
     
     # Relaion con reservation

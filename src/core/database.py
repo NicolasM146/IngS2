@@ -2,43 +2,33 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-
 def init_app(app):
-    """Inicializa a la base de datos con la aplicación de Flask."""
+    """Inicializa la base de datos con la app Flask."""
     db.init_app(app)
     config(app)
-
     return app
 
-
 def config(app):
-    """
-    Configuración de hooks para la base de datos.
-    """
-
     @app.teardown_appcontext
     def close_session(exception=None):
         db.session.remove()
-
     return app
 
-
 def reset():
-    """Resetea la base de datos."""
+    """Resetea la base de datos: borra y crea todas las tablas."""
     print("Importando modelos...")
-    # Importá acá todos los modelos para que SQLAlchemy los conozca antes de eliminar/crear tablas
-    from src.core.Usuario import User
+    # Importá todos los modelos para que SQLAlchemy los conozca
+    from src.core.Usuario.User import User
     from src.core.Usuario.Roles_y_Permisos import Rol, Permiso
     from src.core.Inmueble.property import Property
     from src.core.Alquiler.Rental import Rental
-    from src.core.Resenia.Review import Review  # Agregá este si usás reviews
+    from src.core.Resenia.Review import Review
     from src.core.Reserva.reservation import Reservation
 
     print("Eliminando base de datos...")
     db.drop_all()
-
-    print("Creando base nuevamente...")
+    print("Creando base de datos...")
     db.create_all()
 
-    print("¡Listo! Se han creado las siguientes tablas: ")
+    print("¡Listo! Tablas creadas:")
     print(db.metadata.tables.keys())

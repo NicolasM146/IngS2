@@ -1,7 +1,5 @@
-# src/core/Alquiler/rental.py
 from datetime import datetime
 from src.core.database import db
-from src.core.Resenia.Review import Review
 
 class Rental(db.Model):
     __tablename__ = 'rentals'
@@ -16,18 +14,13 @@ class Rental(db.Model):
 
     property = db.relationship("Property", back_populates="rental", foreign_keys=[property_id])
 
-    reviews = db.relationship('Review', back_populates='rental', cascade='all, delete-orphan')
+    # Para Review y Reservation, asegurate que también estén importados al final
+    reviews = db.relationship("Review", back_populates="rental", cascade='all, delete-orphan')
+    reservations = db.relationship("Reservation", back_populates="rental", lazy='dynamic', cascade='all, delete-orphan')
 
-    # Asumo que Reservation es otro modelo, igual evitamos import directo
-    reservations = db.relationship('Reservation', back_populates='rental', lazy='dynamic', cascade='all, delete-orphan')
+# IMPORTAR Property AL FINAL PARA EVITAR CICLO DE IMPORTACION
+from src.core.Inmueble.property import Property
 
-    def __repr__(self):
-        return f'<Rental ID: {self.id}, Property: {self.property_id}>'
-
-    def to_json(self):
-        return {
-            "id": self.id,
-            "price": self.price,
-            "property_id": self.property_id,
-            "is_active": self.is_active
-        }
+# IMPORTAR Review y Reservation también al final para romper ciclos
+from src.core.Resenia.Review import Review
+from src.core.Reserva.reservation import Reservation

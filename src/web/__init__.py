@@ -2,11 +2,11 @@ import os
 from flask import Flask
 from flask_mail import Mail
 from flask_login import LoginManager
-from src.core.database import db
+from src.core.database import db, init_app
 from src.web.config import Config
 from src.core.bcrypt import bcrypt
 from src.web import route
-from src.core.Usuario.User import User # Asegurate que apunta a tu modelo de usuario
+from src.core.Usuario.User import User
 
 mail = Mail()
 login_manager = LoginManager()
@@ -26,14 +26,13 @@ def create_app(env="development"):
     app.config['MAIL_USERNAME'] = 'nam.2013.oct@gmail.com'
     app.config['MAIL_PASSWORD'] = 'fumcbxqtbeodlkhb'
 
-    # Inicialización de extensiones
-    db.init_app(app)
+    # Inicializar extensiones
+    init_app(app)
     bcrypt.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
 
-    # Configuración de Flask-Login
-    login_manager.login_view = "login.login"  # Blueprint y endpoint del login
+    login_manager.login_view = "login.login"
     login_manager.login_message = "Debes iniciar sesión para acceder a esta página"
 
     from . import commands
@@ -42,13 +41,11 @@ def create_app(env="development"):
 
     import stripe
     stripe.api_key = app.config["STRIPE_SECRET_KEY"]
-    
+
     print("Template folder cargado:", app.template_folder)
 
     return app
 
-# Cargar el usuario para Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
