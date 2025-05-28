@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block title %}Detalles de Propiedad - {{ property.direccion }}{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='properties/show.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container property-details mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Encabezado -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">{{ property.direccion }}</h1>
+                <span class="badge bg-{{ 'success' if property.estado == 'disponible' else 'warning' }} fs-6">
+                    {{ property.estado|capitalize }}
+                </span>
+            </div>
+
+            <!-- Galería de imágenes (puedes agregarla después) -->
+            <div class="property-gallery mb-4 bg-light" style="height: 300px;">
+                <div class="d-flex justify-content-center align-items-center h-100">
+                    <i class="fas fa-home fa-4x text-secondary"></i>
+                </div>
+            </div>
+
+            <!-- Detalles principales -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Información básica</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-map-marker-alt me-2"></i>Localidad:</strong> {{ property.localidad }}</p>
+                            <p><strong><i class="fas fa-bed me-2"></i>Habitaciones:</strong> {{ property.habitaciones }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong><i class="fas fa-users me-2"></i>Capacidad:</strong> {{ property.capacidad }} personas</p>
+                            <p><strong><i class="fas fa-user-tie me-2"></i>Propietario:</strong> {{ property.user.nombre }} - ID: {{property.user.id}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Descripción</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ property.descripcion or "No hay descripción disponible." }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar con acciones -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Acciones</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('property.index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Volver al listado
+                        </a>
+                        
+                        {% if current_user.tiene_permiso('properties_update') %}
+                        <a href="{{ url_for('property.edit', id=property.id) }}" class="btn btn-warning">
+                            <i class="fas fa-edit me-2"></i>Editar propiedad
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Botón de eliminar (opcional) -->
+                        {% if current_user.tiene_permiso('properties_destroy') %}
+                        <form action="{{ url_for('property.delete', id=property.id) }}" method="POST" class="d-grid">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar esta propiedad permanentemente?')">
+                                <i class="fas fa-trash me-2"></i>Eliminar
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
