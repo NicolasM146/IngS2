@@ -25,14 +25,20 @@ def config(app):
 
 def reset():
     """Resetea la base de datos."""
-    print(" Eliminando base de datos...")
-    db.drop_all()
-    print("Creando base nuevamente...")
+    print("Importando modelos...")
+    # Importá acá todos los modelos para que SQLAlchemy los conozca antes de eliminar/crear tablas
     from src.core.Usuario import User
     from src.core.Usuario.Roles_y_Permisos import Rol, Permiso
     from src.core.Inmueble.property import Property
     from src.core.Alquiler.Rental import Rental
+    from src.core.Resenia.Review import Review  # Agregá este si usás reviews
     from src.core.Reserva.reservation import Reservation
+
+    print("Eliminando base de datos...")
+    db.drop_all()
+
+    print("Creando base nuevamente...")
     db.create_all()
+
     print("¡Listo! Se han creado las siguientes tablas: ")
     print(db.metadata.tables.keys())
