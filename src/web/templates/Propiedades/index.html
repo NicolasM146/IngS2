@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block title %}Propiedades{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='properties/index.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Gestión de Propiedades</h1>
+
+<!-- Botón para agregar propiedad (si tiene permisos) -->
+{% if current_user.tiene_permiso('properties_create') %}
+<div class="mb-4">
+    <a href="{{ url_for('property.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Cargar Inmueble
+    </a>
+</div>
+{% endif %}
+
+<!-- Mensaje si no hay propiedades -->
+{% if no_results %}
+<div class="alert alert-info">
+    No se encontraron propiedades registradas.
+</div>
+{% else %}
+<!-- Tabla de propiedades -->
+<div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Dirección</th>
+                <th>Localidad</th>
+                <th>Capacidad</th>
+                <th>Habitaciones</th>
+                <th>Estado</th>
+                <th>Propietario</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for property in properties %}
+            <tr>
+                <td>{{ property.id }}</td>
+                <td>{{ property.direccion }}</td>
+                <td>{{ property.localidad }}</td>
+                <td>{{ property.capacidad }}</td>
+                <td>{{ property.habitaciones }}</td>
+                <td>
+                    <span class="badge bg-{{ 'success' if property.estado == 'disponible' else 'warning' }}">
+                        {{ property.estado|capitalize }}
+                    </span>
+                </td>
+                <td>{{ property.user.nombre }}</td>
+                <td>
+                    <a href="{{ url_for('property.show', id=property.id) }}" 
+                       class="btn btn-sm btn-info" title="Ver">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    {% if current_user.tiene_permiso('properties_update') %}
+                    <a href="{{ url_for('property.edit', id=property.id) }}" 
+                       class="btn btn-sm btn-warning" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- Botón de volver -->
+<div class="mt-4">
+    <a href="{{ url_for('home') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Volver al Inicio
+    </a>
+</div>
+{% endblock %}
