@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}Cargar Nuevo Inmueble{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='properties/create.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-home me-2"></i>Cargar Nuevo Inmueble</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('property.create') }}">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Sección Propietario -->
+                        <h4 class="mb-3 border-bottom pb-2">Propietario</h4>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <div class="form-floating mb-3">
+                                    {{ form.usuario_id(class="form-select") }}
+                                    {{ form.usuario_id.label }}
+                                    {% for error in form.usuario_id.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                    <small class="text-muted">Se mostrarán solo usuarios activos con email confirmado</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Información Básica -->
+                        <h4 class="mb-3 border-bottom pb-2">Información Básica</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.direccion(class="form-control", placeholder=" ") }}
+                                    {{ form.direccion.label }}
+                                    {% for error in form.direccion.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    {{ form.localidad(class="form-control", placeholder=" ") }}
+                                    {{ form.localidad.label }}
+                                    {% for error in form.localidad.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    {{ form.capacidad(class="form-control", placeholder=" ") }}
+                                    {{ form.capacidad.label }}
+                                    {% for error in form.capacidad.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    {{ form.habitaciones(class="form-control", placeholder=" ") }}
+                                    {{ form.habitaciones.label }}
+                                    {% for error in form.habitaciones.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    {{ form.estado(class="form-select", placeholder=" ") }}
+                                    {{ form.estado.label }}
+                                    {% for error in form.estado.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Descripción -->
+                        <h4 class="mb-3 mt-4 border-bottom pb-2">Descripción</h4>
+                        <div class="form-floating mb-3">
+                            {{ form.descripcion(class="form-control", style="height: 120px", placeholder=" ") }}
+                            {{ form.descripcion.label }}
+                            {% for error in form.descripcion.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('property.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Inmueble
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

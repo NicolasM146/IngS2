@@ -3,6 +3,7 @@ from src.core.database import db
 from src.core.Inmueble.property import Property
 from src.core.Usuario.User import User
 from flask_login import login_required, current_user
+from src.web.forms.forms import PropertyForm
 
 
 bp = Blueprint("property", __name__, url_prefix="/property")
@@ -36,14 +37,33 @@ def show(id):
     return render_template("Propiedades/show.html", property=property)
 
 # Formulario de creación
-@bp.route("/create", methods=["GET"])
+@bp.route("/create", methods=["GET", "POST"])
 @login_required
 def create():
     if not current_user.tiene_permiso('properties_create'):
-        flash("No tienes permisos para esta acción", "danger")
+        flash("No tienes permisos para crear propiedades", "danger")
         return redirect(url_for('property.index'))
-    
-    return render_template("Propiedades/create.html")
+
+    form = PropertyForm()  # Crea la instancia del formulario
+
+    if form.validate_on_submit():
+        # Lógica para guardar la propiedad
+        
+        new_property = Property(
+            direccion=form.direccion.data,
+            localidad=form.localidad.data,
+            capacidad=form.capacidad.data,
+            habitaciones=form.habitaciones.data,
+            estado=form.estado.data,
+            descripcion=form.descripcion.data,
+            user_id=current_user.id
+        )
+        db.session.add(new_property)
+        db.session.commit()
+        flash("Propiedad creada exitosamente", "success")
+        return redirect(url_for('property.index'))
+
+    return render_template("Propiedades/create.html", form=form)
 
 # Formulario de edición
 @bp.route("/<int:id>/edit", methods=["GET", "POST"])
@@ -66,3 +86,16 @@ def edit(id):
         return redirect(url_for('property.show', id=id))
     
     return render_template("Propiedades/edit.html", property=property)
+
+@bp.route("/<int:id>/delete", methods=["POST"])
+@login_required
+def delete(id):
+    if not current_user.tiene_permiso('properties_destroy'):
+        flash("No tienes permisos para eliminar propiedades", "danger")
+        return redirect(url_for('property.index'))
+    
+    property = Property.query.get_or_404(id)
+    db.session.delete(property)
+    db.session.commit()
+    flash("Propiedad eliminada correctamente", "success")
+    return redirect(url_for('property.index'))
