@@ -70,6 +70,7 @@ def create():
 @login_required
 def edit(id):
     property = Property.query.get_or_404(id)
+    users = User.query.all()  # O filtrar según tus necesidades
     
     if not current_user.tiene_permiso('properties_update'):
         flash("No tienes permisos para editar", "danger")
@@ -85,7 +86,7 @@ def edit(id):
         flash("Propiedad actualizada", "success")
         return redirect(url_for('property.show', id=id))
     
-    return render_template("Propiedades/edit.html", property=property)
+    return render_template("Propiedades/edit.html", property=property, users=users)
 
 @bp.route("/<int:id>/delete", methods=["POST"])
 @login_required

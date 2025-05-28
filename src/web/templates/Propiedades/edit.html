@@ -1,0 +1,106 @@
+{% extends "layout.html" %}
+
+{% block title %}Editar Propiedad - {{ property.direccion }}{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='properties/edit.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-edit me-2"></i>Editar Propiedad</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('property.edit', id=property.id) }}">
+                        <!-- Sección Propietario (modificable) -->
+                        <h4 class="mb-3 border-bottom pb-2">Propietario</h4>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="user_id" name="user_id" required>
+                                        {% for user in users %}
+                                        <option value="{{ user.id }}" {% if user.id == property.user_id %}selected{% endif %}>
+                                            {{ user.nombre }} (DNI: {{ user.dni }}) - Tel: {{ user.telefono }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <label for="user_id">Seleccionar Propietario</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Información Básica -->
+                        <h4 class="mb-3 border-bottom pb-2">Información Básica</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="direccion" name="direccion" 
+                                           value="{{ property.direccion }}" required>
+                                    <label for="direccion">Dirección</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="localidad" name="localidad" 
+                                           value="{{ property.localidad }}" required>
+                                    <label for="localidad">Localidad</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="capacidad" name="capacidad" 
+                                           value="{{ property.capacidad }}" required>
+                                    <label for="capacidad">Capacidad</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <input type="number" class="form-control" id="habitaciones" name="habitaciones" 
+                                           value="{{ property.habitaciones }}" required>
+                                    <label for="habitaciones">Habitaciones</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="estado" name="estado" required>
+                                        <option value="disponible" {% if property.estado == 'disponible' %}selected{% endif %}>Disponible</option>
+                                        <option value="ocupado" {% if property.estado == 'ocupado' %}selected{% endif %}>Ocupado</option>
+                                    </select>
+                                    <label for="estado">Estado</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección Descripción -->
+                        <h4 class="mb-3 mt-4 border-bottom pb-2">Descripción</h4>
+                        <div class="form-floating mb-3">
+                            <textarea class="form-control" id="descripcion" name="descripcion" 
+                                      style="height: 120px" required>{{ property.descripcion }}</textarea>
+                            <label for="descripcion">Descripción</label>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('property.show', id=property.id) }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
