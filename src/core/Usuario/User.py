@@ -70,6 +70,6 @@ class User(UserMixin,db.Model):
         if self.rol is None:
             return False
         return self.rol.tiene_permiso(nombre_permiso)
-
+    
     def __repr__(self):
         return f'<User {self.username}>'

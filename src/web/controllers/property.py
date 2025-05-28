@@ -88,7 +88,7 @@ def edit(id):
     
     return render_template("Propiedades/edit.html", property=property, users=users)
 
-@bp.route("/<int:id>/delete", methods=["POST"])
+@bp.route("/delete/<int:id>", methods=["POST"])
 @login_required
 def delete(id):
     if not current_user.tiene_permiso('properties_destroy'):
