@@ -73,7 +73,7 @@
                     </li>
 
                     {% if current_user.is_authenticated %}
-                        {% if current_user.is_sysadmin %}
+                        {% if current_user.tiene_permiso('properties_index') %}
                         <li class="nav-item">
                             <a class="btn btn-success me-2" href="{{ url_for('property.index') }}">Gestionar Inmuebles</a>
                         </li>
