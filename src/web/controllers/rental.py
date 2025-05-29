@@ -1,0 +1,94 @@
+from flask import Blueprint, render_template
+from flask_login import login_required, current_user
+from src.core.database import db
+from src.core.Alquiler.Rental import Rental
+from src.core.Inmueble.property import Property
+from flask import request, redirect, url_for, flash
+from datetime import datetime
+from sqlalchemy.orm import aliased
+from sqlalchemy import or_
+
+bp = Blueprint('rental', __name__, url_prefix='/rentals')
+
+@bp.route('/', methods=['GET'])
+@login_required
+def index():
+    # Obtener todas las propiedades del usuario logueado
+    propiedades_ids = [p.id for p in Property.query.filter_by(user_id=current_user.id).all()]
+
+    # Obtener todos los alquileres cuyas propiedades son del usuario
+    alquileres = Rental.query.filter(Rental.property_id.in_(propiedades_ids)).all()
+
+    return render_template('Alquileres/index.html', alquileres=alquileres)
+
+@bp.route('/create', methods=['GET', 'POST'])
+@login_required
+def create():
+    # Alias para Rental
+    rental_alias = aliased(Rental)
+
+    # Propiedades del usuario sin alquiler activo
+    propiedades = (
+        db.session.query(Property)
+        .outerjoin(rental_alias, Property.id == rental_alias.property_id)
+        .filter(
+            Property.user_id == current_user.id,
+            or_(rental_alias.id == None, rental_alias.is_active == False)
+        )
+        .all()
+    )
+
+    if request.method == 'POST':
+        property_id = request.form.get('property_id')
+        price = request.form.get('price')
+        description = request.form.get('description')
+
+        # Validar propiedad seleccionada
+        propiedad = Property.query.filter_by(id=property_id, user_id=current_user.id).first()
+        if not propiedad:
+            flash("La propiedad seleccionada no es válida o no te pertenece.", "danger")
+            return redirect(url_for('rental.create'))
+
+        # Validar que no exista ya un alquiler para esa propiedad (property_id es unique)
+        alquiler_existente = Rental.query.filter_by(property_id=property_id).first()
+        if alquiler_existente:
+            flash("Ya existe un alquiler asociado a esta propiedad.", "warning")
+            return redirect(url_for('rental.create'))
+
+        try:
+            price_float = float(price)
+            if price_float < 0:
+                raise ValueError("Precio inválido")
+        except:
+            flash("El precio debe ser un número positivo válido.", "danger")
+            return redirect(url_for('rental.create'))
+
+        nuevo_alquiler = Rental(
+            property_id=property_id,
+            creation_date=datetime.utcnow(),
+            price=price_float,
+            description=description,
+            is_active=True
+        )
+        db.session.add(nuevo_alquiler)
+        db.session.commit()
+        flash("Alquiler creado con éxito", "success")
+        return redirect(url_for('rental.index'))
+
+    return render_template("Alquileres/create.html", propiedades=propiedades)
+
+@bp.route('/delete/<int:rental_id>', methods=['POST'])
+@login_required
+def delete(rental_id):
+    alquiler = Rental.query.get_or_404(rental_id)
+
+    # Solo permitir borrar si el alquiler pertenece al usuario actual
+    if alquiler.property.user_id != current_user.id:
+        flash("No tienes permiso para borrar este alquiler.", "danger")
+        return redirect(url_for('rental.index'))
+
+    # Eliminar el alquiler
+    db.session.delete(alquiler)
+    db.session.commit()
+    flash("Alquiler eliminado correctamente.", "success")
+    return redirect(url_for('rental.index'))

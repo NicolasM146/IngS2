@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Mis Alquileres{% endblock %}
+
+{% block content %}
+<h2>Mis Alquileres</h2>
+<a href="{{ url_for('rental.create') }}" class="btn btn-primary mb-3">Nuevo Alquiler</a>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Fecha de creación</th>
+            <th>Precio</th>
+            <th>Descripción</th>
+            <th>Dirección</th>
+            <th>Localidad</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for alquiler in alquileres %}
+        <tr>
+            <td>{{ alquiler.id }}</td>
+            <td>{{ alquiler.creation_date.strftime('%d/%m/%Y') if alquiler.creation_date else 'N/D' }}</td>
+            <td>${{ alquiler.price | round(2) }}</td>
+            <td>{{ alquiler.description or 'Sin descripción' }}</td>
+            <td>{{ alquiler.property.direccion }}</td>
+            <td>{{ alquiler.property.localidad }}</td>
+            <td>{{ 'Sí' if alquiler.is_active else 'No' }}</td>
+            <td>
+                <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este alquiler?');">Borrar</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8">No hay alquileres para mostrar.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
