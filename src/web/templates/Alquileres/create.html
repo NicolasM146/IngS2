@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}Nuevo Alquiler{% endblock %}
+
+{% block content %}
+<h2>Crear Nuevo Alquiler</h2>
+
+<form method="post" action="{{ url_for('rental.create') }}">
+    <div class="mb-3">
+        <label for="property_id" class="form-label">Propiedad</label>
+        <select id="property_id" name="property_id" class="form-select" required>
+            <option value="" disabled selected>Seleccione una propiedad</option>
+            {% for prop in propiedades %}
+            <option value="{{ prop.id }}">{{ prop.direccion }} - {{ prop.localidad }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="price" class="form-label">Precio</label>
+        <input type="number" step="0.01" min="0" id="price" name="price" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Descripción</label>
+        <textarea id="description" name="description" class="form-control"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">Crear Alquiler</button>
+    <a href="{{ url_for('rental.index') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

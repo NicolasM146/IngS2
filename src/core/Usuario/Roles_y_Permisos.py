@@ -77,6 +77,8 @@ def crear_roles_y_permisos(tabla, coneccion, **kw):
         crear_y_asignar_permisos(
             sesion,
             {
+                ""
+                 
                 "user_index": [],
                 "user_show": [],
                 "user_edit": [],
