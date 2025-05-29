@@ -3,8 +3,8 @@
 {% block title %}Cargar Nuevo Inmueble{% endblock %}
 
 {% block head %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='properties/create.css') }}">
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='properties/create.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -13,14 +13,14 @@
         <div class="col-lg-8">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0"><i class="fas fa-home me-2"></i>Cargar Nuevo Inmueble</h2>
+                    <h2 class="mb-0"><i class="fas fa-home me-2"></i>Cargar Inmueble</h2>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('property.create') }}">
                         {{ form.hidden_tag() }}
 
-                        <!-- Sección Propietario -->
-                        <h4 class="mb-3 border-bottom pb-2">Propietario</h4>
+                        <!-- Sección Inmueble -->
+                        <h4 class="mb-3 border-bottom pb-2">Inmueble</h4>
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <div class="form-floating mb-3">
@@ -29,7 +29,8 @@
                                     {% for error in form.usuario_id.errors %}
                                     <div class="invalid-feedback d-block">{{ error }}</div>
                                     {% endfor %}
-                                    <small class="text-muted">Se mostrarán solo usuarios activos con email confirmado</small>
+                                    <small class="text-muted">Se mostrarán solo usuarios activos con email
+                                        confirmado</small>
                                 </div>
                             </div>
                         </div>
@@ -104,7 +105,7 @@
                                 <i class="fas fa-times me-2"></i>Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Guardar Inmueble
+                                <i class="fas fa-save me-2"></i>Cargar Inmueble
                             </button>
                         </div>
                     </form>

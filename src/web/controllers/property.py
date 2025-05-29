@@ -60,7 +60,7 @@ def create():
         )
         db.session.add(new_property)
         db.session.commit()
-        flash("Propiedad creada exitosamente", "success")
+        flash('Carga del Inmueble exitosa')
         return redirect(url_for('property.index'))
 
     return render_template("Propiedades/create.html", form=form)
@@ -83,7 +83,7 @@ def edit(id):
         property.capacidad = request.form.get('capacidad')
         property.habitaciones = request.form.get('habitaciones')
         db.session.commit()
-        flash("Propiedad actualizada", "success")
+        flash("Actualización de Inmueble exitosa")
         return redirect(url_for('property.show', id=id))
     
     return render_template("Propiedades/edit.html", property=property, users=users)
@@ -98,5 +98,5 @@ def delete(id):
     property = Property.query.get_or_404(id)
     db.session.delete(property)
     db.session.commit()
-    flash("Propiedad eliminada correctamente", "success")
+    flash("Inmueble eliminado correctamente")
     return redirect(url_for('property.index'))

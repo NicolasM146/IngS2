@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Propiedades{% endblock %}
+{% block title %}Inmuebles{% endblock %}
 
 {% block head %}
     {{ super() }}
@@ -8,9 +8,18 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Gestión de Propiedades</h1>
+<h1 class="mb-4">Gestión de Inmuebles</h1>
 
-<!-- Botón para agregar propiedad (si tiene permisos) -->
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ messages[0] }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- Botón para agregar Inmueble (si tiene permisos) -->
 {% if current_user.tiene_permiso('properties_create') %}
 <div class="mb-4">
     <a href="{{ url_for('property.create') }}" class="btn btn-primary">
@@ -19,13 +28,13 @@
 </div>
 {% endif %}
 
-<!-- Mensaje si no hay propiedades -->
+<!-- Mensaje si no hay Inmuebles -->
 {% if no_results %}
 <div class="alert alert-info">
-    No se encontraron propiedades registradas.
+    No se encontraron Inmuebles registradas.
 </div>
 {% else %}
-<!-- Tabla de propiedades -->
+<!-- Tabla de Inmuebles -->
 <div class="table-responsive">
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
