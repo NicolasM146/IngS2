@@ -17,11 +17,13 @@ def login_required_custom(f):
 
 def tiene_permiso(permiso):
     """
-    Verifica si el usuario logueado tiene un permiso dado.
-    Retorna True o False.
+    Retorna True si el usuario logueado tiene el permiso dado.
+    Si es admin, siempre retorna True.
     """
     if not current_user.is_authenticated:
         return False
+    if current_user.es_sysadmin:
+        return True
     return current_user.tiene_permiso(permiso)
 
 
