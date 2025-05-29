@@ -30,13 +30,13 @@
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
             <tr>
-                <th>#</th>
+                <th>ID</th>
                 <th>Dirección</th>
                 <th>Localidad</th>
                 <th>Capacidad</th>
                 <th>Habitaciones</th>
                 <th>Estado</th>
-                <th>Propietario</th>
+                <th>Encargado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -67,7 +67,7 @@
                     {% endif %}
                     {% if current_user.tiene_permiso('properties_destroy') %}
                     <form action="{{ url_for('property.delete', id=property.id) }}" method="POST" style="display: inline;">
-                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de que deseas eliminar esta propiedad?');">
+                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar Inmueble" onclick="return confirm('¿Eliminar el Inmueble con ID = {{property.id}} permanentemente?');">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>

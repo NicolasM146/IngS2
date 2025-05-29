@@ -17,8 +17,8 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('property.edit', id=property.id) }}">
-                        <!-- Sección Propietario (modificable) -->
-                        <h4 class="mb-3 border-bottom pb-2">Propietario</h4>
+                        <!-- Sección Encargado (modificable) -->
+                        <h4 class="mb-3 border-bottom pb-2">Encargado</h4>
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <div class="form-floating mb-3">
@@ -29,7 +29,7 @@
                                         </option>
                                         {% endfor %}
                                     </select>
-                                    <label for="user_id">Seleccionar Propietario</label>
+                                    <label for="user_id">Seleccionar Encargado</label>
                                 </div>
                             </div>
                         </div>

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Eliminar Propiedad - {{ property.direccion }}{% endblock %}
+{% block title %}Eliminar Inmueble - {{ property.direccion }}{% endblock %}
 
 {% block head %}
     {{ super() }}
@@ -13,17 +13,17 @@
         <div class="col-lg-8">
             <div class="card shadow border-danger">
                 <div class="card-header bg-danger text-white">
-                    <h2 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación</h2>
+                    <h2 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Eliminar Inmueble</h2>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-warning">
                         <h4 class="alert-heading">¡Atención!</h4>
-                        <p>Estás a punto de eliminar permanentemente la siguiente propiedad:</p>
+                        <p>Estás a punto de eliminar permanentemente el siguiente inmueble:</p>
                         <hr>
                         <ul class="mb-0">
                             <li><strong>Dirección:</strong> {{ property.direccion }}</li>
                             <li><strong>Localidad:</strong> {{ property.localidad }}</li>
-                            <li><strong>Propietario:</strong> {{ property.user.nombre }}</li>
+                            <li><strong>Encargado:</strong> {{ property.user.nombre }}</li>
                             <li><strong>Estado actual:</strong> 
                                 <span class="badge bg-{{ 'success' if property.estado == 'disponible' else 'warning' }}">
                                     {{ property.estado|capitalize }}
