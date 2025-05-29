@@ -4,11 +4,13 @@ from src.core.Inmueble.property import Property
 from src.core.Usuario.User import User
 from flask_login import login_required, current_user
 from src.web.forms.forms import PropertyForm
+from src.web.handlers.auth import permiso_required
 
 
 bp = Blueprint("property", __name__, url_prefix="/property")
 
 @bp.route("/", methods=["GET", "POST"])
+@permiso_required('properties_index')
 @login_required
 def index():
     if request.method == "GET":
@@ -29,8 +31,9 @@ def index():
         # Parte POST (pendiente de implementación)
         pass
     
-# Detalle de propiedad
+# Vista del Inmueble
 @bp.route("/<int:id>")
+@permiso_required('properties_show')
 @login_required
 def show(id):
     property = Property.query.get_or_404(id)
@@ -38,6 +41,7 @@ def show(id):
 
 # Formulario de creación
 @bp.route("/create", methods=["GET", "POST"])
+@permiso_required('properties_create')
 @login_required
 def create():
     if not current_user.tiene_permiso('properties_create'):
@@ -67,6 +71,7 @@ def create():
 
 # Formulario de edición
 @bp.route("/<int:id>/edit", methods=["GET", "POST"])
+@permiso_required('properties_edit')
 @login_required
 def edit(id):
     property = Property.query.get_or_404(id)
@@ -89,6 +94,7 @@ def edit(id):
     return render_template("Propiedades/edit.html", property=property, users=users)
 
 @bp.route("/delete/<int:id>", methods=["POST"])
+@permiso_required('properties_destroy')
 @login_required
 def delete(id):
     if not current_user.tiene_permiso('properties_destroy'):
