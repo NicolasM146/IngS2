@@ -49,3 +49,11 @@ Posicionarse Dentro de la carpeta en powerShel o Cmd y colocar "ngrok config add
 Abrir la pagina web con "Flask run" y luego pocicionados en la carpeta de Ngrok y colocas "ngrok http 5000" en la terminal cmd, para luego presionar el link que te da
 en Forwarding, ejemploe -> Forwarding                   https://87d2-200-114-209-238.ngrok-free.app -> http://localhost:5000 , te mostrar una ventana de aviso, le das a 
 "visitar sitio" y ya estas en https
+
+## Como subir git
+
+git add .
+
+git commit -m "un texto"
+
+git push

@@ -21,11 +21,7 @@ def tiene_permiso(permiso):
     """
     if not current_user.is_authenticated:
         return False
-<<<<<<< HEAD
     if current_user.es_sysadmin():
-=======
-    if current_user.es_sysadmin:
->>>>>>> 157b27d09dcdd95f1b5524a322c6f4d61aba758f
         return True
     return current_user.tiene_permiso(permiso)
 

@@ -46,9 +46,18 @@ def register():
             flash("El nombre solo debe contener letras y acentos.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
-        if not data_usuario["dni"].isdigit():
-            flash("El DNI debe contener solo números.", "error")
+        dni_raw = data_usuario["dni"]
+        dni_limpio = dni_raw.replace(".", "").strip()
+
+        if not dni_limpio.isdigit():
+            flash("El DNI debe contener solo números (puede incluir puntos opcionalmente).", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
+
+        if len(dni_limpio) != 8:
+            flash("El DNI debe tener exactamente 8 dígitos.", "error")
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
+
+        data_usuario["dni"] = dni_limpio
 
         if not es_telefono_valido(data_usuario["telefono"]):
             flash("El teléfono debe contener solo números (mínimo 6 dígitos).", "error")
