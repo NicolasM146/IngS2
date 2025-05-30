@@ -102,6 +102,7 @@ def edit(id):
         property.descripcion = request.form.get('descripcion')
         property.capacidad = request.form.get('capacidad')
         property.habitaciones = request.form.get('habitaciones')
+        property.estado = request.form.get('estado')
         db.session.commit()
         flash("Actualización de Inmueble exitosa")
         return redirect(url_for('property.show', id=id))
