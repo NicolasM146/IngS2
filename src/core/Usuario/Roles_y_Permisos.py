@@ -78,7 +78,7 @@ def crear_roles_y_permisos(tabla, coneccion, **kw):
             sesion,
             {
                 ""
-                 
+                "gestion_index":[check_in_out],
                 "user_index": [],
                 "user_show": [],
                 "user_edit": [],
@@ -91,14 +91,11 @@ def crear_roles_y_permisos(tabla, coneccion, **kw):
                 "properties_create": [],
                 "properties_destroy": [],
                 
-                "rentals_index": [],
-                "rentals_show": [],
-                "rentals_edit": [],
-                "rentals_create": [],
-                "rentals_destroy": [],
-                
-                "properties_check_in": [check_in_out],  # Asignando permisos específicos al rol
-                "properties_check_out": [check_in_out],  # Lo mismo aquí
+                "rentals_index": [check_in_out],
+                "rentals_show": [check_in_out],
+                "rentals_edit": [check_in_out],
+                "rentals_create": [check_in_out],
+                "rentals_destroy": [check_in_out],
             },
         )
 

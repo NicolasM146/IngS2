@@ -92,3 +92,37 @@ def delete(rental_id):
     db.session.commit()
     flash("Alquiler eliminado correctamente.", "success")
     return redirect(url_for('rental.index'))
+
+# Agrega esta nueva ruta al final del archivo rental.py
+@bp.route('/edit/<int:rental_id>', methods=['GET', 'POST'])
+@login_required
+def edit(rental_id):
+    alquiler = Rental.query.get_or_404(rental_id)
+    
+    # Verificar que el alquiler pertenece al usuario actual
+    if alquiler.property.user_id != current_user.id:
+        flash("No tienes permiso para editar este alquiler.", "danger")
+        return redirect(url_for('rental.index'))
+
+    if request.method == 'POST':
+        price = request.form.get('price')
+        description = request.form.get('description')
+        is_active = request.form.get('is_active') == 'on'
+
+        try:
+            price_float = float(price)
+            if price_float < 0:
+                raise ValueError("Precio inválido")
+        except:
+            flash("El precio debe ser un número positivo válido.", "danger")
+            return redirect(url_for('rental.edit', rental_id=rental_id))
+
+        alquiler.price = price_float
+        alquiler.description = description
+        alquiler.is_active = is_active
+        
+        db.session.commit()
+        flash("Alquiler actualizado con éxito", "success")
+        return redirect(url_for('rental.index'))
+
+    return render_template("Alquileres/edit.html", alquiler=alquiler)
