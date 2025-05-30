@@ -20,10 +20,9 @@ def index():
 
     no_results = len(users) == 0
 
-    return render_template('users/index.html', 
-                       users=users, 
-                       no_results=no_results, 
-                       page=page, 
-                       total=total, 
-                       per_page=per_page)
-
+    return render_template('users/index.html',
+                           users=users,
+                           no_results=no_results,
+                           page=page,
+                           total=total,
+                           per_page=per_page)

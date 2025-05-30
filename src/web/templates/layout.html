@@ -96,7 +96,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="gestionesDropdown">
                                     <li><h6 class="dropdown-header">Gestión de Contenidos</h6></li>
                                     
-                                    {% if current_user.tiene_permiso('users_index') %}
+                                    {% if current_user.tiene_permiso('user_index') %}
                                     <li><a class="dropdown-item" href="{{ url_for('users.index') }}">
                                         <i class="fas fa-users me-2"></i>Gestionar Usuarios</a></li>
                                     {% endif %}
@@ -111,7 +111,7 @@
                                     
                                     <li><hr class="dropdown-divider"></li>
                                     
-                                    {% if current_user.tiene_permiso('rental_create') %}
+                                    {% if current_user.tiene_permiso('rentals_create') %}
                                     <li><a class="dropdown-item" href="{{ url_for('rental.create') }}">
                                         <i class="fas fa-plus-circle me-2"></i>Crear Alquiler Manual</a></li>
                                     {% endif %}
