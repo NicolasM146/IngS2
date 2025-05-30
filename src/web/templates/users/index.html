@@ -23,7 +23,7 @@
                 <th>Email</th>
                 <th>Teléfono</th>
                 <th>Rol</th>
-                <th>Fecha de Creación</th>
+                <th>Fecha de Nacimiento</th>
                 <th>Estado</th>
             </tr>
         </thead>
@@ -35,7 +35,7 @@
                 <td>{{ user.email }}</td>
                 <td>{{ user.telefono }}</td>
                 <td>{{ user.rol.nombre if user.rol else 'Sin rol' }}</td>
-                <td>{{ user.inserted_at.strftime('%Y-%m-%d') if user.inserted_at else 'Desconocida' }}</td>
+                <td>{{ user.fecha_nacimiento }}</td>
                 <td>{{ 'Bloqueado' if user.is_locked else 'Activo' }}</td>
             </tr>
             {% endfor %}
