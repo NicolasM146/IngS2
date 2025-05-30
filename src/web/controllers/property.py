@@ -3,7 +3,7 @@ from src.core.database import db
 from src.core.Inmueble.property import Property
 from src.core.Usuario.User import User
 from flask_login import login_required, current_user
-from src.web.forms.forms import PropertyForm
+from src.web.forms.forms import PropertyForm, PropertySearchForm
 from src.web.handlers.auth import permiso_required
 
 
@@ -13,23 +13,38 @@ bp = Blueprint("property", __name__, url_prefix="/property")
 @permiso_required('properties_index')
 @login_required
 def index():
-    if request.method == "GET":
-        # Obtener todas las propiedades desde la base de datos
-        properties = Property.query.all()  # Usando SQLAlchemy como ejemplo
-        
-        # Verificar si no hay resultados
-        no_results = len(properties) == 0
-        
-        # Renderizar la plantilla con los datos
-        return render_template(
-            "Propiedades/index.html",
-            properties=properties,
-            no_results=no_results
-        )
+    form = PropertySearchForm()
+    query = Property.query
     
-    elif request.method == "POST":
-        # Parte POST (pendiente de implementación)
-        pass
+    if form.validate_on_submit():
+        # Filtro por dirección (búsqueda parcial)
+        if form.direccion.data:
+            query = query.filter(Property.direccion.ilike(f'%{form.direccion.data}%'))
+        
+        # Filtro por localidad (búsqueda exacta)
+        if form.localidad.data:
+            query = query.filter(Property.localidad.ilike(f'%{form.localidad.data}%'))
+        
+        # Filtro por estado
+        if form.estado.data:
+            query = query.filter(Property.estado == form.estado.data)
+        
+        # Filtros numéricos (mínimos)
+        if form.capacidad.data:
+            query = query.filter(Property.capacidad == int(form.capacidad.data))
+        
+        if form.habitaciones.data:
+            query = query.filter(Property.habitaciones == int(form.habitaciones.data))
+    
+    properties = query.all()
+    no_results = len(properties) == 0
+    
+    return render_template(
+        "Propiedades/index.html",
+        properties=properties,
+        no_results=no_results,
+        form=form
+    )
     
 # Vista del Inmueble
 @bp.route("/<int:id>")

@@ -1,8 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, TextAreaField, SelectField
+from wtforms import StringField, IntegerField, TextAreaField, SelectField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
 from src.core.Usuario.User import User
+from wtforms.validators import Optional, NumberRange
 
+
+# Formualrio para registrar o actualizar un Inmueble
 class PropertyForm(FlaskForm):
     direccion = StringField('Dirección', validators=[DataRequired()])
     localidad = StringField('Localidad', validators=[DataRequired()])
@@ -31,3 +34,40 @@ class PropertyForm(FlaskForm):
                 email_confirmed=True
             ).order_by(User.nombre).all()
         ]
+        
+# Formulario para filtrar en la Busqueda de Inmuebles
+class PropertySearchForm(FlaskForm):
+    # Campos de texto
+    direccion = StringField('Dirección', validators=[Optional()], 
+                          render_kw={"placeholder": "Ej: Calle Principal 123"})
+    
+    localidad = StringField('Localidad', validators=[Optional()],
+                          render_kw={"placeholder": "Ej: Buenos Aires"})
+    
+    # Campos de selección
+    estado = SelectField('Estado', choices=[
+        ('', 'Todos los estados'),
+        ('disponible', 'Disponible'),
+        ('ocupado', 'Ocupado'),
+        ('dado_de_baja', 'Dado de baja'),
+    ], validators=[Optional()])
+    
+    capacidad = SelectField('Capacidad', choices=[
+        ('', 'Cualquier capacidad'),
+        ('1', '1 persona'),
+        ('2', '2 personas'),
+        ('4', '4 personas'),
+        ('6', '6 personas'),
+        ('8', '8 personas')
+    ], validators=[Optional()])
+    
+    habitaciones = SelectField('Habitaciones', choices=[
+        ('', 'Cualquier cantidad'),
+        ('1', '1 habitacion'),
+        ('2', '2 habitaciones'),
+        ('3', '3 habitaciones'),
+        ('4', '4 habitaciones'),
+        ('5', '5 habitaciones')
+    ], validators=[Optional()])
+    
+    buscar = SubmitField('Buscar', render_kw={"class": "btn btn-primary"})
