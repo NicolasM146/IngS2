@@ -10,8 +10,9 @@ from flask_login import current_user
 def register(app):
     @app.route("/")
     def home():
-        if not current_user.is_authenticated:
-           return redirect(url_for("login.login"))  # Cambiá "login.login" según el nombre de tu blueprint y ruta login
+        #if not current_user.is_authenticated:
+        
+        #   return redirect(url_for("login.login"))  # Cambiá "login.login" según el nombre de tu blueprint y ruta login
         return render_template("home.html")
 
 

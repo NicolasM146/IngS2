@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Detalle del Alquiler</h2>
+
+    <ul class="list-group">
+        <li class="list-group-item"><strong>Propiedad:</strong> {{ alquiler.property.titulo }}</li>
+        <li class="list-group-item"><strong>Precio:</strong> ${{ alquiler.price }}</li>
+        <li class="list-group-item"><strong>Descripción:</strong> {{ alquiler.description }}</li>
+        <li class="list-group-item"><strong>Activo:</strong> {{ 'Sí' if alquiler.is_active else 'No' }}</li>
+        <li class="list-group-item"><strong>Creado el:</strong> {{ alquiler.creation_date.strftime('%d/%m/%Y') }}</li>
+    </ul>
+
+    <a href="{{ url_for('rental.index') }}" class="btn btn-secondary mt-3">Volver</a>
+</div>
+{% endblock %}

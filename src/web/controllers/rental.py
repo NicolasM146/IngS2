@@ -10,16 +10,31 @@ from sqlalchemy import or_
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
 
+#se agrego el filtrado en la ruta index
+
 @bp.route('/', methods=['GET'])
 @login_required
 def index():
-    # Obtener todas las propiedades del usuario logueado
-    propiedades_ids = [p.id for p in Property.query.filter_by(user_id=current_user.id).all()]
+    query = Rental.query.join(Property)
 
-    # Obtener todos los alquileres cuyas propiedades son del usuario
-    alquileres = Rental.query.filter(Rental.property_id.in_(propiedades_ids)).all()
+    direccion = request.args.get("direccion")
+    localidad = request.args.get("localidad")
+    estado = request.args.get("estado")
 
-    return render_template('Alquileres/index.html', alquileres=alquileres)
+    if direccion:
+        query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
+
+    if localidad:
+        query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+
+    if estado == "libre":
+        query = query.filter(Rental.is_active == True)
+    elif estado == "bloqueado":
+        query = query.filter(Rental.is_active == False)
+
+    alquileres = query.all()
+
+    return render_template("Alquileres/index.html", alquileres=alquileres)
 
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -87,8 +102,58 @@ def delete(rental_id):
         flash("No tienes permiso para borrar este alquiler.", "danger")
         return redirect(url_for('rental.index'))
 
+    reservas_activas = alquiler.reservations.count()  # como es lazy='dynamic', count() consulta la DB
+    if reservas_activas > 0:
+        flash("No se puede eliminar el alquiler porque tiene reservas asociadas.", "danger")
+        return redirect(url_for('rental.index'))
+    
     # Eliminar el alquiler
     db.session.delete(alquiler)
     db.session.commit()
     flash("Alquiler eliminado correctamente.", "success")
     return redirect(url_for('rental.index'))
+
+# Agrega esta nueva ruta al final del archivo rental.py
+@bp.route('/edit/<int:rental_id>', methods=['GET', 'POST'])
+@login_required
+def edit(rental_id):
+    alquiler = Rental.query.get_or_404(rental_id)
+    
+    # Verificar que el alquiler pertenece al usuario actual
+    if alquiler.property.user_id != current_user.id:
+        flash("No tienes permiso para editar este alquiler.", "danger")
+        return redirect(url_for('rental.index'))
+
+    if request.method == 'POST':
+        price = request.form.get('price')
+        description = request.form.get('description')
+        is_active = request.form.get('is_active') == 'on'
+
+        try:
+            price_float = float(price)
+            if price_float < 0:
+                raise ValueError("Precio inválido")
+        except:
+            flash("El precio debe ser un número positivo válido.", "danger")
+            return redirect(url_for('rental.edit', rental_id=rental_id))
+
+        alquiler.price = price_float
+        alquiler.description = description
+        alquiler.is_active = is_active
+        
+        db.session.commit()
+        flash("Alquiler actualizado con éxito", "success")
+        return redirect(url_for('rental.index'))
+
+    return render_template("Alquileres/edit.html", alquiler=alquiler)
+
+@bp.route('/<int:rental_id>', methods=['GET'])
+@login_required
+def show(rental_id):
+    alquiler = Rental.query.get_or_404(rental_id)
+
+    if alquiler.property.user_id != current_user.id:
+        flash("No tienes permiso para ver este alquiler.", "danger")
+        return redirect(url_for('rental.index'))
+
+    return render_template("Alquileres/show.html", alquiler=alquiler)
