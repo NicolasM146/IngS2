@@ -102,6 +102,11 @@ def delete(rental_id):
         flash("No tienes permiso para borrar este alquiler.", "danger")
         return redirect(url_for('rental.index'))
 
+    reservas_activas = alquiler.reservations.count()  # como es lazy='dynamic', count() consulta la DB
+    if reservas_activas > 0:
+        flash("No se puede eliminar el alquiler porque tiene reservas asociadas.", "danger")
+        return redirect(url_for('rental.index'))
+    
     # Eliminar el alquiler
     db.session.delete(alquiler)
     db.session.commit()
