@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Reservar {{ rental.titulo }}</h2>
+
+  <form method="post" action="" id="reserva-form">
+    <div class="form-group">
+      <label for="start_date">Fecha de inicio:</label>
+      <input type="date" name="start_date" id="start_date" class="form-control" required>
+    </div>
+
+    <div class="form-group">
+      <label for="end_date">Fecha de fin:</label>
+      <input type="date" name="end_date" id="end_date" class="form-control" required>
+    </div>
+
+    <div class="form-group mt-3">
+      <label>Acompañantes registrados:</label>
+      {% if compañeros %}
+        {% for compa in compañeros %}
+          <div class="form-check d-flex justify-content-between align-items-center mb-2">
+            <div>
+              <input class="form-check-input" type="checkbox" name="compañeros" value="{{ compa.id }}" id="compa{{ compa.id }}">
+              <label class="form-check-label" for="compa{{ compa.id }}">
+                {{ compa.nombre }} {{ compa.apellido }} (DNI: {{ compa.dni }})
+              </label>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="eliminarCompañero({{ compa.id }})">Eliminar</button>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p>No tenés acompañantes registrados.</p>
+      {% endif %}
+    </div>
+
+    <hr>
+    <h4>Agregar nuevos acompañantes</h4>
+    <div id="companieros-container">
+      <div class="row mb-3 companiero-entry">
+        <div class="col-md-3">
+          <input type="text" class="form-control" name="nuevo_nombre[]" placeholder="Nombre" autocomplete="off">
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="form-control" name="nuevo_apellido[]" placeholder="Apellido" autocomplete="off">
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="form-control" name="nuevo_dni[]" placeholder="DNI" autocomplete="off">
+        </div>
+        <div class="col-md-2">
+          <input type="text" class="form-control" name="nuevo_telefono[]" placeholder="Teléfono" autocomplete="off">
+        </div>
+        <div class="col-md-1">
+          <button type="button" class="btn btn-danger btn-sm remove-btn">X</button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="btn btn-secondary" id="add-compa-btn">Agregar otro acompañante</button>
+
+    <button type="submit" class="btn btn-success mt-3 d-block">Confirmar reserva</button>
+  </form>
+
+  <hr>
+  <h5>Días ocupados:</h5>
+  <ul>
+    {% for inicio, fin in dias_ocupados %}
+      <li style="color: red;">🛑 Desde {{ inicio.strftime('%d/%m/%Y') }} hasta {{ fin.strftime('%d/%m/%Y') }}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<script>
+  // Agregar nuevo acompañante dinámicamente
+  document.getElementById('add-compa-btn').addEventListener('click', function () {
+    const container = document.getElementById('companieros-container');
+    const entry = document.createElement('div');
+    entry.classList.add('row', 'mb-3', 'companiero-entry');
+    entry.innerHTML = `
+      <div class="col-md-3">
+        <input type="text" class="form-control" name="nuevo_nombre[]" placeholder="Nombre" autocomplete="off">
+      </div>
+      <div class="col-md-3">
+        <input type="text" class="form-control" name="nuevo_apellido[]" placeholder="Apellido" autocomplete="off">
+      </div>
+      <div class="col-md-3">
+        <input type="text" class="form-control" name="nuevo_dni[]" placeholder="DNI" autocomplete="off">
+      </div>
+      <div class="col-md-2">
+        <input type="text" class="form-control" name="nuevo_telefono[]" placeholder="Teléfono" autocomplete="off">
+      </div>
+      <div class="col-md-1">
+        <button type="button" class="btn btn-danger btn-sm remove-btn">X</button>
+      </div>
+    `;
+    container.appendChild(entry);
+  });
+
+  // Eliminar acompañante dinámico
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.classList.contains('remove-btn')) {
+      e.target.closest('.companiero-entry').remove();
+    }
+  });
+
+  // Eliminar acompañante registrado con confirmación
+  function eliminarCompañero(id) {
+    if (confirm('¿Estás seguro que querés eliminar este acompañante?')) {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/reservation/eliminar-companero/${id}`;  // Ajustá esta ruta a la de tu blueprint
+
+      // CSRF token si usás Flask-WTF
+      const csrfToken = document.querySelector('input[name=csrf_token]');
+      if (csrfToken) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'csrf_token';
+        input.value = csrfToken.value;
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
+    }
+  }
+
+  // Validar fechas con días ocupados
+  const diasOcupados = {{ dias_ocupados|tojson }};
+  document.getElementById('reserva-form').addEventListener('submit', function (e) {
+    const start = new Date(document.getElementById('start_date').value);
+    const end = new Date(document.getElementById('end_date').value);
+
+    for (const [iniStr, finStr] of diasOcupados) {
+      const ini = new Date(iniStr);
+      const fin = new Date(finStr);
+
+      if (start <= fin && end >= ini) {
+        alert(`Las fechas ingresadas se superponen con una reserva existente del ${ini.toLocaleDateString()} al ${fin.toLocaleDateString()}.`);
+        e.preventDefault();
+        return;
+      }
+    }
+  });
+</script>
+{% endblock %}

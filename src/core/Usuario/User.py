@@ -43,7 +43,8 @@ class User(UserMixin,db.Model):
     # Relaion con reservation
     reservations = db.relationship('Reservation', back_populates='user', lazy='dynamic')
 
-    compañeros = db.relationship('Compañero', back_populates='user', cascade='all, delete-orphan')
+    compañeros = db.relationship('Compañero', back_populates='user')  
+
 
 
     def es_mayor_de_edad(self):

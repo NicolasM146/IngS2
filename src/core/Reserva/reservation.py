@@ -1,6 +1,13 @@
 from datetime import datetime
 from src.core.database import db
 
+
+reserva_compañero = db.Table(
+    'reserva_compañero',
+    db.Column('reservation_id', db.Integer, db.ForeignKey('reservations.id'), primary_key=True),
+    db.Column('compañero_id', db.Integer, db.ForeignKey('compañeros.id'), primary_key=True)
+)
+
 class Reservation(db.Model):
     __tablename__ = 'reservations'
 
@@ -16,3 +23,9 @@ class Reservation(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user = db.relationship("User", back_populates="reservations")
+
+    compañeros = db.relationship(
+        'Compañero',
+        secondary=reserva_compañero,
+        back_populates='reservas'
+    )

@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}Detalles del Alquiler - AlquiloAndo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>{{ rental.property.titulo }}</h1>
+
+  <div class="row">
+    <div class="col-md-6 mb-2">
+      <strong>Localidad:</strong> {{ rental.property.localidad }}
+    </div>
+    <div class="col-md-6 mb-2">
+      <strong>Precio por noche:</strong> ${{ rental.price }}
+    </div>
+    <div class="col-md-6 mb-2">
+      <strong>Capacidad:</strong> {{ rental.property.capacidad }} personas
+    </div>
+    <div class="col-md-6 mb-2">
+      <strong>Habitaciones:</strong> {{ rental.property.habitaciones }}
+    </div>
+  </div>
+</div>
+  <h2 class="mt-4">Reseñas:</h2>
+  {% if reseñas %}
+    <ul>
+      {% for r in reseñas %}
+        <li><strong>{{ r.user.nombre }}:</strong> {{ r.comentario }} ({{ r.puntaje }}/5)</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No hay reseñas aún.</p>
+  {% endif %}
+
+  <div class="mt-4 text-start">
+    <a href="{{ url_for('reservation.alquilar', rental_id=rental.id) }}" class="btn btn-primary">Alquilar</a>
+  </div>
+
+  
+</div>
+{% endblock %}

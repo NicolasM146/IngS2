@@ -53,16 +53,23 @@
   <div class="row g-4">
     {% for alquiler in rentals %}
       <div class="col-md-4">
-        <div class="border p-3 h-100">
-          <h5>{{ alquiler.property.nombre }}</h5>
-          <p><strong>Precio:</strong> ${{ alquiler.price }}</p>
-          <p><strong>Localidad:</strong> {{ alquiler.property.localidad }}</p>
-          <p><strong>Habitaciones:</strong> {{ alquiler.property.habitaciones }}</p>
-          <p><strong>Capacidad:</strong> {{ alquiler.property.capacidad }} personas</p>
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">{{ alquiler.property.nombre }}</h5>
+            <p class="card-text"><strong>Precio:</strong> ${{ alquiler.price }}</p>
+            <p class="card-text"><strong>Localidad:</strong> {{ alquiler.property.localidad }}</p>
+            <p class="card-text"><strong>Habitaciones:</strong> {{ alquiler.property.habitaciones }}</p>
+            <p class="card-text"><strong>Capacidad:</strong> {{ alquiler.property.capacidad }} personas</p>
+            <form action="{{ url_for('reservation.ver_alquiler', rental_id=alquiler.id) }}" method="get">
+              <button type="submit" class="btn btn-secondary">Ver detalles</button>
+            </form>
+          </div>
         </div>
       </div>
     {% endfor %}
   </div>
+{% else %}
+  <p class="mt-5">No se encontraron alquileres con los filtros seleccionados.</p>
 {% endif %}
 
 </div>

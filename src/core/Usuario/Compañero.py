@@ -10,9 +10,12 @@ class Compañero(db.Model):
     estado_civil = db.Column(db.String(50), nullable=True)
     telefono = db.Column(db.String(20), nullable=False)
 
-    # ForeignKey hacia User
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user = db.relationship('User', back_populates='compañeros')
 
-    def __repr__(self):
-        return f'<Compañero {self.nombre} {self.apellido} - DNI: {self.dni}>'
+    # Relación Many-to-Many con Reservation mediante la tabla reserva_compañero
+    reservas = db.relationship(
+        'Reservation',
+        secondary='reserva_compañero',  # Se usa el nombre de la tabla intermedia como string
+        back_populates='compañeros'
+    )
