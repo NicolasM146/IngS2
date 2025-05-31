@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block title %}Mis Alquileres - AlquiloAndo{% endblock %}
+
+{% block content %}
+<div class="content-container">
+
+<h1 class="mb-4">Mis Alquileres</h1>
+
+<form method="GET" action="{{ url_for('reservation.buscar_alquileres') }}">
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <label for="precio_min" class="form-label">Precio mínimo:</label>
+      <input type="number" class="form-control" id="precio_min" name="precio_min" placeholder="Precio mínimo" value="{{ request.args.get('precio_min', '') }}">
+    </div>
+    <div class="col-md-3">
+      <label for="precio_max" class="form-label">Precio máximo:</label>
+      <input type="number" class="form-control" id="precio_max" name="precio_max" placeholder="Precio máximo" value="{{ request.args.get('precio_max', '') }}">
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <label for="fecha_inicio" class="form-label">Fecha inicio:</label>
+      <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ request.args.get('fecha_inicio', '') }}">
+    </div>
+    <div class="col-md-3">
+      <label for="fecha_fin" class="form-label">Fecha fin:</label>
+      <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" value="{{ request.args.get('fecha_fin', '') }}">
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <label for="localidad" class="form-label">Localidad:</label>
+      <input type="text" class="form-control" id="localidad" name="localidad" value="{{ request.args.get('localidad', '') }}">
+    </div>
+    <div class="col-md-3">
+      <label for="habitaciones" class="form-label">Habitaciones:</label>
+      <input type="number" class="form-control" id="habitaciones" name="habitaciones" min="1" value="{{ request.args.get('habitaciones', '') }}">
+    </div>
+    <div class="col-md-3">
+      <label for="cant_personas" class="form-label">Cantidad personas:</label>
+      <input type="number" class="form-control" id="cant_personas" name="cant_personas" min="1" value="{{ request.args.get('cant_personas', '') }}">
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Buscar</button>
+</form>
+
+{% if rentals %}
+  <h2 class="mt-5 mb-4">Resultados</h2>
+  <div class="row g-4">
+    {% for alquiler in rentals %}
+      <div class="col-md-4">
+        <div class="border p-3 h-100">
+          <h5>{{ alquiler.property.nombre }}</h5>
+          <p><strong>Precio:</strong> ${{ alquiler.price }}</p>
+          <p><strong>Localidad:</strong> {{ alquiler.property.localidad }}</p>
+          <p><strong>Habitaciones:</strong> {{ alquiler.property.habitaciones }}</p>
+          <p><strong>Capacidad:</strong> {{ alquiler.property.capacidad }} personas</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+</div>
+{% endblock %}

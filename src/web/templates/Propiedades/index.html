@@ -100,7 +100,7 @@
                        class="btn btn-sm btn-info" title="Ver Inmueble">
                         <i class="fas fa-eye"></i>
                     </a>
-                    {% if current_user.tiene_permiso('properties_update') %}
+                    {% if current_user.tiene_permiso('properties_edit') %}
                     <a href="{{ url_for('property.edit', id=property.id) }}" 
                        class="btn btn-sm btn-warning" title="Actualizar Inmueble">
                         <i class="fas fa-edit"></i>

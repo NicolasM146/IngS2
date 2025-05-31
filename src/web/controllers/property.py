@@ -59,9 +59,6 @@ def show(id):
 @permiso_required('properties_create')
 @login_required
 def create():
-    if not current_user.tiene_permiso('properties_create'):
-        flash("No tienes permisos para crear propiedades", "danger")
-        return redirect(url_for('property.index'))
 
     form = PropertyForm()  # Crea la instancia del formulario
 
@@ -92,9 +89,6 @@ def edit(id):
     property = Property.query.get_or_404(id)
     users = User.query.all()  # O filtrar según tus necesidades
     
-    if not current_user.tiene_permiso('properties_update'):
-        flash("No tienes permisos para editar", "danger")
-        return redirect(url_for('property.index'))
     
     if request.method == "POST":
         property.direccion = request.form.get('direccion')
@@ -113,9 +107,6 @@ def edit(id):
 @permiso_required('properties_destroy')
 @login_required
 def delete(id):
-    if not current_user.tiene_permiso('properties_destroy'):
-        flash("No tienes permisos para eliminar propiedades", "danger")
-        return redirect(url_for('property.index'))
     
     property = Property.query.get_or_404(id)
     db.session.delete(property)

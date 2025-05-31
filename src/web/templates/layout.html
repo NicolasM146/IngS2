@@ -16,6 +16,11 @@
 
         body {
             background-color: white;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         header {
@@ -57,10 +62,22 @@
 
         footer {
             background-color: var(--azul-oscuro);
+            height: 60px;
+            line-height: 60px;
+            text-align: center;
+            margin-top: auto; /* Esto empuja el footer abajo */
+            flex-shrink: 0;
         }
 
         .dropdown-item:hover {
             background-color: var(--gris-claro);
+        }
+
+        /* Para que el contenido principal tenga al menos la altura correcta */
+        .content-container {
+            flex: 1 0 auto;
+            padding-top: 20px;
+            padding-bottom: 20px;
         }
     </style>
 </head>
@@ -86,6 +103,10 @@
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('reservation.buscar_alquileres') }}" style="color: #28a745; font-weight: 600;">
+                        Buscar Alquileres
+                    </a>
+
                     {% if current_user.is_authenticated %}
                         {% if current_user.tiene_permiso('gestion_index') %}
                             <li class="nav-item dropdown">
@@ -146,11 +167,14 @@
         {% endwith %}
     </div>
 
-    {% block content %}
-    <!-- Aquí va el contenido específico de cada página -->
-    {% endblock %}
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="container content-container">
+        {% block content %}
+        <!-- Aquí va el contenido específico de cada página -->
+        {% endblock %}
+    </div>
 
-    <footer class="text-center py-3">
+    <footer>
         <p>&copy; 2025 AlquiloAndo. Todos los derechos reservados.</p>
     </footer>
 
