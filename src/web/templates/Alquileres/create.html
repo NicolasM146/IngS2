@@ -11,7 +11,9 @@
         <select id="property_id" name="property_id" class="form-select" required>
             <option value="" disabled selected>Seleccione un Inmueble</option>
             {% for prop in propiedades %}
-            <option value="{{ prop.id }}">{{ prop.direccion }} - {{ prop.localidad }}</option>
+                {% if not prop.rental  %}
+                <option value="{{ prop.id }}">{{ prop.direccion }} - {{ prop.localidad }}</option>
+                {% endif %}
             {% endfor %}
         </select>
     </div>
