@@ -122,3 +122,34 @@ def delete(id):
     db.session.commit()
     flash("Inmueble eliminado correctamente")
     return redirect(url_for('property.index'))
+
+@bp.route("/<int:id>/deactivate", methods=["POST"])
+@permiso_required('properties_update')
+@login_required
+def deactivate(id):
+    property = Property.query.get_or_404(id)
+
+    if not current_user.tiene_permiso('properties_update'):
+        flash("No tienes permisos para dar de baja propiedades", "danger")
+        return redirect(url_for('property.show', id=id))
+
+    property.estado = 'baja'
+    db.session.commit()
+
+    flash("Baja del inmueble exitosa", "secondary")
+    return redirect(url_for('property.show', id=id))
+
+@bp.route("/<int:id>/reactivate", methods=["POST"])
+@permiso_required('properties_update')
+@login_required
+def reactivate(id):
+    property = Property.query.get_or_404(id)
+    
+    if not current_user.tiene_permiso('properties_update'):
+        flash("No tienes permisos para reactivar propiedades", "danger")
+        return redirect(url_for('property.show', id=id))
+    
+    property.estado = 'disponible'
+    db.session.commit()
+    flash("Inmueble reactivado correctamente", "success")
+    return redirect(url_for('property.show', id=id))
