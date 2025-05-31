@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from src.core.Usuario.Roles_y_Permisos import Permiso
 from flask_login import UserMixin
 from src.core.Inmueble.property import Property
+from src.core.Usuario.Compañero import Compañero
 
 
 class User(UserMixin,db.Model):
@@ -41,6 +42,9 @@ class User(UserMixin,db.Model):
     
     # Relaion con reservation
     reservations = db.relationship('Reservation', back_populates='user', lazy='dynamic')
+
+    compañeros = db.relationship('Compañero', back_populates='user', cascade='all, delete-orphan')
+
 
     def es_mayor_de_edad(self):
         today = date.today()
