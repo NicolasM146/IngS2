@@ -87,12 +87,10 @@ def alquilar(rental_id):
     dias_ocupados = [(r.start_date, r.end_date) for r in reservas]
 
     if request.method == "POST":
-        # Obtener fechas de la reserva
         start_date_str = request.form.get("start_date")
         end_date_str = request.form.get("end_date")
         payment_method_id = current_user.stripe_payment_method_id
 
-        # Validaciones básicas de fechas
         if not start_date_str or not end_date_str:
             flash("Debés elegir fecha de inicio y fin.", "warning")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
@@ -108,37 +106,50 @@ def alquilar(rental_id):
             flash("La fecha de inicio no puede ser posterior a la fecha de fin.", "warning")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
-        # Validar superposición con reservas existentes
         for ocupado_inicio, ocupado_fin in dias_ocupados:
             if start_date <= ocupado_fin and end_date >= ocupado_inicio:
                 flash(f"Las fechas elegidas se superponen con una reserva existente del {ocupado_inicio.strftime('%d/%m/%Y')} al {ocupado_fin.strftime('%d/%m/%Y')}.", "danger")
                 return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
-        # Validar método de pago
         if not payment_method_id or not isinstance(payment_method_id, str):
             flash("Método de pago inválido.", "danger")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
-        # Obtener acompañantes seleccionados
         acompañantes_ids = request.form.getlist("compañeros")
         acompañantes_seleccionados = Compañero.query.filter(
             Compañero.id.in_(acompañantes_ids), Compañero.user_id == current_user.id
         ).all()
 
-        # Procesar nuevos acompañantes
         nuevos_nombres = request.form.getlist("nuevo_nombre[]")
         nuevos_apellidos = request.form.getlist("nuevo_apellido[]")
         nuevos_dnis = request.form.getlist("nuevo_dni[]")
         nuevos_telefonos = request.form.getlist("nuevo_telefono[]")
+        nuevos_nacimientos = request.form.getlist("nuevo_nacimiento[]")  # Debe venir del formulario
+        tutor = request.form.get("nuevo_tutor[]")  # Campo para indicar si es tutor
 
         nuevos_acompañantes = []
-        for nombre, apellido, dni, telefono in zip(nuevos_nombres, nuevos_apellidos, nuevos_dnis, nuevos_telefonos):
+        for nombre, apellido, dni, telefono, nacimiento in zip(nuevos_nombres, nuevos_apellidos, nuevos_dnis, nuevos_telefonos, nuevos_nacimientos):
             nombre = nombre.strip()
             apellido = apellido.strip()
             dni = dni.strip()
             telefono = telefono.strip()
+            nacimiento = nacimiento.strip()
+            tutor = tutor.strip()
+            
+            
 
-            if nombre and apellido and dni:
+            if nombre and apellido and dni and nacimiento:
+                try:
+                    fecha_nacimiento = datetime.strptime(nacimiento, "%Y-%m-%d").date()
+                    hoy = datetime.today().date()
+                    edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
+                    if edad < 18 and tutor is None:
+                        flash(f"El acompañante {nombre} {apellido} es menor de edad ({edad} años).", "warning")
+                        return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                except ValueError:
+                    flash(f"Fecha de nacimiento inválida para {nombre} {apellido}.", "danger")
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+
                 existente = Compañero.query.filter_by(dni=dni, user_id=current_user.id).first()
                 if existente:
                     nuevos_acompañantes.append(existente)
@@ -148,14 +159,14 @@ def alquilar(rental_id):
                         apellido=apellido,
                         dni=dni,
                         telefono=telefono,
-                        user_id=current_user.id
+                        user_id=current_user.id,
+                        fechaNacimiento=fecha_nacimiento
                     )
                     db.session.add(nuevo)
                     nuevos_acompañantes.append(nuevo)
 
         db.session.commit()
 
-        # Crear la reserva en BD
         nueva_reserva = Reservation(
             start_date=start_date,
             end_date=end_date,
@@ -167,9 +178,7 @@ def alquilar(rental_id):
         db.session.add(nueva_reserva)
         db.session.commit()
 
-        # Procesar pago con Stripe
         try:
-            # Buscar o crear cliente Stripe
             clientes = stripe.Customer.list(email=current_user.email).data
             if clientes:
                 cliente = clientes[0]
@@ -179,45 +188,40 @@ def alquilar(rental_id):
                     name=f"{current_user.nombre} {current_user.apellido}"
                 )
 
-            # Intentar adjuntar el método de pago
             try:
                 stripe.PaymentMethod.attach(
                     payment_method_id,
                     customer=cliente.id,
                 )
             except stripe.error.InvalidRequestError:
-                # Ya estaba adjunto
                 pass
 
-            # Establecer método de pago predeterminado
             stripe.Customer.modify(
                 cliente.id,
                 invoice_settings={"default_payment_method": payment_method_id},
             )
 
-            # Ca
-            cotizacion_usd = 1000  # Ejemplo, 1 USD = 1000 ARS
-            precio_ars = rental.price  # 5000 ARS
-            precio_usd = precio_ars / cotizacion_usd  # 5 USD
+            cotizacion_usd = 1000
+            precio_ars = rental.price
+            precio_usd = precio_ars / cotizacion_usd
 
             noches = (end_date - start_date).days + 1
             total_a_pagar = int(precio_usd * noches * 100)
-            # Crear y confirmar PaymentIntent
+
             payment_intent = stripe.PaymentIntent.create(
-            amount=total_a_pagar,
-            currency="usd",  # o "usd" si querés, pero usá ARS para pesos argentinos
-            customer=cliente.id,
-            payment_method=payment_method_id,
-            off_session=True,
-            confirm=True,
-            description=f"Reserva inmueble {rental.id} - Usuario {current_user.id}",
+                amount=total_a_pagar,
+                currency="usd",
+                customer=cliente.id,
+                payment_method=payment_method_id,
+                off_session=True,
+                confirm=True,
+                description=f"Reserva inmueble {rental.id} - Usuario {current_user.id}",
             )
 
             flash("Reserva y pago confirmados con éxito.", "success")
             return redirect(url_for("home"))
 
         except stripe.error.CardError as e:
-            # Eliminar reserva para mantener consistencia si falla el pago
             db.session.delete(nueva_reserva)
             db.session.commit()
             flash(f"Error en el pago: {e.user_message}", "danger")
@@ -232,12 +236,11 @@ def alquilar(rental_id):
     return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
 
-
-@bp.route("/eliminar-compañero/<int:id>", methods=["POST"])
+@bp.route("/eliminar-compañero/<int:id>/<int:rental_id>", methods=["POST"])
 @login_required
-def eliminar_compañero(id):
+def eliminar_compañero(id, rental_id):
     compañero = Compañero.query.filter_by(id=id, user_id=current_user.id).first_or_404()
     db.session.delete(compañero)
     db.session.commit()
     flash("Acompañante eliminado.", "info")
-    return redirect(request.referrer or url_for('reservation.alquilar'))
+    return redirect(url_for("reservation.alquilar", rental_id=rental_id))
