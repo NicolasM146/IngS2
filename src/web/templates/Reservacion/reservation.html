@@ -55,7 +55,16 @@
         </div>
         <div class="row mb-3">
           <div class="col-md-4">
-            <input type="date" class="form-control" name="nuevo_nacimiento[]" required>
+            <input type="date" class="form-control" name="nuevo_nacimiento[]">
+          </div>
+            <div class="col-md-3">
+            <label>Estado Civil</label>
+            <select class="form-control" name="nuevo_estado_civil[]">
+            <option value="" selected disabled>Seleccione</option>
+            <option value="soltero/a">Soltero/a</option>
+            <option value="casado/a">Casado/a</option>
+            <option value="viudo/a">Viudo/a</option>
+          </select>
           </div>
           <div class="col-md-6">
             <input type="text" class="form-control" name="nuevo_tutor[]" placeholder="Tutor (si es menor)" autocomplete="off">
@@ -105,6 +114,16 @@
       <div class="row mb-3">
         <div class="col-md-4">
             <input type="date" class="form-control" name="nuevo_nacimiento[]" required>
+        </div>
+        </div>
+          <div class="col-md-3">
+          <label>Estado Civil</label>
+          <select class="form-control" name="nuevo_estado_civil[]">
+          <option value="" selected disabled>Seleccione</option>
+          <option value="soltero/a">Soltero/a</option>
+          <option value="casado/a">Casado/a</option>
+          <option value="viudo/a">Viudo/a</option>
+          </select>
         </div>
         <div class="col-md-6">
           <input type="text" class="form-control" name="nuevo_tutor[]" placeholder="Tutor (si es menor)" autocomplete="off">

@@ -14,7 +14,7 @@ class Compañero(db.Model):
     
     tutor = db.Column(db.String(250), nullable=True)  # nuevo campo tutor
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     user = db.relationship('User', back_populates='compañeros')
 
     reservas = db.relationship(

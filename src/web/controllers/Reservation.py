@@ -115,35 +115,46 @@ def alquilar(rental_id):
             flash("Método de pago inválido.", "danger")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
-        acompañantes_ids = request.form.getlist("compañeros")
+        acompañantes_ids = request.form.getlist("compañeros[]")
+        acompañantes_ids = list(map(int, acompañantes_ids))  # 👈 esta línea es clave
+
         acompañantes_seleccionados = Compañero.query.filter(
-            Compañero.id.in_(acompañantes_ids), Compañero.user_id == current_user.id
-        ).all()
+        Compañero.id.in_(acompañantes_ids), Compañero.user_id == current_user.id
+            ).all()
 
         nuevos_nombres = request.form.getlist("nuevo_nombre[]")
         nuevos_apellidos = request.form.getlist("nuevo_apellido[]")
         nuevos_dnis = request.form.getlist("nuevo_dni[]")
         nuevos_telefonos = request.form.getlist("nuevo_telefono[]")
         nuevos_nacimientos = request.form.getlist("nuevo_nacimiento[]")  # Debe venir del formulario
-        tutor = request.form.get("nuevo_tutor[]")  # Campo para indicar si es tutor
+        nuevos_tutores = request.form.getlist("nuevo_tutor[]")
+        nuevos_estados_civiles = request.form.getlist("nuevo_estado_civil[]")
 
         nuevos_acompañantes = []
-        for nombre, apellido, dni, telefono, nacimiento in zip(nuevos_nombres, nuevos_apellidos, nuevos_dnis, nuevos_telefonos, nuevos_nacimientos):
+        for nombre, apellido, dni, telefono, nacimiento,tutor,estado_civil in zip(nuevos_nombres, nuevos_apellidos, nuevos_dnis, nuevos_telefonos, nuevos_nacimientos,nuevos_tutores, nuevos_estados_civiles):
             nombre = nombre.strip()
             apellido = apellido.strip()
             dni = dni.strip()
             telefono = telefono.strip()
             nacimiento = nacimiento.strip()
             tutor = tutor.strip()
+            estado_civil = estado_civil.strip()
             
             
 
-            if nombre and apellido and dni and nacimiento:
+            if nombre and apellido and dni and telefono and estado_civil:
+                if dni and len(dni) < 7:
+                    flash(f"DNI inválido para {nombre} {apellido}. Debe tener al menos 7 caracteres.", "warning")
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                if not nacimiento:
+                    flash(f"Fecha de nacimiento requerida para {nombre} {apellido}.", "warning")
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+        
                 try:
                     fecha_nacimiento = datetime.strptime(nacimiento, "%Y-%m-%d").date()
                     hoy = datetime.today().date()
                     edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
-                    if edad < 18 and tutor is None:
+                    if edad < 18 and not tutor:
                         flash(f"El acompañante {nombre} {apellido} es menor de edad ({edad} años).", "warning")
                         return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
                 except ValueError:
@@ -160,7 +171,9 @@ def alquilar(rental_id):
                         dni=dni,
                         telefono=telefono,
                         user_id=current_user.id,
-                        fechaNacimiento=fecha_nacimiento
+                        fechaNacimiento=fecha_nacimiento,
+                        estado_civil=estado_civil,
+                        tutor=tutor if tutor else None  # Si es menor, asignar tutor
                     )
                     db.session.add(nuevo)
                     nuevos_acompañantes.append(nuevo)
@@ -240,7 +253,14 @@ def alquilar(rental_id):
 @login_required
 def eliminar_compañero(id, rental_id):
     compañero = Compañero.query.filter_by(id=id, user_id=current_user.id).first_or_404()
-    db.session.delete(compañero)
-    db.session.commit()
-    flash("Acompañante eliminado.", "info")
+
+    if len(compañero.reservas) > 0:
+        compañero.user_id = None
+        db.session.commit()
+        flash("El acompañante fue desvinculado de tu cuenta pero conserva historial de reservas.", "info")
+    else:
+        db.session.delete(compañero)
+        db.session.commit()
+        flash("Acompañante eliminado.", "info")
+
     return redirect(url_for("reservation.alquilar", rental_id=rental_id))
