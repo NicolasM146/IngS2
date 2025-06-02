@@ -17,7 +17,7 @@ class PropertyForm(FlaskForm):
     ], validators=[DataRequired()])
     descripcion = TextAreaField('Descripción')
     usuario_id = SelectField(
-        'Propietario',
+        'Encargado',
         coerce=int,
         choices=[],
         validators=[DataRequired()],

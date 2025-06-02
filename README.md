@@ -17,6 +17,9 @@ Flask run
 Comando para resetear la base de datos
 Flask reset-db
 
+Comando para correr flask en modo debugger
+$env:FLASK_DEBUG = "1"
+
 # Todo esto en CMDR
 
 Para ver donde estas parado en cmdr y ver todas las ramas
