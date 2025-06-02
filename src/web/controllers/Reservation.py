@@ -6,6 +6,7 @@ from flask_login import login_required, current_user
 from src.core.database import db
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, flash, redirect, url_for
+from datetime import date
 
 import os
 from dotenv import load_dotenv
@@ -85,7 +86,7 @@ def alquilar(rental_id):
     compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
     reservas = Reservation.query.filter_by(rental_id=rental_id).all()
     dias_ocupados = [(r.start_date, r.end_date) for r in reservas]
-
+    hoy = date.today().isoformat()  # formato 'YYYY-MM-DD'
     if request.method == "POST":
         start_date_str = request.form.get("start_date")
         end_date_str = request.form.get("end_date")
@@ -246,7 +247,7 @@ def alquilar(rental_id):
             flash(f"Error inesperado: {str(e)}", "danger")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
-    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
 
 @bp.route("/eliminar-compañero/<int:id>/<int:rental_id>", methods=["POST"])
