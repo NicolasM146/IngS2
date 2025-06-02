@@ -2,6 +2,7 @@
 from src.core.Alquiler.Rental import Rental
 from src.core.Reserva.reservation import Reservation
 from src.core.Usuario.Compañero import Compañero
+from src.core.Inmueble.property import Property
 from flask_login import login_required, current_user
 from src.core.database import db
 from datetime import datetime, timedelta
@@ -31,43 +32,36 @@ def buscar_alquileres():
     habitaciones = request.args.get("habitaciones", type=int)
     cant_personas = request.args.get("cant_personas", type=int)
 
-    query = Rental.query.filter_by(is_active=True)
+    query = Rental.query.join(Rental.property).filter(Rental.is_active == True)
 
-    # Filtro precio
     if precio_min is not None:
         query = query.filter(Rental.price >= precio_min)
 
     if precio_max is not None:
         query = query.filter(Rental.price <= precio_max)
 
-    # Filtro fechas: excluir alquileres reservados en ese rango
     if fecha_inicio and fecha_fin:
         try:
             fi = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
             ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
 
-            # Subconsulta: reservas que se solapan con las fechas dadas
             subquery = db.session.query(Reservation.rental_id).filter(
                 Reservation.start_date <= ff,
                 Reservation.end_date >= fi
             ).subquery()
 
-            # Filtrar alquileres que NO están en esas reservas (disponibles)
             query = query.filter(~Rental.id.in_(subquery))
         except ValueError:
             pass
 
-    # Filtro localidad
     if localidad:
-        query = query.filter(Rental.property.localidad.ilike(f"%{localidad}%"))
+        query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
 
-    # Filtro habitaciones
     if habitaciones:
-        query = query.filter(Rental.property.habitaciones == habitaciones)
+        query = query.filter(Property.habitaciones == habitaciones)
 
-    # Filtro cantidad de personas
     if cant_personas:
-        query = query.filter(Rental.property.capacidad >= cant_personas)
+        query = query.filter(Property.capacidad == cant_personas)
 
     alquileres = query.all()
     return render_template("Reservacion/rentals.html", rentals=alquileres)
