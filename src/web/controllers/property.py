@@ -64,6 +64,15 @@ def create():
 
     if form.validate_on_submit():
         # Lógica para guardar la propiedad
+        direccion = form.direccion.data.strip()
+        localidad = form.localidad.data.strip()
+
+        # Validamos si ya existe una propiedad con esa dirección y localidad
+        propiedad_existente = Property.query.filter_by(direccion=direccion, localidad=localidad).first()
+
+        if propiedad_existente:
+            flash('Ya existe una propiedad registrada con esa dirección y localidad.', 'error')
+            return render_template("Propiedades/create.html", form=form)
         
         new_property = Property(
             direccion=form.direccion.data,

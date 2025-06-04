@@ -45,6 +45,11 @@ def register():
 
         dni_raw = data_usuario["dni"]
         dni_limpio = dni_raw.replace(".", "").strip()
+        
+        existing_user = User.query.filter_by(dni=data_usuario["dni"]).first()
+        if existing_user:
+            flash("Ya existe un usuario registrado con ese DNI.", "error")
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
 
         if len(dni_limpio) != 8:
