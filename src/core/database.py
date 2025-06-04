@@ -25,11 +25,10 @@ def reset():
     from src.core.Alquiler.Rental import Rental
     from src.core.Resenia.Review import Review
     from src.core.Reserva.reservation import Reservation
+    from src.core.Inmueble.property_photo import PropertyPhoto
 
     print("Eliminando base de datos con CASCADE...")
-    with db.engine.connect() as connection:
-        connection.execute(text("DROP SCHEMA public CASCADE"))
-        connection.execute(text("CREATE SCHEMA public"))
+    db.drop_all()
 
     print("Creando base de datos...")
     db.create_all()
