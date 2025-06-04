@@ -86,9 +86,6 @@ def alquilar(rental_id):
         end_date_str = request.form.get("end_date")
         payment_method_id = current_user.stripe_payment_method_id
 
-        if not start_date_str or not end_date_str:
-            flash("Debés elegir fecha de inicio y fin.", "warning")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
@@ -226,19 +223,19 @@ def alquilar(rental_id):
                 description=f"Reserva inmueble {rental.id} - Usuario {current_user.id}",
             )
 
-            flash("Reserva y pago confirmados con éxito.", "success")
+            flash("Reserva Exitosa", "success")
             return redirect(url_for("home"))
 
         except stripe.error.CardError as e:
             db.session.delete(nueva_reserva)
             db.session.commit()
-            flash(f"Error en el pago: {e.user_message}", "danger")
+            flash("Error en el pago, no se realizo la reserva", "danger")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
         except Exception as e:
             db.session.delete(nueva_reserva)
             db.session.commit()
-            flash(f"Error inesperado: {str(e)}", "danger")
+            flash("Error en el pago, no se realizo la reserva", "danger")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
     return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)

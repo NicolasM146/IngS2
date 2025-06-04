@@ -4,6 +4,8 @@ from src.core.database import db
 from flask import flash, redirect, url_for
 from sqlalchemy.orm import Session
 from datetime import datetime
+from flask_login import login_required, current_user
+from src.web.handlers.auth import permiso_required
 
 bp = Blueprint("users", __name__, url_prefix="/usuarios")
 

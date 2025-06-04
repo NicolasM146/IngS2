@@ -7,6 +7,9 @@ from flask import request, redirect, url_for, flash
 from datetime import datetime
 from sqlalchemy.orm import aliased
 from sqlalchemy import or_
+from flask_login import login_required, current_user
+from src.web.handlers.auth import permiso_required
+
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
 
