@@ -10,6 +10,8 @@ bp = Blueprint("users", __name__, url_prefix="/usuarios")
 session = Session()
 
 @bp.route('/')
+@permiso_required('user_index')
+@login_required
 def index():
     page = request.args.get('page', 1, type=int)
     per_page = 10

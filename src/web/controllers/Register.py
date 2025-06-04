@@ -13,8 +13,7 @@ bp = Blueprint("register", __name__, url_prefix="/register")
 def es_nombre_valido(nombre):
     return bool(re.fullmatch(r"[A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]+", nombre))
 
-def es_telefono_valido(telefono):
-    return bool(re.fullmatch(r"\d{6,15}", telefono))
+
 
 def es_email_valido(email):
     return bool(re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email))
@@ -37,9 +36,7 @@ def register():
         payment_method_id = request.form.get("payment_method_id")
 
         rol_cliente = Rol.query.filter_by(nombre="client").first()
-        if not rol_cliente:
-            flash("El rol 'client' no está definido en la base de datos.", "error")
-            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
+
 
         # Validaciones usuario
         if not es_nombre_valido(data_usuario["nombre"]):
@@ -49,19 +46,12 @@ def register():
         dni_raw = data_usuario["dni"]
         dni_limpio = dni_raw.replace(".", "").strip()
 
-        if not dni_limpio.isdigit():
-            flash("El DNI debe contener solo números (puede incluir puntos opcionalmente).", "error")
-            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if len(dni_limpio) != 8:
             flash("El DNI debe tener exactamente 8 dígitos.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         data_usuario["dni"] = dni_limpio
-
-        if not es_telefono_valido(data_usuario["telefono"]):
-            flash("El teléfono debe contener solo números (mínimo 6 dígitos).", "error")
-            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if not es_email_valido(data_usuario["email"]):
             flash("El email no tiene un formato válido.", "error")
@@ -71,9 +61,6 @@ def register():
             flash("El email ya está registrado.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
-        if User.query.filter_by(username=data_usuario["username"]).first():
-            flash("El nombre de usuario ya está en uso.", "error")
-            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if len(data_usuario["password"]) < 6:
             flash("La contraseña debe tener al menos 6 caracteres.", "error")

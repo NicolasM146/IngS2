@@ -35,8 +35,8 @@
                     <input type="text" name="nombre" value="{{ datos.nombre if datos else '' }}" required class="w-full mt-1 p-2 border rounded" autocomplete="given-name" />
                 </div>
                 <div>
-                    <label class="block text-gray-600 text-sm">DNI:</label>
-                    <input type="text" name="dni" value="{{ datos.dni if datos else '' }}" required class="w-full mt-1 p-2 border rounded" autocomplete="off" />
+                    <label class="block text-gray-600 text-sm">Documento Nacional:</label>
+                    <input type="number" name="dni" value="{{ datos.dni if datos else '' }}" required class="w-full mt-1 p-2 border rounded" autocomplete="off" />
                 </div>
                 <div>
                     <label class="block text-gray-600 text-sm">Nacionalidad:</label>
@@ -54,7 +54,7 @@
                 </div>
                 <div>
                     <label class="block text-gray-600 text-sm">Teléfono:</label>
-                    <input type="text" name="telefono" value="{{ datos.telefono if datos else '' }}" required class="w-full mt-1 p-2 border rounded" autocomplete="tel" />
+                    <input type="number" name="telefono" value="{{ datos.telefono if datos else '' }}" required class="w-full mt-1 p-2 border rounded" autocomplete="tel" />
                 </div>
                 <div>
                     <label class="block text-gray-600 text-sm">Fecha de Nacimiento:</label>

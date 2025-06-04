@@ -13,6 +13,7 @@ bp = Blueprint('rental', __name__, url_prefix='/rentals')
 #se agrego el filtrado en la ruta index
 
 @bp.route('/', methods=['GET'])
+@permiso_required('rentals_index')
 @login_required
 def index():
     query = Rental.query.join(Property)
@@ -37,6 +38,7 @@ def index():
     return render_template("Alquileres/index.html", alquileres=alquileres)
 
 @bp.route('/create', methods=['GET', 'POST'])
+@permiso_required('rentals_create')
 @login_required
 def create():
     # Alias para Rental
@@ -93,6 +95,7 @@ def create():
     return render_template("Alquileres/create.html", propiedades=propiedades)
 
 @bp.route('/delete/<int:rental_id>', methods=['POST'])
+@permiso_required('rentals_destroy')
 @login_required
 def delete(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
@@ -115,6 +118,7 @@ def delete(rental_id):
 
 # Agrega esta nueva ruta al final del archivo rental.py
 @bp.route('/edit/<int:rental_id>', methods=['GET', 'POST'])
+@permiso_required('rentals_edit')
 @login_required
 def edit(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
@@ -148,6 +152,7 @@ def edit(rental_id):
     return render_template("Alquileres/edit.html", alquiler=alquiler)
 
 @bp.route('/<int:rental_id>', methods=['GET'])
+@permiso_required('rentals_show')
 @login_required
 def show(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)

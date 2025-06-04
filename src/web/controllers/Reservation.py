@@ -245,6 +245,7 @@ def alquilar(rental_id):
 
 
 @bp.route("/eliminar-compañero/<int:id>/<int:rental_id>", methods=["POST"])
+
 @login_required
 def eliminar_compañero(id, rental_id):
     compañero = Compañero.query.filter_by(id=id, user_id=current_user.id).first_or_404()
