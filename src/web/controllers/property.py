@@ -192,7 +192,7 @@ def edit(id):
         for file_storage in new_photo_files_from_form:
             if file_storage and file_storage.filename:
                 if not PropertyPhoto.allowed_file(file_storage.filename):
-                    flash(f'El archivo "{file_storage.filename}" tiene una extensión no permitida. Las nuevas fotos no se procesarán.', 'warning')
+                    flash(f'El archivo tiene una extensión no permitida. Se guardaron los cambios pero las nuevas fotos no se procesarán.', 'warning')
                     invalid_file_extension_found = True
                     break
                 valid_new_photo_files_to_upload.append(file_storage)
@@ -212,7 +212,7 @@ def edit(id):
             return redirect(url_for('property.edit', id=id))
 
         if projected_final_photo_count > 10:
-            flash(f'Error: No puede tener más de 10 fotos (se intentarían {projected_final_photo_count}).', 'danger')
+            flash(f'Error: No puede tener más de 10 fotos.', 'danger')
             return redirect(url_for('property.edit', id=id))
 
         photos_deleted_from_session = []

@@ -37,7 +37,6 @@
             <th>ID</th>
             <th>Fecha de creación</th>
             <th>Precio</th>
-            <th>Descripción</th>
             <th>Dirección</th>
             <th>Localidad</th>
             <th>Activo</th>
@@ -50,7 +49,6 @@
             <td>{{ alquiler.id }}</td>
             <td>{{ alquiler.creation_date.strftime('%d/%m/%Y') if alquiler.creation_date else 'N/D' }}</td>
             <td>${{ alquiler.price | round(2) }}</td>
-            <td>{{ alquiler.description or 'Sin descripción' }}</td>
             <td>{{ alquiler.property.direccion }}</td>
             <td>{{ alquiler.property.localidad }}</td>
             <td>{{ 'Sí' if alquiler.is_active else 'No' }}</td>
@@ -58,9 +56,6 @@
                 {# En la columna de Acciones, agrega este botón antes del de borrar #}
             <td>
                 <a href="{{ url_for('rental.show', rental_id=alquiler.id) }}" class="btn btn-info btn-sm">Ver</a>
-                <a href="{{ url_for('rental.edit', rental_id=alquiler.id) }}" class="btn btn-primary btn-sm">Editar</a>
-                <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" style="display:inline;">
-                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este alquiler?');">Borrar</button>
                 </form>
             </td>
         </tr>
