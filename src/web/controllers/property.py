@@ -16,9 +16,12 @@ bp = Blueprint("property", __name__, url_prefix="/property")
 @login_required
 def index():
     form = PropertySearchForm()
-    query = Property.query
-    
+    properties = []
+    no_results = False
+    busqueda_realizada = False
+
     if form.validate_on_submit():
+        query = Property.query
         if form.direccion.data:
             query = query.filter(Property.direccion.ilike(f'%{form.direccion.data}%'))
         if form.localidad.data:
@@ -29,16 +32,24 @@ def index():
             query = query.filter(Property.capacidad == int(form.capacidad.data))
         if form.habitaciones.data:
             query = query.filter(Property.habitaciones == int(form.habitaciones.data))
-    
-    properties = query.all()
-    no_results = len(properties) == 0
-    
+        if form.publicado.data == 'si':
+            query = query.filter(Property.rental != None)
+        elif form.publicado.data == 'no':
+            query = query.filter(Property.rental == None)
+
+        
+        properties = query.all()
+        no_results = len(properties) == 0
+        busqueda_realizada = True
+
     return render_template(
         "Propiedades/index.html",
         properties=properties,
         no_results=no_results,
+        busqueda_realizada=busqueda_realizada,
         form=form
     )
+
     
 @bp.route("/<int:id>")
 @permiso_required('properties_show')

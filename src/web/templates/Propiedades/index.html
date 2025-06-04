@@ -3,8 +3,8 @@
 {% block title %}Inmuebles{% endblock %}
 
 {% block head %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='properties/index.css') }}">
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='properties/index.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -35,6 +35,10 @@
             {{ form.habitaciones.label(class="form-label") }}
             {{ form.habitaciones(class="form-control") }}
         </div>
+        <div class="col-md-2">
+            {{ form.publicado.label(class="form-label") }}
+            {{ form.publicado(class="form-select") }}
+        </div>
     </div>
     <div class="mt-3">
         <button type="submit" class="btn btn-primary">
@@ -52,8 +56,9 @@
 </div>
 {% endif %}
 
-<!-- Mensaje si no hay Inmuebles -->
+{% if busqueda_realizada %}
 {% if no_results %}
+<!-- Mensaje si no hay Inmuebles -->
 <div class="alert alert-info">
     No se encontraron Inmuebles registrados.
 </div>
@@ -88,8 +93,8 @@
                 </td>
                 <td>{{ property.user.nombre }}</td>
                 <td>
-                    <a href="{{ url_for('property.show', id=property.id) }}" 
-                       class="btn btn-sm btn-info" title="Ver Inmueble">
+                    <a href="{{ url_for('property.show', id=property.id) }}" class="btn btn-sm btn-info"
+                        title="Ver Inmueble">
                         <i class="fas fa-eye"></i>
                     </a>
                 </td>
@@ -98,6 +103,7 @@
         </tbody>
     </table>
 </div>
+{% endif %}
 {% endif %}
 
 <!-- Botón de volver -->

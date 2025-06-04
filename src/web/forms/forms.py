@@ -79,4 +79,13 @@ class PropertySearchForm(FlaskForm):
         ('5', '5 habitaciones')
     ], validators=[Optional()])
     
+    publicado = SelectField(
+        'Alquiler',
+        choices=[
+            ('', '---'),
+            ('si', 'Publicado para alquilar'),
+            ('no', 'Sin publicar para alquilar')
+        ]
+    )
+    
     buscar = SubmitField('Buscar', render_kw={"class": "btn btn-primary"})
