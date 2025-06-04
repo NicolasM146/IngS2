@@ -92,19 +92,6 @@
                        class="btn btn-sm btn-info" title="Ver Inmueble">
                         <i class="fas fa-eye"></i>
                     </a>
-                    {% if current_user.tiene_permiso('properties_edit') %}
-                    <a href="{{ url_for('property.edit', id=property.id) }}" 
-                       class="btn btn-sm btn-warning" title="Actualizar Inmueble">
-                        <i class="fas fa-edit"></i>
-                    </a>
-                    {% endif %}
-                    {% if current_user.tiene_permiso('properties_destroy') %}
-                    <form action="{{ url_for('property.delete', id=property.id) }}" method="POST" style="display: inline;">
-                        <button type="submit" class="btn btn-sm btn-danger" title="Eliminar Inmueble" onclick="return confirm('¿Eliminar el Inmueble con ID = {{property.id}} permanentemente?');">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
-                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
