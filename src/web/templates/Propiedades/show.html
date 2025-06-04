@@ -19,12 +19,35 @@
                 </span>
             </div>
 
-            <!-- Galería de imágenes (puedes agregarla después) -->
-            <div class="property-gallery mb-4 bg-light" style="height: 300px;">
-                <div class="d-flex justify-content-center align-items-center h-100">
-                    <i class="fas fa-home fa-4x text-secondary"></i>
+            <!-- Galería de imágenes  -->
+            <div class="property-gallery mb-4">
+                <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+                        {% for photo in property.photos %}
+                        <button type="button" data-bs-target="#propertyCarousel" 
+                                data-bs-slide-to="{{ loop.index0 }}" 
+                                {% if loop.first %}class="active" aria-current="true"{% endif %}
+                                aria-label="Slide {{ loop.index }}"></button>
+                        {% endfor %}
+                    </div>
+                    <div class="carousel-inner rounded">
+                        {% for photo in property.photos %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ url_for('static', filename='uploads/properties/' + photo.filename) }}" 
+                                class="d-block w-100" alt="Foto del inmueble" style="height: 400px; object-fit: cover;">
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
                 </div>
-            </div>
+</div>
 
             <!-- Detalles principales -->
             <div class="card mb-4">

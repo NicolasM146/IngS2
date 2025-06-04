@@ -11,6 +11,9 @@ class Config(object):
     TESTING = False
     SESSION_TYPE = "filesystem"
     
+    #16MB máximo por upload de fotos
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
+
     # Configuración de Stripe usando variables del .env
     STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
     STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
