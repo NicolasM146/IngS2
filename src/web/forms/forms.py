@@ -80,11 +80,11 @@ class PropertySearchForm(FlaskForm):
     ], validators=[Optional()])
     
     publicado = SelectField(
-        'Alquiler',
+        'Publicado para alquilar',
         choices=[
-            ('', '---'),
-            ('si', 'Publicado para alquilar'),
-            ('no', 'Sin publicar para alquilar')
+            ('', 'si/no'),
+            ('si', 'si'),
+            ('no', 'no')
         ]
     )
     
