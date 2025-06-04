@@ -3,7 +3,7 @@ from wtforms import StringField, IntegerField, TextAreaField, SelectField, Boole
 from wtforms.validators import DataRequired
 from src.core.Usuario.User import User
 from wtforms.validators import Optional, NumberRange
-
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 # Formualrio para registrar o actualizar un Inmueble
 class PropertyForm(FlaskForm):
@@ -23,7 +23,14 @@ class PropertyForm(FlaskForm):
         validators=[DataRequired()],
         description="Seleccione el dueño del inmueble"
     )
+    #Formulario para subir fotos de un Inmueble   
     
+    photos = FileField('Fotos de la propiedad', validators=[
+        FileRequired(message='Debe cargar al menos una foto'),
+        FileAllowed(['jpg', 'png', 'jpeg', 'gif'], 'Solo imágenes (jpg, png, jpeg, gif)')
+    ], render_kw={"multiple": True})
+
+ 
     def __init__(self, *args, **kwargs):
         super(PropertyForm, self).__init__(*args, **kwargs)
         # Carga usuarios activos no bloqueados y con email confirmado
@@ -34,7 +41,9 @@ class PropertyForm(FlaskForm):
                 email_confirmed=True
             ).order_by(User.nombre).all()
         ]
-        
+
+
+
 # Formulario para filtrar en la Busqueda de Inmuebles
 class PropertySearchForm(FlaskForm):
     # Campos de texto

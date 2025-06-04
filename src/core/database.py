@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 
 db = SQLAlchemy()
 
@@ -25,8 +26,11 @@ def reset():
     from src.core.Resenia.Review import Review
     from src.core.Reserva.reservation import Reservation
 
-    print("Eliminando base de datos...")
-    db.drop_all()
+    print("Eliminando base de datos con CASCADE...")
+    with db.engine.connect() as connection:
+        connection.execute(text("DROP SCHEMA public CASCADE"))
+        connection.execute(text("CREATE SCHEMA public"))
+
     print("Creando base de datos...")
     db.create_all()
 

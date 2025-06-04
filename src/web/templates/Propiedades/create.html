@@ -16,7 +16,7 @@
                     <h2 class="mb-0"><i class="fas fa-home me-2"></i>Cargar Inmueble</h2>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('property.create') }}">
+                    <form method="POST" action="{{ url_for('property.create') }}" enctype="multipart/form-data">
                         {{ form.hidden_tag() }}
 
                         <!-- Sección Inmueble -->
@@ -99,6 +99,16 @@
                             {% endfor %}
                         </div>
 
+                        <!-- Sección Fotos -->
+                        <h4 class="mb-3 mt-4 border-bottom pb-2">Fotos</h4>
+                        <div class="mb-3">
+                            <label for="photos" class="form-label">Subir fotos (1-10 imágenes)</label>
+                            <input class="form-control" type="file" id="photos" name="photos" multiple required>
+                            <div class="form-text">La primera imagen será la imagen principal del inmueble.</div>
+                            {% for error in form.photos.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
                         <!-- Botones -->
                         <div class="d-flex justify-content-between mt-4">
                             <a href="{{ url_for('property.index') }}" class="btn btn-secondary">

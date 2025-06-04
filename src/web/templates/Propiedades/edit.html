@@ -16,7 +16,7 @@
                     <h2 class="mb-0"><i class="fas fa-edit me-2"></i>Actualizar Inmueble</h2>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ url_for('property.edit', id=property.id) }}">
+                    <form method="POST" action="{{ url_for('property.edit', id=property.id) }}" enctype="multipart/form-data">
                         <!-- Sección Encargado (modificable) -->
                         <h4 class="mb-3 border-bottom pb-2">Encargado</h4>
                         <div class="row g-3">
@@ -74,6 +74,9 @@
                                     <select class="form-select" id="estado" name="estado" required>
                                         <option value="disponible" {% if property.estado == 'disponible' %}selected{% endif %}>Disponible</option>
                                         <option value="ocupado" {% if property.estado == 'ocupado' %}selected{% endif %}>Ocupado</option>
+                                        {# Si una propiedad está en 'baja', se maneja con deactivate/reactivate, #}
+                                        {# este select no permite cambiarla directamente a/desde 'baja'. Se podría añadir si fuera necesario. #}
+                                        {# <option value="baja" {% if property.estado == 'baja' %}selected{% endif %}>Baja</option> #}
                                     </select>
                                     <label for="estado">Estado</label>
                                 </div>
@@ -87,7 +90,56 @@
                                       style="height: 120px" required>{{ property.descripcion }}</textarea>
                             <label for="descripcion">Descripción</label>
                         </div>
+                        
+                        <h4 class="mb-3 mt-4 border-bottom pb-2">Fotos</h4>
 
+                        <!-- Fotos existentes -->
+                        <div class="mb-4">
+                            <h5>Fotos actuales</h5>
+                            {% if property.photos %}
+                            <div class="row g-3 mb-3">
+                                {% for photo in property.photos %}
+                                <div class="col-md-4">
+                                    <div class="card h-100">
+                                        <img src="{{ url_for('static', filename='uploads/properties/' + photo.filename) }}" 
+                                            class="card-img-top property-photo" alt="Foto del inmueble">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="primary_photo" 
+                                                    id="primary_{{ photo.id }}" value="{{ photo.id }}" 
+                                                    {% if photo.is_primary %}checked{% endif %}>
+                                                <label class="form-check-label" for="primary_{{ photo.id }}">
+                                                    Foto principal
+                                                </label>
+                                            </div>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" name="delete_photos" 
+                                                    id="delete_{{ photo.id }}" value="{{ photo.id }}">
+                                                <label class="form-check-label text-danger" for="delete_{{ photo.id }}">
+                                                    Eliminar foto
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No hay fotos actuales para este inmueble.</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Nuevas fotos -->
+                        <div class="mb-3">
+                            <label for="new_photos" class="form-label">Agregar más fotos</label>
+                            <input class="form-control" type="file" id="new_photos" name="new_photos" multiple>
+                            <div class="form-text">
+                                Puede agregar fotos. Límite total: 10 fotos.
+                                Actualmente tiene {{ property.photos|length }} foto(s).
+                                Puede agregar hasta {{ 10 - (property.photos|length) }} foto(s) más (si no elimina ninguna).
+                            </div>
+                        </div>
+                        
                         <!-- Botones -->
                         <div class="d-flex justify-content-between mt-4">
                             <a href="{{ url_for('property.show', id=property.id) }}" class="btn btn-secondary">

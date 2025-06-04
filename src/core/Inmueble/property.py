@@ -15,6 +15,7 @@ class Property(db.Model):
     user = db.relationship("User", back_populates="properties")
 
     rental = db.relationship("Rental", back_populates="property", uselist=False, cascade='all, delete-orphan')
+    photos = db.relationship("PropertyPhoto", back_populates="property", cascade='all, delete-orphan')
 
 # IMPORTAR Rental AL FINAL PARA EVITAR CICLO DE IMPORTACION
 from src.core.Alquiler.Rental import Rental
