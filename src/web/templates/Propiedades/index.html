@@ -10,14 +10,6 @@
 {% block content %}
 <h1 class="mb-4">Gestión de Inmuebles</h1>
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ messages[0] }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  {% endif %}
-{% endwith %}
 
 <!-- Formulario de búsqueda -->
 <form method="POST" class="mb-4">
@@ -63,7 +55,7 @@
 <!-- Mensaje si no hay Inmuebles -->
 {% if no_results %}
 <div class="alert alert-info">
-    No se encontraron Inmuebles registradas.
+    No se encontraron Inmuebles registrados.
 </div>
 {% else %}
 <!-- Tabla de Inmuebles -->

@@ -76,7 +76,7 @@ def create():
         )
         db.session.add(new_property)
         db.session.commit()
-        flash('Carga del Inmueble exitosa')
+        flash('Carga del Inmueble exitosa',"success")
         return redirect(url_for('property.index'))
 
     return render_template("Propiedades/create.html", form=form)
@@ -98,7 +98,7 @@ def edit(id):
         property.habitaciones = request.form.get('habitaciones')
         property.estado = request.form.get('estado')
         db.session.commit()
-        flash("Actualización de Inmueble exitosa")
+        flash("Actualización de Inmueble exitosa","success")
         return redirect(url_for('property.show', id=id))
     
     return render_template("Propiedades/edit.html", property=property, users=users)
@@ -111,7 +111,7 @@ def delete(id):
     property = Property.query.get_or_404(id)
     db.session.delete(property)
     db.session.commit()
-    flash("Inmueble eliminado correctamente")
+    flash("Inmueble eliminado correctamente","success")
     return redirect(url_for('property.index'))
 
 @bp.route("/<int:id>/deactivate", methods=["POST"])
@@ -127,7 +127,7 @@ def deactivate(id):
     property.estado = 'baja'
     db.session.commit()
 
-    flash("Baja del inmueble exitosa", "secondary")
+    flash("Baja del inmueble exitosa", "success")
     return redirect(url_for('property.show', id=id))
 
 @bp.route("/<int:id>/reactivate", methods=["POST"])
