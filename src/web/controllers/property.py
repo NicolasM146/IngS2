@@ -295,9 +295,14 @@ def edit(id):
 @permiso_required('properties_destroy')
 @login_required
 def delete(id):
-    
-    property_obj = Property.query.get_or_404(id) # Renombrado
-    # Antes de eliminar la propiedad, eliminar sus fotos del sistema de archivos
+    property_obj = Property.query.get_or_404(id)
+
+    # Verificar si tiene reservas activas
+    if property_obj.rental and property_obj.rental.reservations.count() > 0:
+        flash("Error, se tiene actividad registrada del Inmueble. No se pudo borrar el Inmueble", "danger")
+        return redirect(url_for('property.index'))
+
+    # Eliminar fotos asociadas del sistema de archivos
     upload_folder = PropertyPhoto.get_upload_folder()
     for photo in property_obj.photos:
         file_path = os.path.join(upload_folder, photo.filename)
@@ -306,11 +311,13 @@ def delete(id):
                 os.remove(file_path)
             except OSError as e:
                 flash(f"Advertencia: No se pudo eliminar el archivo {photo.filename}: {e}", "warning")
-    
+
+    # Eliminar inmueble
     db.session.delete(property_obj)
     db.session.commit()
-    flash("Inmueble eliminado correctamente","success")
+    flash("Inmueble eliminado correctamente", "success")
     return redirect(url_for('property.index'))
+
 
 @bp.route("/<int:id>/deactivate", methods=["POST"])
 @permiso_required('properties_update')
