@@ -5,7 +5,7 @@
 {% block content %}
 <div class="content-container">
 
-<h1 class="mb-4">Mis Alquileres</h1>
+<h1 class="mb-4">Alquileres</h1>
 
 <form method="GET" action="{{ url_for('reservation.buscar_alquileres') }}">
   <div class="row mb-3">
@@ -69,7 +69,7 @@
     {% endfor %}
   </div>
 {% else %}
-  <p class="mt-5">No se encontraron alquileres con los filtros seleccionados.</p>
+  <p class="mt-5">No se encontraron alquileres.</p>
 {% endif %}
 
 </div>
