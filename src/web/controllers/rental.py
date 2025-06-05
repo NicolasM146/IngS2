@@ -92,7 +92,7 @@ def create():
         )
         db.session.add(nuevo_alquiler)
         db.session.commit()
-        flash("Alquiler creado con éxito", "success")
+        flash("Carga de Alquiler exitosa", "success")
         return redirect(url_for('rental.index'))
 
     return render_template("Alquileres/create.html", propiedades=propiedades)

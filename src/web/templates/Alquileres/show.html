@@ -11,7 +11,7 @@
             </a>
             {% endif %}
             
-            {% if current_user.tiene_permiso('rentals_destroy') %}
+            {% if current_user.tiene_permiso('rentals_destroy') and alquiler.reservations.count() == 0 %}
             <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" class="ms-2">
                 <button type="submit" class="btn btn-danger" 
                         onclick="return confirm('¿Estás seguro de eliminar este alquiler?')">
