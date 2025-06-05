@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from flask_login import login_required, current_user
 from src.web.handlers.auth import permiso_required
+from src.core.Usuario.Roles_y_Permisos import Rol
 
 bp = Blueprint("users", __name__, url_prefix="/usuarios")
 
@@ -15,18 +16,33 @@ session = Session()
 @permiso_required('user_index')
 @login_required
 def index():
-    page = request.args.get('page', 1, type=int)
+    nombre = request.args.get('nombre')
+    email = request.args.get('email')
+    rol = request.args.get('rol')
+    estado = request.args.get('estado')
+    page = int(request.args.get('page', 1))
     per_page = 10
 
-    users_query = User.query.order_by(User.id.desc())
-    total = users_query.count()
-    users = users_query.offset((page - 1) * per_page).limit(per_page).all()
+    query = db.session.query(User)
 
-    no_results = len(users) == 0
+    if nombre:
+        query = query.filter(User.nombre.ilike(f'%{nombre}%'))
+    if email:
+        query = query.filter(User.email.ilike(f'%{email}%'))
+    if rol:
+        query = query.join(User.rol).filter(Rol.nombre == rol)
+    if estado == 'activo':
+        query = query.filter(User.is_locked == False)
+    elif estado == 'bloqueado':
+        query = query.filter(User.is_locked == True)
+
+    total = query.count()
+    users = query.offset((page - 1) * per_page).limit(per_page).all()
+    no_results = total == 0
 
     return render_template('users/index.html',
                            users=users,
-                           no_results=no_results,
                            page=page,
+                           per_page=per_page,
                            total=total,
-                           per_page=per_page)
+                           no_results=no_results)
