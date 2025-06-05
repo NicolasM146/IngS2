@@ -67,15 +67,9 @@
                             <strong>Precio:</strong> ${{ alquiler.price }}
                         </li>
                         <li class="list-group-item">
-<<<<<<< HEAD
-                            <strong>Estado:</strong> 
-                            <span class="badge bg-{{ 'success' if alquiler.is_active else 'secondary' }}">
-                                {{ 'Activo' if alquiler.is_active else 'Inactivo' }}
-=======
                             <strong>Estado:</strong>
                             <span class="badge bg-{{ 'success' if alquiler.is_active else 'secondary' }}">
                                 {{ 'Activo' if alquiler.is_active else 'Bloqueado' }}
->>>>>>> feature/alquileres
                             </span>
                         </li>
                     </ul>
@@ -100,14 +94,9 @@
                             <strong>Descripción:</strong> {{ alquiler.property.descripcion }}
                         </li>
                         <li class="list-group-item">
-<<<<<<< HEAD
-                            <strong>Estado:</strong> 
-                            <span class="badge bg-{{ 'success' if alquiler.property.estado == 'disponible' else 'warning' }}">
-=======
                             <strong>Estado:</strong>
                             <span
                                 class="badge bg-{{ 'success' if alquiler.property.estado == 'disponible' else 'warning' }}">
->>>>>>> feature/alquileres
                                 {{ alquiler.property.estado|capitalize }}
                             </span>
                         </li>
