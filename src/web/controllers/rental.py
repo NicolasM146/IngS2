@@ -164,3 +164,30 @@ def show(rental_id):
         return redirect(url_for('rental.index'))
 
     return render_template("Alquileres/show.html", alquiler=alquiler)
+
+@bp.route("/<int:rental_id>/lock", methods=["POST"])
+@permiso_required('rentals_update')
+@login_required
+def lock(rental_id):
+    alquiler = Rental.query.get_or_404(rental_id)
+    if alquiler.property.user_id != current_user.id:
+        flash("No tienes permiso para bloquear este alquiler.", "danger")
+        return redirect(url_for('rental.show', rental_id=rental_id))
+    alquiler.is_active = False
+    db.session.commit()
+    flash("Alquiler bloqueado correctamente.", "success")
+    return redirect(url_for('rental.show', rental_id=rental_id))
+
+
+@bp.route("/<int:rental_id>/unlock", methods=["POST"])
+@permiso_required('rentals_update')
+@login_required
+def unlock(rental_id):
+    alquiler = Rental.query.get_or_404(rental_id)
+    if alquiler.property.user_id != current_user.id:
+        flash("No tienes permiso para liberar este alquiler.", "danger")
+        return redirect(url_for('rental.show', rental_id=rental_id))
+    alquiler.is_active = True
+    db.session.commit()
+    flash("Alquiler liberado correctamente.", "success")
+    return redirect(url_for('rental.show', rental_id=rental_id))

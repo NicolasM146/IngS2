@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from src.core.database import db
 
 class Rental(db.Model):
@@ -27,6 +27,20 @@ class Rental(db.Model):
             if reserva.esta_vigente():
                 return True
         return False
+    
+    def reserved_today_or_later(self) -> bool:
+        today = datetime.now(timezone.utc).date()
+        tomorrow = today + timedelta(days=1)
+
+        # Primero chequeamos si esta ocupada
+        if self.is_busy(): return True
+
+        # Luego verificamos si hay alguna reserva con start_date >= mañana (reservas futuras)
+        has_future_reservation = self.reservations.filter(
+            Reservation.start_date >= tomorrow
+        ).count() > 0
+
+        return has_future_reservation
 
 # IMPORTAR Property AL FINAL PARA EVITAR CICLO DE IMPORTACION
 from src.core.Inmueble.property import Property

@@ -10,14 +10,32 @@
                 <i class="fas fa-edit"></i> Actualizar
             </a>
             {% endif %}
-            
-            {% if current_user.tiene_permiso('rentals_destroy') %}
+
+            {% if current_user.tiene_permiso('rentals_destroy') and not alquiler.reserved_today_or_later() %}
             <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" class="ms-2">
-                <button type="submit" class="btn btn-danger" 
-                        onclick="return confirm('¿Estás seguro de eliminar este alquiler?')">
+                <button type="submit" class="btn btn-danger"
+                    onclick="return confirm('¿Estás seguro de eliminar este alquiler?')">
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
             </form>
+            {% endif %}
+
+            {% if current_user.tiene_permiso('rentals_update') %}
+            {% if alquiler.is_active %}
+            <form action="{{ url_for('rental.lock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                <button type="submit" class="btn btn-secondary"
+                    onclick="return confirm('¿Querés bloquear este alquiler?')">
+                    <i class="fas fa-lock"></i> Bloquear
+                </button>
+            </form>
+            {% else %}
+            <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                <button type="submit" class="btn btn-success"
+                    onclick="return confirm('¿Querés liberar este alquiler?')">
+                    <i class="fas fa-lock-open"></i> Liberar
+                </button>
+            </form>
+            {% endif %}
             {% endif %}
         </div>
     </div>
@@ -25,15 +43,14 @@
     <!-- Foto principal de la propiedad -->
     <div class="mb-4">
         {% if alquiler.property.photos %}
-            {% set primary_photo = alquiler.property.photos|selectattr('is_primary')|first or alquiler.property.photos[0] %}
-            <img src="{{ url_for('static', filename='uploads/properties/' + primary_photo.filename) }}" 
-                 class="img-fluid rounded shadow" 
-                 alt="Foto principal de la propiedad">
+        {% set primary_photo = alquiler.property.photos|selectattr('is_primary')|first or alquiler.property.photos[0] %}
+        <img src="{{ url_for('static', filename='uploads/properties/' + primary_photo.filename) }}"
+            class="img-fluid rounded shadow" alt="Foto principal de la propiedad">
         {% else %}
-            <div class="text-center py-4 bg-light rounded">
-                <i class="fas fa-home fa-5x text-secondary"></i>
-                <p class="mt-2">No hay fotos disponibles</p>
-            </div>
+        <div class="text-center py-4 bg-light rounded">
+            <i class="fas fa-home fa-5x text-secondary"></i>
+            <p class="mt-2">No hay fotos disponibles</p>
+        </div>
         {% endif %}
     </div>
 
@@ -50,9 +67,9 @@
                             <strong>Precio:</strong> ${{ alquiler.price }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Estado:</strong> 
+                            <strong>Estado:</strong>
                             <span class="badge bg-{{ 'success' if alquiler.is_active else 'secondary' }}">
-                                {{ 'Activo' if alquiler.is_active else 'Inactivo' }}
+                                {{ 'Activo' if alquiler.is_active else 'Bloqueado' }}
                             </span>
                         </li>
                     </ul>
@@ -77,8 +94,9 @@
                             <strong>Descripción:</strong> {{ alquiler.property.descripcion }}
                         </li>
                         <li class="list-group-item">
-                            <strong>Estado:</strong> 
-                            <span class="badge bg-{{ 'success' if alquiler.property.estado == 'disponible' else 'warning' }}">
+                            <strong>Estado:</strong>
+                            <span
+                                class="badge bg-{{ 'success' if alquiler.property.estado == 'disponible' else 'warning' }}">
                                 {{ alquiler.property.estado|capitalize }}
                             </span>
                         </li>
