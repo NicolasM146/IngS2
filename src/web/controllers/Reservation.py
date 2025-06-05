@@ -103,20 +103,20 @@ def alquilar(rental_id):
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
         except ValueError:
             flash("Formato de fecha inválido.", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         if start_date > end_date:
             flash("La fecha de inicio no puede ser posterior a la fecha de fin.", "warning")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         for ocupado_inicio, ocupado_fin in dias_ocupados:
             if start_date <= ocupado_fin and end_date >= ocupado_inicio:
                 flash(f"Las fechas elegidas se superponen con una reserva existente del {ocupado_inicio.strftime('%d/%m/%Y')} al {ocupado_fin.strftime('%d/%m/%Y')}.", "danger")
-                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         if not payment_method_id or not isinstance(payment_method_id, str):
             flash("Método de pago inválido.", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         acompañantes_ids = request.form.getlist("compañeros[]")
         acompañantes_ids = list(map(int, acompañantes_ids))  # 👈 esta línea es clave
@@ -148,10 +148,10 @@ def alquilar(rental_id):
             if nombre and apellido and dni and telefono and estado_civil:
                 if dni and len(dni) < 7:
                     flash(f"DNI inválido para {nombre} {apellido}. Debe tener al menos 7 caracteres.", "warning")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
                 if not nacimiento:
                     flash(f"Fecha de nacimiento requerida para {nombre} {apellido}.", "warning")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
         
                 try:
                     fecha_nacimiento = datetime.strptime(nacimiento, "%Y-%m-%d").date()
@@ -159,10 +159,10 @@ def alquilar(rental_id):
                     edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
                     if edad < 18 and not tutor:
                         flash(f"El acompañante {nombre} {apellido} es menor de edad ({edad} años).", "warning")
-                        return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                        return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
                 except ValueError:
                     flash(f"Fecha de nacimiento inválida para {nombre} {apellido}.", "danger")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
                 existente = Compañero.query.filter_by(dni=dni, user_id=current_user.id).first()
                 if existente:
@@ -201,7 +201,7 @@ def alquilar(rental_id):
             else:
                 cliente = stripe.Customer.create(
                     email=current_user.email,
-                    name=f"{current_user.nombre} {current_user.apellido}"
+                    name=f"{current_user.nombre}"
                 )
 
             try:
@@ -241,13 +241,13 @@ def alquilar(rental_id):
             db.session.delete(nueva_reserva)
             db.session.commit()
             flash("Error en el pago, no se realizo la reserva", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         except Exception as e:
             db.session.delete(nueva_reserva)
             db.session.commit()
             flash("Error en el pago, no se realizo la reserva", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
     return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 

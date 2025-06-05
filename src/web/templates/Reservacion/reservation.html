@@ -26,7 +26,7 @@
                 {{ compa.nombre }} {{ compa.apellido }} (DNI: {{ compa.dni }})
               </label>
             </div>
-            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarCompañero({{ compa.id }}, {{ rental.id }})">Eliminar</button>
+             <button type="button" class="btn btn-danger btn-sm" onclick="eliminarCompañero('{{ compa.id }}', '{{ rental.id }}')">Eliminar</button>
           </div>
         {% endfor %}
       {% else %}
