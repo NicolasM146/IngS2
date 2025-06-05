@@ -201,11 +201,7 @@ def alquilar(rental_id):
             else:
                 cliente = stripe.Customer.create(
                     email=current_user.email,
-<<<<<<< HEAD
-                    name=f"{current_user.nombre}"
-=======
                     name=current_user.nombre  # 👈 CAMBIO HECHO AQUÍ
->>>>>>> 243e7e0f2251aa550b29192033a619b424bcd585
                 )
 
             try:
