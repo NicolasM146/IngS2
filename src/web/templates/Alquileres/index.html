@@ -20,7 +20,7 @@
             <label for="estado">Estado</label>
             <select class="form-control" name="estado" id="estado">
                 <option value="">Todos</option>
-                <option value="libre" {% if request.args.get('estado') == 'libre' %}selected{% endif %}>Libre</option>
+                <option value="libre" {% if request.args.get('estado') == 'libre' %}selected{% endif %}>Activo</option>
                 <option value="bloqueado" {% if request.args.get('estado') == 'bloqueado' %}selected{% endif %}>Bloqueado</option>
                 <option value="reservado" {% if request.args.get('estado') == 'reservado' %}selected{% endif %}>Reservado</option>
                 <option value="no_reservado" {% if request.args.get('estado') == 'no_reservado' %}selected{% endif %}>No reservado</option>
@@ -31,12 +31,13 @@
         </div>
     </div>
 </form>
+{% if alquileres %}
 <table class="table table-striped">
     <thead>
         <tr>
             <th>ID</th>
             <th>Fecha de creación</th>
-            <th>Precio</th>
+            <th>Precio por noche</th>
             <th>Dirección</th>
             <th>Localidad</th>
             <th>Activo</th>
@@ -53,15 +54,13 @@
             <td>{{ alquiler.property.localidad }}</td>
             <td>{{ 'Sí' if alquiler.is_active else 'No' }}</td>
             <td>
-                {# En la columna de Acciones, agrega este botón antes del de borrar #}
-            <td>
                 <a href="{{ url_for('rental.show', rental_id=alquiler.id) }}" class="btn btn-info btn-sm">Ver</a>
-                </form>
             </td>
         </tr>
-        {% else %}
-        <tr><td colspan="8">No hay alquileres para mostrar.</td></tr>
         {% endfor %}
     </tbody>
 </table>
+{% elif request.args %}
+<p>No hay alquileres para mostrar con los filtros seleccionados.</p>
+{% endif %}
 {% endblock %}

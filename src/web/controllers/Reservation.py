@@ -29,42 +29,53 @@ def buscar_alquileres():
     fecha_inicio = request.args.get("fecha_inicio")
     fecha_fin = request.args.get("fecha_fin")
     localidad = request.args.get("localidad", type=str)
+    direccion = request.args.get("direccion", type=str)
     habitaciones = request.args.get("habitaciones", type=int)
     cant_personas = request.args.get("cant_personas", type=int)
 
-    query = Rental.query.join(Rental.property).filter(Rental.is_active == True)
+    alquileres = []
+    busqueda_realizada = False
 
-    if precio_min is not None:
-        query = query.filter(Rental.price >= precio_min)
+    if request.args:  # Solo si se presionó "Buscar"
+        busqueda_realizada = True
+        query = Rental.query.join(Rental.property).filter(Rental.is_active == True)
 
-    if precio_max is not None:
-        query = query.filter(Rental.price <= precio_max)
+        if precio_min is not None:
+            query = query.filter(Rental.price >= precio_min)
 
-    if fecha_inicio and fecha_fin:
-        try:
-            fi = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
-            ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+        if precio_max is not None:
+            query = query.filter(Rental.price <= precio_max)
 
-            subquery = db.session.query(Reservation.rental_id).filter(
-                Reservation.start_date <= ff,
-                Reservation.end_date >= fi
-            ).subquery()
+        if fecha_inicio and fecha_fin:
+            try:
+                fi = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+                ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
 
-            query = query.filter(~Rental.id.in_(subquery))
-        except ValueError:
-            pass
+                subquery = db.session.query(Reservation.rental_id).filter(
+                    Reservation.start_date <= ff,
+                    Reservation.end_date >= fi
+                ).subquery()
 
-    if localidad:
-        query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+                query = query.filter(~Rental.id.in_(subquery))
+            except ValueError:
+                pass
 
-    if habitaciones:
-        query = query.filter(Property.habitaciones == habitaciones)
+        if localidad:
+            query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
 
-    if cant_personas:
-        query = query.filter(Property.capacidad == cant_personas)
+        if direccion:
+            query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
 
-    alquileres = query.all()
-    return render_template("Reservacion/rentals.html", rentals=alquileres)
+        if habitaciones:
+            query = query.filter(Property.habitaciones == habitaciones)
+
+        if cant_personas:
+            query = query.filter(Property.capacidad == cant_personas)
+
+        alquileres = query.all()
+
+    return render_template("Reservacion/rentals.html", rentals=alquileres, busqueda_realizada=busqueda_realizada)
+
 
 @bp.route("/alquiler/<int:rental_id>")
 def ver_alquiler(rental_id):
@@ -92,20 +103,20 @@ def alquilar(rental_id):
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
         except ValueError:
             flash("Formato de fecha inválido.", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         if start_date > end_date:
             flash("La fecha de inicio no puede ser posterior a la fecha de fin.", "warning")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         for ocupado_inicio, ocupado_fin in dias_ocupados:
             if start_date <= ocupado_fin and end_date >= ocupado_inicio:
                 flash(f"Las fechas elegidas se superponen con una reserva existente del {ocupado_inicio.strftime('%d/%m/%Y')} al {ocupado_fin.strftime('%d/%m/%Y')}.", "danger")
-                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         if not payment_method_id or not isinstance(payment_method_id, str):
             flash("Método de pago inválido.", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         acompañantes_ids = request.form.getlist("compañeros[]")
         acompañantes_ids = list(map(int, acompañantes_ids))  # 👈 esta línea es clave
@@ -137,10 +148,10 @@ def alquilar(rental_id):
             if nombre and apellido and dni and telefono and estado_civil:
                 if dni and len(dni) < 7:
                     flash(f"DNI inválido para {nombre} {apellido}. Debe tener al menos 7 caracteres.", "warning")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
                 if not nacimiento:
                     flash(f"Fecha de nacimiento requerida para {nombre} {apellido}.", "warning")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
         
                 try:
                     fecha_nacimiento = datetime.strptime(nacimiento, "%Y-%m-%d").date()
@@ -148,10 +159,10 @@ def alquilar(rental_id):
                     edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
                     if edad < 18 and not tutor:
                         flash(f"El acompañante {nombre} {apellido} es menor de edad ({edad} años).", "warning")
-                        return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                        return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
                 except ValueError:
                     flash(f"Fecha de nacimiento inválida para {nombre} {apellido}.", "danger")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
                 existente = Compañero.query.filter_by(dni=dni, user_id=current_user.id).first()
                 if existente:
@@ -190,7 +201,7 @@ def alquilar(rental_id):
             else:
                 cliente = stripe.Customer.create(
                     email=current_user.email,
-                    name=f"{current_user.nombre} {current_user.apellido}"
+                    name=current_user.nombre  # 👈 CAMBIO HECHO AQUÍ
                 )
 
             try:
@@ -226,17 +237,22 @@ def alquilar(rental_id):
             flash("Reserva Exitosa", "success")
             return redirect(url_for("home"))
 
+
         except stripe.error.CardError as e:
+            # Agrego este print(e) para entender por que me da error el pago
+            print(str(e) + " PRIMER PRINT")
             db.session.delete(nueva_reserva)
             db.session.commit()
             flash("Error en el pago, no se realizo la reserva", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         except Exception as e:
+            # Agrego este print(e) para entender por que me da error el pago
+            print(str(e) + " SEGUNDO PRINT")
             db.session.delete(nueva_reserva)
             db.session.commit()
             flash("Error en el pago, no se realizo la reserva", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
     return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 

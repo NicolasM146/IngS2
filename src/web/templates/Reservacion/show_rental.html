@@ -27,6 +27,9 @@
       <strong>Localidad:</strong> {{ rental.property.localidad }}
     </div>
     <div class="col-md-6 mb-2">
+      <strong>Direccion:</strong> {{ rental.property.direccion }}
+    </div>
+    <div class="col-md-6 mb-2">
       <strong>Precio por noche:</strong> ${{ rental.price }}
     </div>
     <div class="col-md-6 mb-2">
@@ -65,7 +68,7 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>No hay reseñas aún.</p>
+    <p>Este Alquiler aun no tiene reseñas.</p>
   {% endif %}
 
   <div class="mt-4 text-start">

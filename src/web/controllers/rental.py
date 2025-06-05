@@ -19,27 +19,35 @@ bp = Blueprint('rental', __name__, url_prefix='/rentals')
 @permiso_required('rentals_index')
 @login_required
 def index():
-    query = Rental.query.join(Property)
-
     direccion = request.args.get("direccion")
     localidad = request.args.get("localidad")
     estado = request.args.get("estado")
 
-    if direccion:
-        query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
+    alquileres = []
 
-    if localidad:
-        query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+    if request.args:  # Si se presionó "Buscar" (aunque los campos estén vacíos)
+        query = Rental.query.join(Property)
 
-    if estado == "libre":
-        query = query.filter(Rental.is_active == True)
-    elif estado == "bloqueado":
-        query = query.filter(Rental.is_active == False)
+        if direccion:
+            query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
 
-    alquileres = query.all()
+        if localidad:
+            query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+
+        if estado == "libre":
+            query = query.filter(Rental.is_active == True)
+        elif estado == "bloqueado":
+            query = query.filter(Rental.is_active == False)
+
+        alquileres = query.all()
+
+        # Filtro por funciones de Python
+        if estado == "reservado":
+            alquileres = [a for a in alquileres if a.reserved_today_or_later()]
+        elif estado == "no_reservado":
+            alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
 
     return render_template("Alquileres/index.html", alquileres=alquileres)
-
 @bp.route('/create', methods=['GET', 'POST'])
 @permiso_required('rentals_create')
 @login_required
@@ -92,7 +100,7 @@ def create():
         )
         db.session.add(nuevo_alquiler)
         db.session.commit()
-        flash("Alquiler creado con éxito", "success")
+        flash("Carga de Alquiler exitosa", "success")
         return redirect(url_for('rental.index'))
 
     return render_template("Alquileres/create.html", propiedades=propiedades)
@@ -164,3 +172,30 @@ def show(rental_id):
         return redirect(url_for('rental.index'))
 
     return render_template("Alquileres/show.html", alquiler=alquiler)
+
+@bp.route("/<int:rental_id>/lock", methods=["POST"])
+@permiso_required('rentals_update')
+@login_required
+def lock(rental_id):
+    alquiler = Rental.query.get_or_404(rental_id)
+    if alquiler.property.user_id != current_user.id:
+        flash("No tienes permiso para bloquear este alquiler.", "danger")
+        return redirect(url_for('rental.show', rental_id=rental_id))
+    alquiler.is_active = False
+    db.session.commit()
+    flash("Alquiler bloqueado correctamente.", "success")
+    return redirect(url_for('rental.show', rental_id=rental_id))
+
+
+@bp.route("/<int:rental_id>/unlock", methods=["POST"])
+@permiso_required('rentals_update')
+@login_required
+def unlock(rental_id):
+    alquiler = Rental.query.get_or_404(rental_id)
+    if alquiler.property.user_id != current_user.id:
+        flash("No tienes permiso para liberar este alquiler.", "danger")
+        return redirect(url_for('rental.show', rental_id=rental_id))
+    alquiler.is_active = True
+    db.session.commit()
+    flash("Alquiler liberado correctamente.", "success")
+    return redirect(url_for('rental.show', rental_id=rental_id))

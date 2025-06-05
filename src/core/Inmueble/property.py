@@ -7,7 +7,8 @@ class Property(db.Model):
     direccion = db.Column(db.String(255), nullable=False)
     localidad = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.Text)
-    estado = db.Column(db.String(20), default='disponible')
+    # Estados posibles: disponible, baja, ocupado (ocupado si esta alquilado y ocupado al momento de la consulta)
+    estado = db.Column(db.String(20), default='disponible') 
     capacidad = db.Column(db.Integer)
     habitaciones = db.Column(db.Integer)
 

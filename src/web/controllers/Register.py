@@ -48,19 +48,22 @@ def register():
         
         existing_user = User.query.filter_by(dni=data_usuario["dni"]).first()
         if existing_user:
-            flash("Ya existe un usuario registrado con ese DNI.", "error")
+            flash("Ya existe un usuario registrado con ese DNI/Documento de identidad.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
 
-        if len(dni_limpio) != 8:
-            flash("El DNI debe tener exactamente 8 dígitos.", "error")
+        
+        if len(dni_limpio) != 8 and data_usuario["nacionalidad"] == 'Argentina':
+            flash("El DNI argentino debe tener 8 dígitos.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         data_usuario["dni"] = dni_limpio
+        
 
         if not es_email_valido(data_usuario["email"]):
             flash("El email no tiene un formato válido.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
+            
 
         if User.query.filter_by(email=data_usuario["email"]).first():
             flash("El email ya está registrado.", "error")
@@ -95,7 +98,7 @@ def register():
         nuevo_usuario.set_password(data_usuario["password"])
 
         if not nuevo_usuario.es_mayor_de_edad():
-            flash("El usuario debe ser mayor de edad para registrarse.", "error")
+            flash("Para registrarse debe ser mayor a 18 años.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if payment_method_id:
