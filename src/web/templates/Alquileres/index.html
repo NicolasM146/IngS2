@@ -53,7 +53,6 @@
             <td>{{ alquiler.property.localidad }}</td>
             <td>{{ 'Sí' if alquiler.is_active else 'No' }}</td>
             <td>
-                {# En la columna de Acciones, agrega este botón antes del de borrar #}
             <td>
                 <a href="{{ url_for('rental.show', rental_id=alquiler.id) }}" class="btn btn-info btn-sm">Ver</a>
                 </form>

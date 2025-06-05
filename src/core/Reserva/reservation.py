@@ -29,3 +29,7 @@ class Reservation(db.Model):
         secondary=reserva_compañero,
         back_populates='reservas'
     )
+    
+    def esta_vigente(self) -> bool:
+        hoy = datetime.utcnow().date()
+        return self.start_date <= hoy <= self.end_date
