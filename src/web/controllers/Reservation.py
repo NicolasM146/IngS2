@@ -201,7 +201,7 @@ def alquilar(rental_id):
             else:
                 cliente = stripe.Customer.create(
                     email=current_user.email,
-                    name=f"{current_user.nombre} {current_user.apellido}"
+                    name=current_user.nombre  # 👈 CAMBIO HECHO AQUÍ
                 )
 
             try:
@@ -237,13 +237,18 @@ def alquilar(rental_id):
             flash("Reserva Exitosa", "success")
             return redirect(url_for("home"))
 
+
         except stripe.error.CardError as e:
+            # Agrego este print(e) para entender por que me da error el pago
+            print(str(e) + " PRIMER PRINT")
             db.session.delete(nueva_reserva)
             db.session.commit()
             flash("Error en el pago, no se realizo la reserva", "danger")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados)
 
         except Exception as e:
+            # Agrego este print(e) para entender por que me da error el pago
+            print(str(e) + " SEGUNDO PRINT")
             db.session.delete(nueva_reserva)
             db.session.commit()
             flash("Error en el pago, no se realizo la reserva", "danger")
