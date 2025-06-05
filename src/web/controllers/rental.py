@@ -31,12 +31,14 @@ def index():
     if localidad:
         query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
 
-    if estado == "libre":
-        query = query.filter(Rental.is_active == True)
-    elif estado == "bloqueado":
-        query = query.filter(Rental.is_active == False)
-
     alquileres = query.all()
+    
+    # Se aplican filtros en python ya que no se puede hacer en base a una consulta SQL
+    # sino que es en base a una funcion del objeto Alquiler
+    if estado == "reservado":
+        alquileres = [a for a in alquileres if a.reserved_today_or_later()]
+    elif estado == "no_reservado":
+        alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
 
     return render_template("Alquileres/index.html", alquileres=alquileres)
 

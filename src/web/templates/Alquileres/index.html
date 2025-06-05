@@ -20,7 +20,7 @@
             <label for="estado">Estado</label>
             <select class="form-control" name="estado" id="estado">
                 <option value="">Todos</option>
-                <option value="libre" {% if request.args.get('estado') == 'libre' %}selected{% endif %}>Libre</option>
+                <option value="libre" {% if request.args.get('estado') == 'libre' %}selected{% endif %}>Activo</option>
                 <option value="bloqueado" {% if request.args.get('estado') == 'bloqueado' %}selected{% endif %}>Bloqueado</option>
                 <option value="reservado" {% if request.args.get('estado') == 'reservado' %}selected{% endif %}>Reservado</option>
                 <option value="no_reservado" {% if request.args.get('estado') == 'no_reservado' %}selected{% endif %}>No reservado</option>
