@@ -29,6 +29,7 @@ def buscar_alquileres():
     fecha_inicio = request.args.get("fecha_inicio")
     fecha_fin = request.args.get("fecha_fin")
     localidad = request.args.get("localidad", type=str)
+    direccion = request.args.get("direccion", type=str)
     habitaciones = request.args.get("habitaciones", type=int)
     cant_personas = request.args.get("cant_personas", type=int)
 
@@ -57,6 +58,9 @@ def buscar_alquileres():
     if localidad:
         query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
 
+    if direccion:
+        query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
+    
     if habitaciones:
         query = query.filter(Property.habitaciones == habitaciones)
 
