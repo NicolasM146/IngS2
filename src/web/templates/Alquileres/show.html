@@ -2,17 +2,96 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h2>Detalle del Alquiler</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Detalle del Alquiler</h2>
+        <div class="btn-group">
+            {% if current_user.tiene_permiso('rentals_update') %}
+            <a href="{{ url_for('rental.edit', rental_id=alquiler.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            {% endif %}
+            
+            {% if current_user.tiene_permiso('rentals_destroy') %}
+            <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                <button type="submit" class="btn btn-danger" 
+                        onclick="return confirm('¿Estás seguro de eliminar este alquiler?')">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
 
-    <ul class="list-group">
-        <li class="list-group-item"><strong>Propiedad:</strong> {{ alquiler.property.titulo }}</li>
-        <li class="list-group-item"><strong>Direccion:</strong> {{ alquiler.property.direccion }}</li>
-        <li class="list-group-item"><strong>Precio:</strong> ${{ alquiler.price }}</li>
-        <li class="list-group-item"><strong>Descripción:</strong> {{ alquiler.property.descripcion }}</li>
-        <li class="list-group-item"><strong>Activo:</strong> {{ 'Sí' if alquiler.is_active else 'No' }}</li>
-        <li class="list-group-item"><strong>Creado el:</strong> {{ alquiler.creation_date.strftime('%d/%m/%Y') }}</li>
-    </ul>
+    <!-- Foto principal de la propiedad -->
+    <div class="mb-4">
+        {% if alquiler.property.photos %}
+            {% set primary_photo = alquiler.property.photos|selectattr('is_primary')|first or alquiler.property.photos[0] %}
+            <img src="{{ url_for('static', filename='uploads/properties/' + primary_photo.filename) }}" 
+                 class="img-fluid rounded shadow" 
+                 alt="Foto principal de la propiedad">
+        {% else %}
+            <div class="text-center py-4 bg-light rounded">
+                <i class="fas fa-home fa-5x text-secondary"></i>
+                <p class="mt-2">No hay fotos disponibles</p>
+            </div>
+        {% endif %}
+    </div>
 
-    <a href="{{ url_for('rental.index') }}" class="btn btn-secondary mt-3">Volver</a>
+    <!-- Información del alquiler -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Información del Alquiler</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Precio:</strong> ${{ alquiler.price }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Estado:</strong> 
+                            <span class="badge bg-{{ 'success' if alquiler.is_active else 'secondary' }}">
+                                {{ 'Activo' if alquiler.is_active else 'Inactivo' }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Información de la Propiedad</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>Dirección:</strong> {{ alquiler.property.direccion }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Localidad:</strong> {{ alquiler.property.localidad }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Descripción:</strong> {{ alquiler.property.descripcion }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Estado:</strong> 
+                            <span class="badge bg-{{ 'success' if alquiler.property.estado == 'disponible' else 'warning' }}">
+                                {{ alquiler.property.estado|capitalize }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('rental.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Volver al listado
+        </a>
+    </div>
 </div>
 {% endblock %}

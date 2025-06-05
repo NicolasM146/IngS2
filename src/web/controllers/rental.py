@@ -97,10 +97,10 @@ def create():
 
     return render_template("Alquileres/create.html", propiedades=propiedades)
 
-@bp.route('/delete/<int:rental_id>', methods=['POST'])
+@bp.route("/<int:rental_id>/delete", methods=["POST"])
 @permiso_required('rentals_destroy')
 @login_required
-def delete(rental_id):
+def delete(rental_id):  # Cambia el parámetro para que coincida con la ruta
     alquiler = Rental.query.get_or_404(rental_id)
 
     # Solo permitir borrar si el alquiler pertenece al usuario actual
@@ -120,10 +120,10 @@ def delete(rental_id):
     return redirect(url_for('rental.index'))
 
 # Agrega esta nueva ruta al final del archivo rental.py
-@bp.route('/edit/<int:rental_id>', methods=['GET', 'POST'])
-@permiso_required('rentals_edit')
+@bp.route("/<int:rental_id>/edit", methods=["GET", "POST"])
+@permiso_required('rentals_update')
 @login_required
-def edit(rental_id):
+def edit(rental_id):  # Cambia el parámetro para que coincida con la ruta
     alquiler = Rental.query.get_or_404(rental_id)
     
     # Verificar que el alquiler pertenece al usuario actual
@@ -150,16 +150,15 @@ def edit(rental_id):
         
         db.session.commit()
         flash("Alquiler actualizado con éxito", "success")
-        return redirect(url_for('rental.index'))
+        return redirect(url_for('rental.show', rental_id=rental_id))
 
     return render_template("Alquileres/edit.html", alquiler=alquiler)
 
-@bp.route('/<int:rental_id>', methods=['GET'])
+@bp.route("/<int:rental_id>")
 @permiso_required('rentals_show')
 @login_required
 def show(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
-
     if alquiler.property.user_id != current_user.id:
         flash("No tienes permiso para ver este alquiler.", "danger")
         return redirect(url_for('rental.index'))
