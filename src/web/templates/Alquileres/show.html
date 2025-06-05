@@ -7,7 +7,7 @@
         <div class="btn-group">
             {% if current_user.tiene_permiso('rentals_update') %}
             <a href="{{ url_for('rental.edit', rental_id=alquiler.id) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Editar
+                <i class="fas fa-edit"></i> Actualizar
             </a>
             {% endif %}
             

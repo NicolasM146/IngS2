@@ -63,6 +63,7 @@ def register():
         if not es_email_valido(data_usuario["email"]):
             flash("El email no tiene un formato válido.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
+            
 
         if User.query.filter_by(email=data_usuario["email"]).first():
             flash("El email ya está registrado.", "error")

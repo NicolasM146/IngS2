@@ -17,6 +17,16 @@ class Rental(db.Model):
     # Para Review y Reservation, asegurate que también estén importados al final
     reviews = db.relationship("Review", back_populates="rental", cascade='all, delete-orphan')
     reservations = db.relationship("Reservation", back_populates="rental", lazy='dynamic', cascade='all, delete-orphan')
+    
+    def is_locked(self) -> bool:
+        return not self.is_active
+    
+    def is_busy(self) -> bool:
+        # Obtenengo todas las reservas y chequeo si alguna está vigente
+        for reserva in self.reservations:
+            if reserva.esta_vigente():
+                return True
+        return False
 
 # IMPORTAR Property AL FINAL PARA EVITAR CICLO DE IMPORTACION
 from src.core.Inmueble.property import Property
