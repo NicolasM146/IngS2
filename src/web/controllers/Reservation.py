@@ -33,42 +33,49 @@ def buscar_alquileres():
     habitaciones = request.args.get("habitaciones", type=int)
     cant_personas = request.args.get("cant_personas", type=int)
 
-    query = Rental.query.join(Rental.property).filter(Rental.is_active == True)
+    alquileres = []
+    busqueda_realizada = False
 
-    if precio_min is not None:
-        query = query.filter(Rental.price >= precio_min)
+    if request.args:  # Solo si se presionó "Buscar"
+        busqueda_realizada = True
+        query = Rental.query.join(Rental.property).filter(Rental.is_active == True)
 
-    if precio_max is not None:
-        query = query.filter(Rental.price <= precio_max)
+        if precio_min is not None:
+            query = query.filter(Rental.price >= precio_min)
 
-    if fecha_inicio and fecha_fin:
-        try:
-            fi = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
-            ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+        if precio_max is not None:
+            query = query.filter(Rental.price <= precio_max)
 
-            subquery = db.session.query(Reservation.rental_id).filter(
-                Reservation.start_date <= ff,
-                Reservation.end_date >= fi
-            ).subquery()
+        if fecha_inicio and fecha_fin:
+            try:
+                fi = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+                ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
 
-            query = query.filter(~Rental.id.in_(subquery))
-        except ValueError:
-            pass
+                subquery = db.session.query(Reservation.rental_id).filter(
+                    Reservation.start_date <= ff,
+                    Reservation.end_date >= fi
+                ).subquery()
 
-    if localidad:
-        query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+                query = query.filter(~Rental.id.in_(subquery))
+            except ValueError:
+                pass
 
-    if direccion:
-        query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
-    
-    if habitaciones:
-        query = query.filter(Property.habitaciones == habitaciones)
+        if localidad:
+            query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
 
-    if cant_personas:
-        query = query.filter(Property.capacidad == cant_personas)
+        if direccion:
+            query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
 
-    alquileres = query.all()
-    return render_template("Reservacion/rentals.html", rentals=alquileres)
+        if habitaciones:
+            query = query.filter(Property.habitaciones == habitaciones)
+
+        if cant_personas:
+            query = query.filter(Property.capacidad == cant_personas)
+
+        alquileres = query.all()
+
+    return render_template("Reservacion/rentals.html", rentals=alquileres, busqueda_realizada=busqueda_realizada)
+
 
 @bp.route("/alquiler/<int:rental_id>")
 def ver_alquiler(rental_id):
