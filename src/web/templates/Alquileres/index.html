@@ -31,6 +31,7 @@
         </div>
     </div>
 </form>
+{% if alquileres %}
 <table class="table table-striped">
     <thead>
         <tr>
@@ -53,14 +54,13 @@
             <td>{{ alquiler.property.localidad }}</td>
             <td>{{ 'Sí' if alquiler.is_active else 'No' }}</td>
             <td>
-            <td>
                 <a href="{{ url_for('rental.show', rental_id=alquiler.id) }}" class="btn btn-info btn-sm">Ver</a>
-                </form>
             </td>
         </tr>
-        {% else %}
-        <tr><td colspan="8">No hay alquileres para mostrar.</td></tr>
         {% endfor %}
     </tbody>
 </table>
+{% elif request.args %}
+<p>No hay alquileres para mostrar con los filtros seleccionados.</p>
+{% endif %}
 {% endblock %}

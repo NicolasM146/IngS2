@@ -19,29 +19,35 @@ bp = Blueprint('rental', __name__, url_prefix='/rentals')
 @permiso_required('rentals_index')
 @login_required
 def index():
-    query = Rental.query.join(Property)
-
     direccion = request.args.get("direccion")
     localidad = request.args.get("localidad")
     estado = request.args.get("estado")
 
-    if direccion:
-        query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
+    alquileres = []
 
-    if localidad:
-        query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+    if request.args:  # Si se presionó "Buscar" (aunque los campos estén vacíos)
+        query = Rental.query.join(Property)
 
-    alquileres = query.all()
-    
-    # Se aplican filtros en python ya que no se puede hacer en base a una consulta SQL
-    # sino que es en base a una funcion del objeto Alquiler
-    if estado == "reservado":
-        alquileres = [a for a in alquileres if a.reserved_today_or_later()]
-    elif estado == "no_reservado":
-        alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
+        if direccion:
+            query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
+
+        if localidad:
+            query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+
+        if estado == "libre":
+            query = query.filter(Rental.is_active == True)
+        elif estado == "bloqueado":
+            query = query.filter(Rental.is_active == False)
+
+        alquileres = query.all()
+
+        # Filtro por funciones de Python
+        if estado == "reservado":
+            alquileres = [a for a in alquileres if a.reserved_today_or_later()]
+        elif estado == "no_reservado":
+            alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
 
     return render_template("Alquileres/index.html", alquileres=alquileres)
-
 @bp.route('/create', methods=['GET', 'POST'])
 @permiso_required('rentals_create')
 @login_required
