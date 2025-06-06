@@ -91,50 +91,52 @@ def alquilar(rental_id):
     compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
     reservas = Reservation.query.filter_by(rental_id=rental_id).all()
     dias_ocupados = [(r.start_date, r.end_date) for r in reservas]
-    hoy = date.today().isoformat()  # formato 'YYYY-MM-DD'
+    hoy = date.today().isoformat()
+
     if request.method == "POST":
         start_date_str = request.form.get("start_date")
         end_date_str = request.form.get("end_date")
         payment_method_id = current_user.stripe_payment_method_id
-
 
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
         except ValueError:
             flash("Formato de fecha inválido.", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
         if start_date > end_date:
             flash("La fecha de inicio no puede ser posterior a la fecha de fin.", "warning")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
         for ocupado_inicio, ocupado_fin in dias_ocupados:
             if start_date <= ocupado_fin and end_date >= ocupado_inicio:
-                flash(f"Las fechas elegidas se superponen con una reserva existente", "danger")
-                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
+                flash(f"Las fechas elegidas se superponen con una reserva existente del {ocupado_inicio.strftime('%d/%m/%Y')} al {ocupado_fin.strftime('%d/%m/%Y')}.", "danger")
+                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
         if not payment_method_id or not isinstance(payment_method_id, str):
             flash("Método de pago inválido.", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
-        acompañantes_ids = request.form.getlist("compañeros[]")
-        acompañantes_ids = list(map(int, acompañantes_ids))  # 👈 esta línea es clave
-
+        acompañantes_ids = list(map(int, request.form.getlist("compañeros[]")))
         acompañantes_seleccionados = Compañero.query.filter(
-        Compañero.id.in_(acompañantes_ids), Compañero.user_id == current_user.id
-            ).all()
+            Compañero.id.in_(acompañantes_ids), Compañero.user_id == current_user.id
+        ).all()
 
         nuevos_nombres = request.form.getlist("nuevo_nombre[]")
         nuevos_apellidos = request.form.getlist("nuevo_apellido[]")
         nuevos_dnis = request.form.getlist("nuevo_dni[]")
         nuevos_telefonos = request.form.getlist("nuevo_telefono[]")
-        nuevos_nacimientos = request.form.getlist("nuevo_nacimiento[]")  # Debe venir del formulario
-        nuevos_tutores = request.form.getlist("nuevo_tutor[]")
+        nuevos_nacimientos = request.form.getlist("nuevo_nacimiento[]")
+        nuevos_tutores = request.form.getlist("nuevo_tutor_hidden[]")
         nuevos_estados_civiles = request.form.getlist("nuevo_estado_civil[]")
 
         nuevos_acompañantes = []
-        for nombre, apellido, dni, telefono, nacimiento,tutor,estado_civil in zip(nuevos_nombres, nuevos_apellidos, nuevos_dnis, nuevos_telefonos, nuevos_nacimientos,nuevos_tutores, nuevos_estados_civiles):
+
+        for nombre, apellido, dni, telefono, nacimiento, tutor, estado_civil in zip(
+            nuevos_nombres, nuevos_apellidos, nuevos_dnis, nuevos_telefonos,
+            nuevos_nacimientos, nuevos_tutores, nuevos_estados_civiles
+        ):
             nombre = nombre.strip()
             apellido = apellido.strip()
             dni = dni.strip()
@@ -142,44 +144,53 @@ def alquilar(rental_id):
             nacimiento = nacimiento.strip()
             tutor = tutor.strip()
             estado_civil = estado_civil.strip()
-            
-            
 
-            if nombre and apellido and dni and telefono and estado_civil:
-                if dni and len(dni) < 7:
-                    flash(f"DNI inválido para {nombre} {apellido}. Debe tener al menos 7 caracteres.", "warning")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
-                if not nacimiento:
-                    flash(f"Fecha de nacimiento requerida para {nombre} {apellido}.", "warning")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
-        
-                try:
-                    fecha_nacimiento = datetime.strptime(nacimiento, "%Y-%m-%d").date()
-                    hoy = datetime.today().date()
-                    edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
-                    if edad < 18 and not tutor:
-                        flash(f"El acompañante {nombre} {apellido} es menor de edad ({edad} años).", "warning")
-                        return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
-                except ValueError:
-                    flash(f"Fecha de nacimiento inválida para {nombre} {apellido}.", "danger")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
+            if not all([nombre, apellido, dni, telefono, nacimiento, estado_civil]):
+                continue
 
-                existente = Compañero.query.filter_by(dni=dni, user_id=current_user.id).first()
-                if existente:
-                    nuevos_acompañantes.append(existente)
+            try:
+                fecha_nacimiento = datetime.strptime(nacimiento, "%Y-%m-%d").date()
+                hoy_fecha = datetime.today().date()
+                edad = hoy_fecha.year - fecha_nacimiento.year - ((hoy_fecha.month, hoy_fecha.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
+            except ValueError:
+                flash(f"Fecha de nacimiento inválida para {nombre} {apellido}.", "danger")
+                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+
+            if edad < 18:
+                if not tutor:
+                    flash(f"El acompañante {nombre} {apellido} es menor de edad ({edad} años).", "warning")
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+
+                if tutor == "current_user":
+                    tutor_str = f"{current_user.nombre} {current_user.apellido}"
                 else:
-                    nuevo = Compañero(
-                        nombre=nombre,
-                        apellido=apellido,
-                        dni=dni,
-                        telefono=telefono,
-                        user_id=current_user.id,
-                        fechaNacimiento=fecha_nacimiento,
-                        estado_civil=estado_civil,
-                        tutor=tutor if tutor else None  # Si es menor, asignar tutor
-                    )
-                    db.session.add(nuevo)
-                    nuevos_acompañantes.append(nuevo)
+                    tutor_str = tutor
+
+                tutor_valido = any(
+                    f"{c.nombre} {c.apellido}" == tutor_str for c in acompañantes_seleccionados + nuevos_acompañantes
+                )
+                if not tutor_valido:
+                    flash(f"El tutor {tutor_str} no es válido o fue eliminado.", "danger")
+                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+            else:
+                tutor_str = None
+
+            existente = Compañero.query.filter_by(dni=dni, user_id=current_user.id).first()
+            if existente:
+                nuevos_acompañantes.append(existente)
+            else:
+                nuevo = Compañero(
+                    nombre=nombre,
+                    apellido=apellido,
+                    dni=dni,
+                    telefono=telefono,
+                    user_id=current_user.id,
+                    fechaNacimiento=fecha_nacimiento,
+                    estado_civil=estado_civil,
+                    tutor=tutor_str
+                )
+                db.session.add(nuevo)
+                nuevos_acompañantes.append(nuevo)
 
         db.session.commit()
 
@@ -196,35 +207,21 @@ def alquilar(rental_id):
 
         try:
             clientes = stripe.Customer.list(email=current_user.email).data
-            if clientes:
-                cliente = clientes[0]
-            else:
-                cliente = stripe.Customer.create(
-                    email=current_user.email,
-                    name=current_user.nombre  # 👈 CAMBIO HECHO AQUÍ
-                )
+            cliente = clientes[0] if clientes else stripe.Customer.create(email=current_user.email, name=current_user.nombre)
 
             try:
-                stripe.PaymentMethod.attach(
-                    payment_method_id,
-                    customer=cliente.id,
-                )
+                stripe.PaymentMethod.attach(payment_method_id, customer=cliente.id)
             except stripe.error.InvalidRequestError:
                 pass
 
-            stripe.Customer.modify(
-                cliente.id,
-                invoice_settings={"default_payment_method": payment_method_id},
-            )
+            stripe.Customer.modify(cliente.id, invoice_settings={"default_payment_method": payment_method_id})
 
             cotizacion_usd = 1000
-            precio_ars = rental.price
-            precio_usd = precio_ars / cotizacion_usd
-
+            precio_usd = rental.price / cotizacion_usd
             noches = (end_date - start_date).days + 1
             total_a_pagar = int(precio_usd * noches * 100)
 
-            payment_intent = stripe.PaymentIntent.create(
+            stripe.PaymentIntent.create(
                 amount=total_a_pagar,
                 currency="usd",
                 customer=cliente.id,
@@ -237,39 +234,38 @@ def alquilar(rental_id):
             flash("Reserva Exitosa", "success")
             return redirect(url_for("home"))
 
-
-        except stripe.error.CardError as e:
-            # Agrego este print(e) para entender por que me da error el pago
-            print(str(e) + " PRIMER PRINT")
-            db.session.delete(nueva_reserva)
-            db.session.commit()
-            flash("Error en el pago, no se realizo la reserva", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
-
         except Exception as e:
-            # Agrego este print(e) para entender por que me da error el pago
-            print(str(e) + " SEGUNDO PRINT")
+            print(str(e))
             db.session.delete(nueva_reserva)
             db.session.commit()
-            flash("Error en el pago, no se realizo la reserva", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
+            flash("Error en el pago, no se realizó la reserva", "danger")
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
     return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
 
 @bp.route("/eliminar-compañero/<int:id>/<int:rental_id>", methods=["POST"])
-
 @login_required
 def eliminar_compañero(id, rental_id):
     compañero = Compañero.query.filter_by(id=id, user_id=current_user.id).first_or_404()
+    nombre_compañero = f"{compañero.nombre} {compañero.apellido}"
 
+    # Actualizar todos los acompañantes que tenían a este como tutor
+    acompañantes_con_este_tutor = Compañero.query.filter(
+        Compañero.tutor == nombre_compañero,
+        Compañero.user_id == current_user.id
+    ).all()
+    
+    for a in acompañantes_con_este_tutor:
+        a.tutor = None
+    
     if len(compañero.reservas) > 0:
         compañero.user_id = None
         db.session.commit()
-        flash("El acompañante fue desvinculado de tu cuenta pero conserva historial de reservas.", "info")
+        flash("El acompañante fue desvinculado de tu cuenta pero conserva historial de reservas. Se han actualizado los tutores relacionados.", "info")
     else:
         db.session.delete(compañero)
         db.session.commit()
-        flash("Acompañante eliminado.", "info")
+        flash("Acompañante eliminado. Se han actualizado los tutores relacionados.", "info")
 
     return redirect(url_for("reservation.alquilar", rental_id=rental_id))

@@ -31,3 +31,8 @@ class Compañero(db.Model):
         hoy = datetime.today()
         edad = hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
         return edad < 18
+    
+    def esMayor(self):
+        hoy = datetime.today()
+        edad = hoy.year - self.fechaNacimiento.year - ((hoy.month, hoy.day) < (self.fechaNacimiento.month, self.fechaNacimiento.day))
+        return edad >= 18

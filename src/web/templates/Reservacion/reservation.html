@@ -18,19 +18,21 @@
     <div class="form-group mt-3">
       <label>Acompañantes registrados:</label>
       {% if compañeros %}
-        {% for compa in compañeros %}
-          <div class="form-check d-flex justify-content-between align-items-center mb-2">
-            <div>
-              <input class="form-check-input" type="checkbox" name="compañeros[]" value="{{ compa.id }}" id="compa{{ compa.id }}">
-              <label class="form-check-label" for="compa{{ compa.id }}">
-                {{ compa.nombre }} (DNI: {{ compa.dni }})
-              </label>
-            </div>
-             <button type="button" class="btn btn-danger btn-sm" onclick="eliminarCompañero('{{ compa.id }}', '{{ rental.id }}')">Eliminar</button>
-          </div>
-        {% endfor %}
+      {% for compa in compañeros %}
+      <div class="form-check d-flex justify-content-between align-items-center mb-2">
+        <div>
+          <input class="form-check-input" type="checkbox" name="compañeros[]" value="{{ compa.id }}"
+            id="compa{{ compa.id }}">
+          <label class="form-check-label" for="compa{{ compa.id }}">
+            {{ compa.nombre }} (DNI: {{ compa.dni }})
+          </label>
+        </div>
+        <button type="button" class="btn btn-danger btn-sm"
+          onclick="eliminarCompañero('{{ compa.id }}', '{{ rental.id }}')">Eliminar</button>
+      </div>
+      {% endfor %}
       {% else %}
-        <p>No tenés acompañantes registrados.</p>
+      <p>No tenés acompañantes registrados.</p>
       {% endif %}
     </div>
 
@@ -51,7 +53,7 @@
         </div>
         <div class="row mb-3">
           <div class="col-md-4">
-            <input type="date" class="form-control" name="nuevo_nacimiento[]">
+            <input type="date" class="form-control nacimiento-nuevo-input" name="nuevo_nacimiento[]">
           </div>
           <div class="col-md-3">
             <select class="form-control" name="nuevo_estado_civil[]">
@@ -61,11 +63,17 @@
               <option value="viudo/a">Viudo/a</option>
             </select>
           </div>
-          <div class="col-md-5">
-            <input type="text" class="form-control" name="nuevo_tutor[]" placeholder="Tutor (si es menor)" autocomplete="off">
+          <div class="col-md-5 tutor-select-container" style="display: none;">
+            <select class="form-control tutor-select" name="nuevo_tutor[]">
+              <option value="" selected disabled>Seleccionar tutor</option>
+              <option value="current_user">Yo mismo ({{ current_user.nombre }})</option>
+            </select>
+            <!-- Campo oculto para asegurar el envío del tutor seleccionado -->
+            <input type="hidden" class="hidden-tutor-input" name="nuevo_tutor_hidden[]" value="">
           </div>
-          <div class="col-md-12 mt-2">
+          <div class="col-md-12 mt-2 d-flex justify-content-between">
             <button type="button" class="btn btn-danger btn-sm remove-btn">X</button>
+            <button type="button" class="btn btn-primary btn-sm guardar-btn">Guardar acompañante</button>
           </div>
         </div>
       </div>
@@ -80,12 +88,184 @@
   <h5>Días ocupados:</h5>
   <ul>
     {% for inicio, fin in dias_ocupados %}
-      <li style="color: red;">🛑 Desde {{ inicio.strftime('%d/%m/%Y') }} hasta {{ fin.strftime('%d/%m/%Y') }}</li>
+    <li style="color: red;">🛑 Desde {{ inicio.strftime('%d/%m/%Y') }} hasta {{ fin.strftime('%d/%m/%Y') }}</li>
     {% endfor %}
   </ul>
 </div>
 
 <script>
+  function calcularEdad(fechaStr) {
+    if (!fechaStr) return 0;
+    const fecha = new Date(fechaStr);
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - fecha.getFullYear();
+    const m = hoy.getMonth() - fecha.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < fecha.getDate())) {
+      edad--;
+    }
+    return edad;
+  }
+
+  function esAcompanianteCompleto(entry) {
+    const nombre = entry.querySelector('input[name="nuevo_nombre[]"]')?.value.trim();
+    const dni = entry.querySelector('input[name="nuevo_dni[]"]')?.value.trim();
+    const telefono = entry.querySelector('input[name="nuevo_telefono[]"]')?.value.trim();
+    const nacimiento = entry.querySelector('input[name="nuevo_nacimiento[]"]')?.value;
+    const estadoCivil = entry.querySelector('select[name="nuevo_estado_civil[]"]')?.value;
+
+    return nombre && dni && telefono && nacimiento && estadoCivil;
+  }
+
+  // Sincronizar tutores con campos ocultos antes de enviar
+  document.getElementById('reserva-form').addEventListener('submit', function () {
+    document.querySelectorAll('.companiero-entry').forEach(entry => {
+      const tutorSelect = entry.querySelector('.tutor-select');
+      const hiddenInput = entry.querySelector('.hidden-tutor-input');
+
+      if (tutorSelect && hiddenInput) {
+        hiddenInput.value = tutorSelect.value || entry.dataset.tutorSeleccionado || '';
+      }
+    });
+  });
+
+  function manejarCambioFechaNacimiento(e) {
+    const input = e.target;
+    const entry = input.closest('.companiero-entry');
+    const tutorContainer = entry.querySelector('.tutor-select-container');
+    const edad = calcularEdad(input.value);
+
+    if (tutorContainer) {
+      // Mostrar u ocultar según la edad
+      tutorContainer.style.display = edad < 18 ? 'block' : 'none';
+
+      // Si es mayor de edad, limpiar selección de tutor
+      if (edad >= 18) {
+        const tutorSelect = entry.querySelector('.tutor-select');
+        if (tutorSelect) {
+          tutorSelect.value = '';
+          entry.dataset.tutorSeleccionado = '';
+
+          // Eliminar display del tutor si existe
+          const tutorDisplay = entry.querySelector('.tutor-display');
+          if (tutorDisplay) tutorDisplay.remove();
+        }
+      }
+
+      actualizarOpcionesTutores();
+    }
+  }
+
+  function guardarAcompaniante(btn) {
+    const entry = btn.closest('.companiero-entry');
+
+    if (!esAcompanianteCompleto(entry)) {
+      alert('Por favor complete todos los datos del acompañante antes de guardar');
+      return;
+    }
+
+    const tutorSelect = entry.querySelector('.tutor-select');
+    if (tutorSelect && tutorSelect.style.display !== 'none') {
+      const tutorSeleccionado = tutorSelect.options[tutorSelect.selectedIndex];
+      const hiddenInput = entry.querySelector('.hidden-tutor-input');
+
+      if (!tutorSeleccionado || !tutorSeleccionado.value) {
+        const edad = calcularEdad(entry.querySelector('input[name="nuevo_nacimiento[]"]').value);
+        if (edad < 18) {
+          alert('Debe seleccionar un tutor para el menor');
+          return;
+        }
+      } else {
+        // Guardar el valor del tutor
+        entry.dataset.tutorSeleccionado = tutorSelect.value;
+        entry.dataset.tutorNombre = tutorSeleccionado.text;
+
+        // Asegurar que el campo oculto se actualice correctamente
+        if (hiddenInput) {
+          hiddenInput.value = tutorSelect.value;
+        }
+
+        // Mostrar el tutor seleccionado visualmente
+        const tutorDisplay = document.createElement('span');
+        tutorDisplay.className = 'tutor-display';
+        tutorDisplay.textContent = `Tutor: ${tutorSeleccionado.text}`;
+
+        // Eliminar display anterior si existe
+        const oldDisplay = entry.querySelector('.tutor-display');
+        if (oldDisplay) oldDisplay.remove();
+
+        // Insertar después del contenedor del select
+        tutorSelect.closest('.tutor-select-container').insertAdjacentElement('afterend', tutorDisplay);
+      }
+    }
+
+    entry.dataset.guardado = 'true';
+    btn.textContent = '✓ Guardado';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-success');
+    actualizarOpcionesTutores();
+  }
+
+  function actualizarOpcionesTutores() {
+    const tutores = [{
+      id: "current_user",
+      nombre: "Yo mismo ({{ current_user.nombre }})"
+    }];
+
+    // Agregar acompañantes mayores de edad guardados como tutores
+    document.querySelectorAll('.companiero-entry[data-guardado="true"]').forEach(entry => {
+      const nombre = entry.querySelector('input[name="nuevo_nombre[]"]')?.value.trim();
+      const nacimiento = entry.querySelector('input[name="nuevo_nacimiento[]"]')?.value;
+
+      if (nombre && nacimiento && calcularEdad(nacimiento) >= 18) {
+        if (!tutores.some(t => t.id === nombre)) {
+          tutores.push({
+            id: nombre,
+            nombre: nombre
+          });
+        }
+      }
+    });
+
+    document.querySelectorAll('.tutor-select').forEach(select => {
+      const entry = select.closest('.companiero-entry');
+      const container = select.closest('.tutor-select-container');
+      if (container.style.display !== 'none') {
+        const currentValue = entry.dataset.tutorSeleccionado || '';
+
+        select.innerHTML = '';
+
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = 'Seleccionar tutor';
+        defaultOpt.disabled = true;
+        defaultOpt.selected = !currentValue;
+        select.appendChild(defaultOpt);
+
+        tutores.forEach(tutor => {
+          const option = document.createElement('option');
+          option.value = tutor.id;
+          option.textContent = tutor.nombre;
+          if (currentValue === tutor.id) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+
+        // Mostrar nombre visual si hay un tutor seleccionado
+        if (currentValue) {
+          const tutorDisplay = entry.querySelector('.tutor-display');
+          if (!tutorDisplay) {
+            const span = document.createElement('span');
+            span.className = 'tutor-display';
+            span.textContent = `Tutor: ${currentValue}`;
+            container.insertAdjacentElement('afterend', span);
+          }
+        }
+      }
+    });
+  }
+
+
   // Agregar nuevo acompañante dinámicamente
   document.getElementById('add-compa-btn').addEventListener('click', function () {
     const container = document.getElementById('companieros-container');
@@ -105,7 +285,7 @@
       </div>
       <div class="row mb-3">
         <div class="col-md-4">
-          <input type="date" class="form-control" name="nuevo_nacimiento[]">
+          <input type="date" class="form-control nacimiento-nuevo-input" name="nuevo_nacimiento[]">
         </div>
         <div class="col-md-3">
           <select class="form-control" name="nuevo_estado_civil[]">
@@ -115,27 +295,78 @@
             <option value="viudo/a">Viudo/a</option>
           </select>
         </div>
-        <div class="col-md-5">
-          <input type="text" class="form-control" name="nuevo_tutor[]" placeholder="Tutor (si es menor)" autocomplete="off">
+        <div class="col-md-5 tutor-select-container" style="display: none;">
+          <select class="form-control tutor-select" name="nuevo_tutor[]">
+            <option value="" selected disabled>Seleccionar tutor</option>
+            <option value="current_user">Yo mismo ({{ current_user.nombre }})</option>
+          </select>
+          <input type="hidden" class="hidden-tutor-input" name="nuevo_tutor_hidden[]" value="">
         </div>
-        <div class="col-md-12 mt-2">
+        <div class="col-md-12 mt-2 d-flex justify-content-between">
           <button type="button" class="btn btn-danger btn-sm remove-btn">X</button>
+          <button type="button" class="btn btn-primary btn-sm guardar-btn">Guardar acompañante</button>
         </div>
       </div>
     `;
     container.appendChild(entry);
+
+    // Configurar el event listener para el nuevo input de nacimiento
+    const nuevoInputNacimiento = entry.querySelector('.nacimiento-nuevo-input');
+    nuevoInputNacimiento.addEventListener('input', manejarCambioFechaNacimiento);
+
+    entry.querySelector('.guardar-btn').addEventListener('click', function () {
+      guardarAcompaniante(this);
+    });
+
+    if (nuevoInputNacimiento.value) {
+      const event = new Event('input');
+      nuevoInputNacimiento.dispatchEvent(event);
+    }
   });
 
   // Eliminar acompañante dinámico
   document.addEventListener('click', function (e) {
     if (e.target && e.target.classList.contains('remove-btn')) {
-      e.target.closest('.companiero-entry').remove();
+      if (confirm("¿Estás seguro de eliminar este acompañante?")) {
+        const entry = e.target.closest('.companiero-entry');
+        const nombre = entry.querySelector('input[name="nuevo_nombre[]"]')?.value;
+        entry.remove();
+
+        // Actualizar tutores que podrían estar referenciando a este acompañante
+        actualizarTutoresEliminados(nombre);
+        actualizarOpcionesTutores();
+      }
     }
   });
 
-  // Eliminar acompañante registrado
+  function actualizarTutoresEliminados(nombreEliminado) {
+    document.querySelectorAll('.companiero-entry').forEach(entry => {
+      const tutorSelect = entry.querySelector('.tutor-select');
+      if (tutorSelect) {
+        const tutorSeleccionado = tutorSelect.options[tutorSelect.selectedIndex];
+        if (tutorSeleccionado && tutorSeleccionado.text.includes(nombreEliminado)) {
+          // Limpiar la selección del tutor
+          tutorSelect.value = '';
+          entry.dataset.tutorSeleccionado = '';
+
+          // Eliminar el display del tutor
+          const tutorDisplay = entry.querySelector('.tutor-display');
+          if (tutorDisplay) {
+            tutorDisplay.remove();
+          }
+
+          // Mostrar advertencia si es necesario
+          const edad = calcularEdad(entry.querySelector('input[name="nuevo_nacimiento[]"]').value);
+          if (edad < 18) {
+            alert(`El tutor "${nombreEliminado}" fue eliminado. Por favor seleccione un nuevo tutor para el menor.`);
+          }
+        }
+      }
+    });
+  }
+
   function eliminarCompañero(compaId, rentalId) {
-    if(confirm("¿Querés eliminar este acompañante?")) {
+    if (confirm("¿Querés eliminar este acompañante?")) {
       fetch(`/reservacion/eliminar-compañero/${compaId}/${rentalId}`, {
         method: 'POST',
         headers: {
@@ -151,9 +382,26 @@
     }
   }
 
-  // Validar fechas con días ocupados
-  const diasOcupados = {{ dias_ocupados|tojson }};
+  // Validar fechas con días ocupados y tutores para menores
+  const diasOcupados = {{ dias_ocupados| tojson }};
   document.getElementById('reserva-form').addEventListener('submit', function (e) {
+    // Validar tutores para menores primero
+    const tutoresFaltantes = [];
+    document.querySelectorAll('.tutor-select-container:not([style*="none"])').forEach(container => {
+      const select = container.querySelector('.tutor-select');
+      if (!select.value) {
+        const nombre = container.closest('.companiero-entry').querySelector('input[name="nuevo_nombre[]"]').value;
+        tutoresFaltantes.push(nombre);
+      }
+    });
+
+    if (tutoresFaltantes.length > 0) {
+      alert(`Debe seleccionar un tutor para los siguientes menores de edad:\n${tutoresFaltantes.join('\n')}`);
+      e.preventDefault();
+      return;
+    }
+
+    // Luego validar fechas
     const start = new Date(document.getElementById('start_date').value);
     const end = new Date(document.getElementById('end_date').value);
 
@@ -162,7 +410,6 @@
       e.preventDefault();
       return;
     }
-
     for (const [iniStr, finStr] of diasOcupados) {
       const ini = new Date(iniStr);
       const fin = new Date(finStr);
@@ -173,6 +420,22 @@
         return;
       }
     }
+  });
+
+  // Inicialización
+  document.addEventListener('DOMContentLoaded', function () {
+    // Configurar listeners para inputs de nacimiento existentes
+    document.querySelectorAll('.nacimiento-nuevo-input').forEach(input => {
+      input.addEventListener('input', manejarCambioFechaNacimiento);
+    });
+
+    document.querySelectorAll('.guardar-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        guardarAcompaniante(this);
+      });
+    });
+
+    actualizarOpcionesTutores();
   });
 </script>
 
