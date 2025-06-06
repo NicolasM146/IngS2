@@ -111,7 +111,7 @@ def alquilar(rental_id):
 
         for ocupado_inicio, ocupado_fin in dias_ocupados:
             if start_date <= ocupado_fin and end_date >= ocupado_inicio:
-                flash(f"Las fechas elegidas se superponen con una reserva existente del {ocupado_inicio.strftime('%d/%m/%Y')} al {ocupado_fin.strftime('%d/%m/%Y')}.", "danger")
+                flash(f"Las fechas elegidas se superponen con una reserva existente", "danger")
                 return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados,hoy=hoy)
 
         if not payment_method_id or not isinstance(payment_method_id, str):
