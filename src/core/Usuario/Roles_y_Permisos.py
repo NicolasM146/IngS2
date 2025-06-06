@@ -87,13 +87,13 @@ def crear_roles_y_permisos(tabla, coneccion, **kw):
                 
                 "properties_index": [],
                 "properties_show": [],
-                "properties_edit": [],
+                "properties_update": [],
                 "properties_create": [],
                 "properties_destroy": [],
                 
                 "rentals_index": [check_in_out],
                 "rentals_show": [check_in_out],
-                "rentals_edit": [check_in_out],
+                "rentals_update": [check_in_out],
                 "rentals_create": [check_in_out],
                 "rentals_destroy": [check_in_out],
             },

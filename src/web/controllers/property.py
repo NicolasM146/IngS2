@@ -165,7 +165,7 @@ def create():
 
 
 @bp.route("/<int:id>/edit", methods=["GET", "POST"])
-@permiso_required('properties_edit')
+@permiso_required('properties_update')
 @login_required
 def edit(id):
     property_obj = Property.query.get_or_404(id)
@@ -331,6 +331,7 @@ def deactivate(id):
 
     property_obj.estado = 'baja'
     db.session.commit()
+
 
     flash("Baja del inmueble exitosa", "success")
     return redirect(url_for('property.show', id=id))
