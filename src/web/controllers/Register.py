@@ -37,7 +37,7 @@ def register():
 
         rol_cliente = Rol.query.filter_by(nombre="client").first()
 
-
+        
         # Validaciones usuario
         if not es_nombre_valido(data_usuario["nombre"]):
             flash("El nombre solo debe contener letras y acentos.", "error")
@@ -68,7 +68,9 @@ def register():
         if User.query.filter_by(email=data_usuario["email"]).first():
             flash("El email ya está registrado.", "error")
             return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
-
+        if User.query.filter_by(username=data_usuario["username"]).first():
+            flash("El nombre de usuario ya está en uso. Por favor elegí otro.", "error")
+            return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         if len(data_usuario["password"]) < 6:
             flash("La contraseña debe tener al menos 6 caracteres.", "error")
@@ -112,7 +114,7 @@ def register():
                 # customer = stripe.Customer.create(email=nuevo_usuario.email, payment_method=payment_method_id)
                 # nuevo_usuario.stripe_customer_id = customer.id
             except stripe.error.StripeError as e:
-                flash("Error con Stripe: " + e.user_message, "error")
+                flash("El número de tarjeta no es válido","error")
                 return render_template('auth/register.html', datos=data_usuario, stripe_public_key=current_app.config['STRIPE_PUBLISHABLE_KEY'])
 
         db.session.add(nuevo_usuario)
