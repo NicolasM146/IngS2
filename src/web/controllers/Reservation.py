@@ -108,6 +108,9 @@ def alquilar(rental_id):
         if start_date > end_date:
             flash("La fecha de inicio no puede ser posterior a la fecha de fin.", "warning")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+        if start_date == end_date:
+            flash("La fecha de inicio y la fecha de fin no pueden ser el mismo día.", "warning")
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
         for ocupado_inicio, ocupado_fin in dias_ocupados:
             if start_date <= ocupado_fin and end_date >= ocupado_inicio:
