@@ -6,21 +6,11 @@
 <h2>Actualizar Alquiler</h2>
 
 <form method="post" action="{{ url_for('rental.edit', rental_id=alquiler.id) }}">
-    <div class="mb-3">
-        <label class="form-label">Inmueble</label>
-        <input type="text" class="form-control" value="{{ alquiler.property.direccion }} - {{ alquiler.property.localidad }}" readonly>
-    </div>
 
     <div class="mb-3">
         <label for="price" class="form-label">Precio por noche</label>
         <input type="number" step="0.01" min="0" id="price" name="price" class="form-control" 
                value="{{ alquiler.price }}" required>
-    </div>
-
-    <div class="mb-3 form-check">
-        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
-               {{ 'checked' if alquiler.is_active }}>
-        <label class="form-check-label" for="is_active">Alquiler activo</label>
     </div>
 
     <button type="submit" class="btn btn-primary">Confirmar</button>

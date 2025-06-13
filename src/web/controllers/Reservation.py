@@ -105,8 +105,8 @@ def alquilar(rental_id):
             flash("Formato de fecha inválido.", "danger")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
-        if start_date > end_date:
-            flash("La fecha de inicio no puede ser posterior a la fecha de fin.", "warning")
+        if start_date >= end_date:
+            flash("La fecha de inicio no puede ser posterior o igual a la fecha de fin.", "warning")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
         if start_date == end_date:
             flash("La fecha de inicio y la fecha de fin no pueden ser el mismo día.", "warning")
