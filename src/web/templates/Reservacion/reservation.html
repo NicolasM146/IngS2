@@ -171,7 +171,7 @@
       if (!tutorSeleccionado || !tutorSeleccionado.value) {
         const edad = calcularEdad(entry.querySelector('input[name="nuevo_nacimiento[]"]').value);
         if (edad < 18) {
-          alert('Debe seleccionar un tutor para el menor');
+          alert('Debe seleccionar un tutor para los acompañantes menores de edad');
           return;
         }
       } else {
