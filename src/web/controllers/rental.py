@@ -48,6 +48,7 @@ def index():
             alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
 
     return render_template("Alquileres/index.html", alquileres=alquileres)
+
 @bp.route('/create', methods=['GET', 'POST'])
 @permiso_required('rentals_create')
 @login_required
@@ -70,6 +71,7 @@ def create():
         property_id = request.form.get('property_id')
         price = request.form.get('price')
         description = request.form.get('description')
+        advance_payment = request.form.get('advance_payment') == 'true'
 
         # Validar propiedad seleccionada
         propiedad = Property.query.filter_by(id=property_id, user_id=current_user.id).first()
@@ -96,7 +98,8 @@ def create():
             creation_date=datetime.utcnow(),
             price=price_float,
             description=description,
-            is_active=True
+            is_active=True,
+            advance_payment=advance_payment,
         )
         db.session.add(nuevo_alquiler)
         db.session.commit()
@@ -138,6 +141,7 @@ def edit(rental_id):
     
     if request.method == 'POST':
         price = request.form.get('price')
+        advance_payment = request.form.get('advance_payment') == 'true'
 
         try:
             price_float = float(price)
@@ -148,6 +152,7 @@ def edit(rental_id):
             return redirect(url_for('rental.edit', rental_id=rental_id))
 
         alquiler.price = price_float
+        alquiler.advance_payment = advance_payment
         
         db.session.commit()
         flash("Alquiler actualizado con éxito", "success")

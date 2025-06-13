@@ -23,6 +23,13 @@
         <input type="number" step="0.01" min="0" id="price" name="price" class="form-control" required>
     </div>
 
+    <div class="mb-3">
+        <label for="advance_payment" class="form-label">Pago adelantado</label>
+        <select id="advance_payment" name="advance_payment" class="form-select" required>
+            <option value="false" selected>No</option>
+            <option value="true">Sí</option>
+        </select>
+    </div>
 
     <button type="submit" class="btn btn-success">Cargar Alquiler</button>
     <a href="{{ url_for('rental.index') }}" class="btn btn-secondary">Cancelar</a>

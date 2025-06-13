@@ -7,7 +7,7 @@
         <div class="btn-group">
             {% if current_user.tiene_permiso('rentals_update') %}
             <a href="{{ url_for('rental.edit', rental_id=alquiler.id) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Actualizar precio por noche
+                <i class="fas fa-edit"></i> Actualizar
             </a>
             {% endif %}
 
@@ -71,6 +71,9 @@
                             <span class="badge bg-{{ 'success' if alquiler.is_active else 'secondary' }}">
                                 {{ 'Activo' if alquiler.is_active else 'Bloqueado' }}
                             </span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Pago adelantado:</strong> {{ 'Si' if alquiler.advance_payment else 'No'}}
                         </li>
                     </ul>
                 </div>

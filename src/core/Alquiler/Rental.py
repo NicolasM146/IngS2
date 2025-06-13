@@ -9,6 +9,7 @@ class Rental(db.Model):
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True)
+    advance_payment = db.Column(db.Boolean, default=False)
 
     property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), unique=True, nullable=False)
 
