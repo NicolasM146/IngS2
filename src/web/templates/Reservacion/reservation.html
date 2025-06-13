@@ -405,8 +405,8 @@
     const start = new Date(document.getElementById('start_date').value);
     const end = new Date(document.getElementById('end_date').value);
 
-    if (end < start) {
-      alert("La fecha de fin debe ser mayor o igual a la fecha de inicio.");
+    if (end <= start) {
+      alert("La fecha de fin debe ser posterior a la fecha de inicio.");
       e.preventDefault();
       return;
     }
