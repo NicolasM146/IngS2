@@ -131,18 +131,13 @@ def delete(rental_id):  # Cambia el parámetro para que coincida con la ruta
 @bp.route("/<int:rental_id>/edit", methods=["GET", "POST"])
 @permiso_required('rentals_update')
 @login_required
-def edit(rental_id):  # Cambia el parámetro para que coincida con la ruta
+def edit(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
     
-    # Verificar que el alquiler pertenece al usuario actual
-    if alquiler.property.user_id != current_user.id:
-        flash("No tienes permiso para editar este alquiler.", "danger")
-        return redirect(url_for('rental.index'))
-
+    # Anteriormente se verificaba si el usuario actual era el que estaba almacenado como encargado del Inmueble alquilado, no tenia sentido.
+    
     if request.method == 'POST':
         price = request.form.get('price')
-        description = request.form.get('description')
-        is_active = request.form.get('is_active') == 'on'
 
         try:
             price_float = float(price)
@@ -153,8 +148,6 @@ def edit(rental_id):  # Cambia el parámetro para que coincida con la ruta
             return redirect(url_for('rental.edit', rental_id=rental_id))
 
         alquiler.price = price_float
-        alquiler.description = description
-        alquiler.is_active = is_active
         
         db.session.commit()
         flash("Alquiler actualizado con éxito", "success")
