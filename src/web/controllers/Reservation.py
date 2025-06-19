@@ -222,9 +222,9 @@ def alquilar(rental_id):
             cotizacion_usd = 1000
             precio_usd = rental.price / cotizacion_usd
             noches = (end_date - start_date).days + 1
-            total_a_pagar = int(precio_usd * noches * 100 * 0.2)
-
-            stripe.PaymentIntent.create(
+            if(rental.advance_payment):
+                total_a_pagar = int(precio_usd * noches * 100 * 0.2)
+                stripe.PaymentIntent.create(
                 amount=total_a_pagar,
                 currency="usd",
                 customer=cliente.id,
@@ -232,7 +232,9 @@ def alquilar(rental_id):
                 off_session=True,
                 confirm=True,
                 description=f"Reserva inmueble {rental.id} - Usuario {current_user.id}",
-            )
+                )
+
+
 
             flash("Reserva Exitosa", "success")
             return redirect(url_for("home"))
