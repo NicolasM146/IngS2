@@ -1,12 +1,23 @@
-from flask import render_template, url_for, current_app
+from flask import render_template, url_for
 from flask_mail import Message
-from src.utils.token import generate_confirmation_token
 
-def send_confirmation_email(user_email):
-    from src.web import mail  # Import dentro de la función para evitar import circular
-    token = generate_confirmation_token(user_email)
+from src.utils.token import generate_confirmation_token, confirm_token
+
+def send_email(subject, recipient, html_body):
+    from src.web import mail
+    msg = Message(subject, recipients=[recipient])
+    msg.html = html_body
+    mail.send(msg)
+
+def send_confirmation_email(email):
+    token = generate_confirmation_token(email)
     confirm_url = url_for('register.confirm_email', token=token, _external=True)
     html = render_template('email/confirm.html', confirm_url=confirm_url)
-    msg = Message('Por favor confirma tu email', sender=current_app.config['MAIL_USERNAME'], recipients=[user_email])
-    msg.html = html
-    mail.send(msg)
+    send_email("Confirma tu cuenta en Alquilando", email, html)
+
+def send_password_reset_email(email, token):
+    subject = "Restablecer tu contraseña en Alquilando"
+    reset_url = url_for('login.reset_password', token=token, _external=True)
+    html = render_template('email/reset_password.html', reset_url=reset_url)
+    send_email(subject, email, html)
+
