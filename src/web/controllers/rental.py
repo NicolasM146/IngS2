@@ -9,6 +9,8 @@ from sqlalchemy.orm import aliased
 from sqlalchemy import or_
 from flask_login import login_required, current_user
 from src.web.handlers.auth import permiso_required
+from src.core.Reserva.reservation import Reservation
+from datetime import date
 
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
@@ -170,10 +172,24 @@ def show(rental_id):
         flash("No tienes permiso para ver este alquiler.", "danger")
         return redirect(url_for('rental.index'))
     """
+     # Lógica para permitir reseñar si hay reservas ya iniciadas
+    puede_dejar_resena = Reservation.query.filter_by(
+        user_id=current_user.id,
+        rental_id=alquiler.id
+    ).filter(Reservation.start_date <= date.today()).count() > 0
+
     review_summary = alquiler.get_review_summary()
     average_rating = alquiler.get_average_rating()
     reviews = sorted(alquiler.reviews, key=lambda r: r.created_at, reverse=True)
-    return render_template("Alquileres/show.html", alquiler=alquiler, review_summary=review_summary, average_rating=average_rating, reviews=reviews)
+
+    return render_template(
+        "Alquileres/show.html",
+        alquiler=alquiler,
+        review_summary=review_summary,
+        average_rating=average_rating,
+        reviews=reviews,
+        puede_dejar_resena=puede_dejar_resena
+    )
 
 @bp.route("/<int:rental_id>/lock", methods=["POST"])
 @permiso_required('rentals_update')

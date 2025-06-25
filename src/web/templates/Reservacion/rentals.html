@@ -84,7 +84,7 @@
             <p class="card-text"><strong>Localidad:</strong> {{ alquiler.property.localidad }}</p>
             <p class="card-text"><strong>Habitaciones:</strong> {{ alquiler.property.habitaciones }}</p>
             <p class="card-text"><strong>Capacidad:</strong> {{ alquiler.property.capacidad }}</p>
-            <form action="{{ url_for('reservation.ver_alquiler', rental_id=alquiler.id) }}" method="get">
+            <form action="{{ url_for('rental.show', rental_id=alquiler.id) }}" method="get">
               <button type="submit" class="btn btn-secondary">Ver</button>
             </form>
           </div>

@@ -8,6 +8,8 @@ from src.core.database import db
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from datetime import date
+from statistics import mean
+from collections import Counter
 
 import os
 from dotenv import load_dotenv
@@ -77,12 +79,28 @@ def buscar_alquileres():
     return render_template("Reservacion/rentals.html", rentals=alquileres, busqueda_realizada=busqueda_realizada)
 
 
+# No se deberia usar esta funcion, existe show() en el controlador rental.
 @bp.route("/alquiler/<int:rental_id>")
 def ver_alquiler(rental_id):
     rental = Rental.query.get_or_404(rental_id)
-    reseñas = rental.reviews  # Suponiendo que hay una relación `reviews` en Rental
+    reviews = rental.reviews  # Relación definida en el modelo Rental
 
-    return render_template("Reservacion/show_rental.html", rental=rental, reseñas=reseñas)
+    # Calcular promedio de puntuación
+    if reviews:
+        average_rating = round(mean([r.stars for r in reviews if r.stars is not None]), 2)
+    else:
+        average_rating = 0
+
+    # Contar cuántas reseñas hay por cada cantidad de estrellas
+    review_summary = Counter(r.stars for r in reviews if r.stars is not None)
+
+    return render_template(
+        "Reservacion/show_rental.html",
+        rental=rental,
+        reviews=reviews,
+        average_rating=average_rating,
+        review_summary=review_summary,
+    )
 
 @bp.route("/alquilar/<int:rental_id>", methods=["GET", "POST"])
 @login_required
