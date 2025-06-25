@@ -120,5 +120,49 @@
             <i class="fas fa-arrow-left me-2"></i> Volver al listado
         </a>
     </div>
+
+    <div class="mt-5">
+        <h4>Reseñas</h4>
+
+        {% if reviews|length == 0 %}
+        <p class="text-muted">Aún no hay reseñas.</p>
+        {% else %}
+        <p>
+            Promedio: <strong>{{ average_rating }}</strong> estrellas
+        </p>
+        <ul class="list-group mb-3">
+            {% for star, count in review_summary.items() %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ star }} estrella{{ 's' if star > 1 else '' }}
+                <span class="badge bg-primary rounded-pill">{{ count }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse"
+            data-bs-target="#reseniasCollapse">
+            Ver reseñas
+        </button>
+
+        <div class="collapse mt-3" id="reseniasCollapse">
+            {% for review in reviews %}
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h6 class="card-title mb-1">
+                        {{ review.user.username }} -
+                        <span class="text-warning">
+                            {% for _ in range(review.stars) %}★{% endfor %}
+                        </span>
+                    </h6>
+                    {% if review.comment %}
+                    <p class="card-text">{{ review.comment }}</p>
+                    {% endif %}
+                    <p class="text-muted small">Publicado el {{ review.created_at.strftime('%d/%m/%Y') }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

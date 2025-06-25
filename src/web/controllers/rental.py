@@ -165,11 +165,15 @@ def edit(rental_id):
 @login_required
 def show(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
+    """ Comento esto porque no tiene sentido, hay que borrarlo.
     if alquiler.property.user_id != current_user.id:
         flash("No tienes permiso para ver este alquiler.", "danger")
         return redirect(url_for('rental.index'))
-
-    return render_template("Alquileres/show.html", alquiler=alquiler)
+    """
+    review_summary = alquiler.get_review_summary()
+    average_rating = alquiler.get_average_rating()
+    reviews = sorted(alquiler.reviews, key=lambda r: r.created_at, reverse=True)
+    return render_template("Alquileres/show.html", alquiler=alquiler, review_summary=review_summary, average_rating=average_rating, reviews=reviews)
 
 @bp.route("/<int:rental_id>/lock", methods=["POST"])
 @permiso_required('rentals_update')
