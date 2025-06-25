@@ -163,6 +163,28 @@
             {% endfor %}
         </div>
         {% endif %}
+        {% if current_user.tiene_permiso('reviews_create') and puede_agregar_resenia %}
+        <div class="mt-4">
+            <h5>Agregar Reseña</h5>
+            <form action="{{ url_for('review.create', rental_id=alquiler.id) }}" method="POST">
+                <div class="mb-3">
+                    <label for="stars" class="form-label">Puntaje (1 a 5):</label>
+                    <select name="stars" id="stars" class="form-select" required>
+                        <option value="">Seleccionar</option>
+                        {% for i in range(1, 6) %}
+                        <option value="{{ i }}">{{ i }} estrella{{ 's' if i > 1 else '' }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="comment" class="form-label">Comentario (opcional):</label>
+                    <textarea name="comment" id="comment" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar reseña</button>
+            </form>
+        </div>
+        {% endif %}
+
     </div>
 </div>
 {% endblock %}
