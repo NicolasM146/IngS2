@@ -35,7 +35,7 @@ def procesar_pagos_pendientes():
             monto_total = reserva.price_per_night * noches
             
             # Lógica de pagos (adaptada a tu flujo actual)
-            if alquiler.advance_payment:
+            if reserva.advance_payment:
                 # Asume que el 20% YA se pagó al crear la reserva (según tu código)
                 monto_a_cobrar = monto_total * 0.8  # Cobrar 80% restante
                 descripcion = "Pago restante (80%) de reserva"

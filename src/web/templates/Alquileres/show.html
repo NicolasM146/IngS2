@@ -6,6 +6,12 @@
         <h2>Detalle del Alquiler</h2>
         <div class="btn-group">
             {% if current_user.tiene_permiso('rentals_update') %}
+                <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id) }}" class="btn btn-info ms-2">
+                <i class="fas fa-calendar-alt"></i> Ver Reservas
+            </a>
+            {% endif %}
+
+            {% if current_user.tiene_permiso('rentals_update') %}
             <a href="{{ url_for('rental.edit', rental_id=alquiler.id) }}" class="btn btn-warning">
                 <i class="fas fa-edit"></i> Actualizar
             </a>

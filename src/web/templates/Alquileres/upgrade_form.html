@@ -1,0 +1,36 @@
+{% extends 'layout.html' %}
+
+{% block title %}Upgrade Reserva #{{ reserva.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Upgrade de Reserva #{{ reserva.id }}</h2>
+
+    <h4>Datos actuales</h4>
+    <ul>
+        <li><strong>Cliente:</strong> {{ reserva.user.nombre }}</li>
+        <li><strong>Email:</strong> {{ reserva.user.email }}</li>
+        <li><strong>Alquiler actual:</strong> {{ reserva.rental.property.direccion }}</li>
+        <li><strong>Fecha inicio:</strong> {{ reserva.start_date.strftime('%d/%m/%Y') }}</li>
+        <li><strong>Fecha fin:</strong> {{ reserva.end_date.strftime('%d/%m/%Y') }}</li>
+    </ul>
+
+    <h4>Seleccione nuevo alquiler para las fechas: {{ nuevo_inicio.strftime('%d/%m/%Y') }} - {{ nuevo_fin.strftime('%d/%m/%Y') }}</h4>
+
+    <form method="POST">
+        <div class="mb-3">
+            <label for="nuevo_rental_id" class="form-label">Alquiler disponible</label>
+            <select name="nuevo_rental_id" id="nuevo_rental_id" class="form-select" required>
+                <option value="" disabled selected>Seleccione un alquiler</option>
+                {% for a in alquileres %}
+                <option value="{{ a.id }}">{{ a.property.direccion }} - Precio: ${{ a.price }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Confirmar Upgrade</button>
+        <a href="{{ url_for('rental.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
+
+    </form>
+</div>
+{% endblock %}

@@ -203,7 +203,8 @@ def alquilar(rental_id):
             price_per_night=rental.price,
             rental_id=rental.id,
             user_id=current_user.id,
-            compañeros=acompañantes_seleccionados + nuevos_acompañantes
+            compañeros=acompañantes_seleccionados + nuevos_acompañantes,
+            advance_payment=rental.advance_payment
         )
         db.session.add(nueva_reserva)
         db.session.commit()

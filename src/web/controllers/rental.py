@@ -9,7 +9,8 @@ from sqlalchemy.orm import aliased
 from sqlalchemy import or_
 from flask_login import login_required, current_user
 from src.web.handlers.auth import permiso_required
-
+from src.core.Reserva.reservation import Reservation
+from sqlalchemy import and_
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
 
@@ -49,6 +50,85 @@ def index():
 
     return render_template("Alquileres/index.html", alquileres=alquileres)
 
+@bp.route('/<int:rental_id>/reservas/vigentes')
+@permiso_required("rentals_update")
+@login_required
+def listado_de_reservas(rental_id):
+    hoy = datetime.utcnow().date()
+    reservas = Reservation.query.filter(
+        Reservation.end_date > hoy,
+        Reservation.rental_id == rental_id
+    ).order_by(Reservation.start_date).all()
+    return render_template("Alquileres/current_reservation.html", reservas=reservas)
+
+
+@bp.route('/reserva/<int:reservation_id>/upgrade', methods=['GET', 'POST'])
+@permiso_required('reservations_update')
+@login_required
+def upgrade_reservation(reservation_id):
+    reserva = Reservation.query.get_or_404(reservation_id)
+    hoy = datetime.utcnow().date()
+    
+    # calcular fechas para búsqueda
+    nuevo_inicio = max(hoy, reserva.start_date)
+    nuevo_fin = reserva.end_date
+
+    # buscar alquileres disponibles en ese rango
+    alquileres_disponibles = (
+        Rental.query
+        .filter(Rental.is_active == True)
+        .filter(
+            ~Rental.reservations.any(
+                and_(
+                    Reservation.start_date <= nuevo_fin,
+                    Reservation.end_date >= nuevo_inicio
+                )
+            )
+        )
+        .all()
+    )
+
+    if request.method == 'POST':
+        nuevo_rental_id = request.form.get('nuevo_rental_id')
+        nuevo_rental = Rental.query.get(nuevo_rental_id)
+
+        if not nuevo_rental:
+            flash('Alquiler seleccionado inválido.', 'danger')
+            return redirect(url_for('rental.upgrade_reservation', reservation_id=reservation_id))
+
+        # Calcular fecha inicio según regla: si hoy > reserva.start_date uso hoy, sino reserva.start_date
+        hoy = datetime.utcnow().date()
+        nuevo_inicio = hoy if hoy > reserva.start_date else reserva.start_date
+        nuevo_fin = reserva.end_date  # Siempre el mismo fin
+
+        # Crear nueva reserva copiando datos excepto rental_id y fechas
+        nueva_reserva = Reservation(
+            start_date=nuevo_inicio,
+            end_date=nuevo_fin,
+            price_per_night=reserva.price_per_night,     # mantiene precio viejo
+            advance_payment=reserva.advance_payment,     # mantiene modalidad de pago vieja
+            status=reserva.status,
+            rental=nuevo_rental,
+            user=reserva.user,
+        )
+
+        # Copiar compañeros
+        for c in reserva.compañeros:
+            nueva_reserva.compañeros.append(c)
+
+        db.session.add(nueva_reserva)
+        db.session.delete(reserva)
+        db.session.commit()
+
+        flash('Reserva actualizada con el nuevo alquiler correctamente.', 'success')
+        return redirect(url_for('rental.index'))
+
+    return render_template('Alquileres/upgrade_form.html',
+                           reserva=reserva,
+                           alquileres=alquileres_disponibles,
+                           nuevo_inicio=nuevo_inicio,
+                           nuevo_fin=nuevo_fin)
+    
 @bp.route('/create', methods=['GET', 'POST'])
 @permiso_required('rentals_create')
 @login_required
