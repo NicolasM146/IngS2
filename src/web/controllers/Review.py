@@ -29,3 +29,18 @@ def create(rental_id):
 
     flash("Reseña guardada con éxito", "success")
     return redirect(url_for("rental.show", rental_id=rental_id))
+
+@review_bp.route('/<int:review_id>/delete', methods=['POST'])
+@login_required
+def delete(review_id):
+    review = Review.query.get_or_404(review_id)
+
+    if review.user_id != current_user.id:
+        flash("No tenés permiso para eliminar esta reseña.", "danger")
+        return redirect(url_for('rental.show', rental_id=request.args.get('rental_id')))
+
+    rental_id = review.rental_id
+    db.session.delete(review)
+    db.session.commit()
+    flash("Reseña borrada con éxito", "success")
+    return redirect(url_for('rental.show', rental_id=rental_id))

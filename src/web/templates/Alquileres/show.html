@@ -157,6 +157,12 @@
                     <p class="card-text">{{ review.comment }}</p>
                     {% endif %}
                     <p class="text-muted small">Publicado el {{ review.created_at.strftime('%d/%m/%Y') }}</p>
+                    {% if current_user.id == review.user_id %}
+                    <form action="{{ url_for('review.delete', review_id=review.id, rental_id=alquiler.id) }}"
+                        method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta reseña?')" class="mt-2">
+                        <button type="submit" class="btn btn-danger btn-sm">Eliminar Reseña</button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
