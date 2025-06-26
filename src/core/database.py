@@ -1,6 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
-from src.core.Inmueble.localidad.Cargar_localidades import cargar_localidades
 
 db = SQLAlchemy()
 
@@ -17,6 +16,7 @@ def config(app):
     return app
 
 def reset():
+    from src.core.Inmueble.localidad.Cargar_localidades import cargar_localidades
     """Resetea la base de datos: borra y crea todas las tablas."""
     print("Importando modelos...")
     # Importá todos los modelos para que SQLAlchemy los conozca
