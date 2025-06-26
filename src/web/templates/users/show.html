@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}Detalle del Usuario{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Detalle del Usuario</h1>
+
+<table class="table table-bordered">
+    <tr><th>Nombre</th><td>{{ user.nombre }}</td></tr>
+    <tr><th>Email</th><td>{{ user.email }}</td></tr>
+    <tr><th>DNI</th><td>{{ user.dni }}</td></tr>
+    <tr><th>Rol</th><td>{{ user.rol.nombre if user.rol else 'Sin rol' }}</td></tr>
+    <tr><th>Teléfono</th><td>{{ user.telefono }}</td></tr>
+    <tr><th>Fecha de nacimiento</th><td>{{ user.fecha_nacimiento }}</td></tr>
+    <tr><th>Estado</th><td>{{ 'Bloqueado' if user.is_locked else 'Activo' }}</td></tr>
+</table>
+
+<div class="mt-4 d-flex gap-2">
+    {% if user.is_locked %}
+        <a href="{{ url_for('users.unlock', user_id=user.id) }}" class="btn btn-success">Desbloquear</a>
+    {% else %}
+        <a href="{{ url_for('users.lock', user_id=user.id) }}" class="btn btn-danger">Bloquear</a>
+    {% endif %}
+    
+    <button class="btn btn-secondary" disabled>Ver Recargos</button>
+    <a href="{{ url_for('users.index') }}" class="btn btn-outline-secondary">Volver</a>
+</div>
+{% endblock %}
