@@ -16,7 +16,7 @@ class Reservation(db.Model):
     end_date = db.Column(db.Date, nullable=False)
     price_per_night = db.Column(db.Float, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(20), default='pending')
+    status = db.Column(db.String(20), default='pending') # pending, current, done
 
     rental_id = db.Column(db.Integer, db.ForeignKey('rentals.id'), nullable=False)
     rental = db.relationship("Rental", back_populates="reservations")
