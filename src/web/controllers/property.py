@@ -177,7 +177,7 @@ def edit(id):
     
     if request.method == "POST":
         property_obj.direccion = request.form.get('direccion')
-        property_obj.localidad = request.form.get('localidad')
+        property_obj.localidad_id = int(request.form.get('localidad'))
         property_obj.descripcion = request.form.get('descripcion')
         property_obj.capacidad = request.form.get('capacidad')
         property_obj.habitaciones = request.form.get('habitaciones')
@@ -288,7 +288,11 @@ def edit(id):
         
         return redirect(url_for('property.show', id=id))
     
-    return render_template("Propiedades/edit.html", property=property_obj, users=users) # Pasar como 'property' al template
+    localidades = Localidad.query.order_by(Localidad.nombre).all()
+    tiene_reservas_pendientes = False #Esto definira si se puede modificar o no la Localidad
+    if property_obj.rental and property_obj.rental.reserved_today_or_later():
+        tiene_reservas_pendientes = True
+    return render_template("Propiedades/edit.html", property=property_obj, users=users, localidades=localidades, localidad_bloqueada=tiene_reservas_pendientes)
 
 
 @bp.route("/delete/<int:id>", methods=["POST"])
