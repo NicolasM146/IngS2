@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 from src.web.handlers.auth import permiso_required
 from src.core.Reserva.reservation import Reservation
 from sqlalchemy import and_
+from src.core.Reserva.UpgradeRequest import UpgradeRequest
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
 
@@ -61,30 +62,124 @@ def listado_de_reservas(rental_id):
     ).order_by(Reservation.start_date).all()
     return render_template("Alquileres/current_reservation.html", reservas=reservas)
 
+#####################################
+from flask_mail import Message
+from flask import url_for
 
+
+def enviar_mail_upgrade(cliente, upgrade_request):
+    from src.web import mail  # Importar aquí para evitar import circular
+    from datetime import datetime
+
+    aceptar_url = url_for('rental.upgrade_confirmar', request_id=upgrade_request.id, _external=True)
+    rechazar_url = url_for('rental.upgrade_cancelar', request_id=upgrade_request.id, _external=True)
+
+    hoy = datetime.utcnow().date()
+    fecha_inicio = upgrade_request.old_reservation.start_date
+    fecha_a_mostrar = fecha_inicio if fecha_inicio >= hoy else hoy
+
+    msg = Message("Solicitud de Upgrade de Reserva",
+                  sender="noreply@tualquiler.com",
+                  recipients=[cliente.email])
+    
+    msg.body = f"""
+Hola {cliente.nombre},
+
+Por los inconvenientes con la reserva en {upgrade_request.old_reservation.property.direccion}.
+
+Dirección nueva: {upgrade_request.new_rental.property.direccion}
+Fechas: {fecha_a_mostrar.strftime('%d/%m/%Y')} - {upgrade_request.old_reservation.end_date.strftime('%d/%m/%Y')}
+
+¿Deseás aceptar esta mejora?
+
+✅ Aceptar: {aceptar_url}
+❌ Rechazar: {rechazar_url}
+
+Gracias por usar nuestro servicio.
+"""
+    mail.send(msg)
+    
+from sqlalchemy.orm.exc import StaleDataError
+
+@bp.route('/upgrade/confirmar/<int:request_id>')
+def upgrade_confirmar(request_id):
+    try:
+        req = UpgradeRequest.query.with_for_update().get_or_404(request_id)
+        
+        if req.accepted is not None:
+            flash('Esta solicitud ya fue procesada.', 'warning')
+            return redirect(url_for('rental.index'))
+
+        # Crear reserva nueva, borrar reserva vieja y solicitud
+        reserva = req.old_reservation
+        nueva_reserva = Reservation(
+            start_date=max(datetime.utcnow().date(), reserva.start_date),
+            end_date=reserva.end_date,
+            price_per_night=reserva.price_per_night,
+            advance_payment=reserva.advance_payment,
+            status='pending',
+            rental=req.new_rental,
+            user=reserva.user,
+        )
+        
+        for c in reserva.compañeros:
+            nueva_reserva.compañeros.append(c)
+
+        db.session.add(nueva_reserva)
+        db.session.delete(reserva)
+        db.session.delete(req)
+        db.session.commit()
+
+        flash('Upgrade confirmado y reserva actualizada.', 'success')
+    except StaleDataError:
+        db.session.rollback()
+        flash('La solicitud fue modificada por otro proceso', 'danger')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ocurrió un error: {e}', 'danger')
+
+    return redirect(url_for('rental.index'))
+
+
+@bp.route('/upgrade/cancelar/<int:request_id>')
+def upgrade_cancelar(request_id):
+    req = UpgradeRequest.query.get_or_404(request_id)
+
+    if req.accepted is not None:
+        flash('Esta solicitud ya fue procesada.', 'warning')
+        return redirect(url_for('rental.index'))
+
+    # Primero borrar la solicitud para liberar la FK
+    db.session.delete(req)
+
+    # Luego borrar la reserva original
+    db.session.delete(req.old_reservation)
+
+    db.session.commit()
+
+    flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
+    return redirect(url_for('rental.index'))
+
+
+    
 @bp.route('/reserva/<int:reservation_id>/upgrade', methods=['GET', 'POST'])
 @permiso_required('reservations_update')
 @login_required
 def upgrade_reservation(reservation_id):
     reserva = Reservation.query.get_or_404(reservation_id)
     hoy = datetime.utcnow().date()
-    
-    # calcular fechas para búsqueda
     nuevo_inicio = max(hoy, reserva.start_date)
     nuevo_fin = reserva.end_date
 
-    # buscar alquileres disponibles en ese rango
     alquileres_disponibles = (
         Rental.query
         .filter(Rental.is_active == True)
-        .filter(
-            ~Rental.reservations.any(
-                and_(
-                    Reservation.start_date <= nuevo_fin,
-                    Reservation.end_date >= nuevo_inicio
-                )
+        .filter(~Rental.reservations.any(
+            and_(
+                Reservation.start_date <= nuevo_fin,
+                Reservation.end_date >= nuevo_inicio
             )
-        )
+        ))
         .all()
     )
 
@@ -96,31 +191,17 @@ def upgrade_reservation(reservation_id):
             flash('Alquiler seleccionado inválido.', 'danger')
             return redirect(url_for('rental.upgrade_reservation', reservation_id=reservation_id))
 
-        # Calcular fecha inicio según regla: si hoy > reserva.start_date uso hoy, sino reserva.start_date
-        hoy = datetime.utcnow().date()
-        nuevo_inicio = hoy if hoy > reserva.start_date else reserva.start_date
-        nuevo_fin = reserva.end_date  # Siempre el mismo fin
-
-        # Crear nueva reserva copiando datos excepto rental_id y fechas
-        nueva_reserva = Reservation(
-            start_date=nuevo_inicio,
-            end_date=nuevo_fin,
-            price_per_night=reserva.price_per_night,     # mantiene precio viejo
-            advance_payment=reserva.advance_payment,     # mantiene modalidad de pago vieja
-            status=reserva.status,
-            rental=nuevo_rental,
-            user=reserva.user,
+        # Crear solicitud de upgrade
+        solicitud = UpgradeRequest(
+            old_reservation=reserva,
+            new_rental=nuevo_rental
         )
-
-        # Copiar compañeros
-        for c in reserva.compañeros:
-            nueva_reserva.compañeros.append(c)
-
-        db.session.add(nueva_reserva)
-        db.session.delete(reserva)
+        db.session.add(solicitud)
         db.session.commit()
 
-        flash('Reserva actualizada con el nuevo alquiler correctamente.', 'success')
+        enviar_mail_upgrade(reserva.user, solicitud)
+
+        flash('Se envió un correo al cliente para confirmar el upgrade.', 'info')
         return redirect(url_for('rental.index'))
 
     return render_template('Alquileres/upgrade_form.html',
@@ -128,7 +209,9 @@ def upgrade_reservation(reservation_id):
                            alquileres=alquileres_disponibles,
                            nuevo_inicio=nuevo_inicio,
                            nuevo_fin=nuevo_fin)
-    
+
+#######################################################################################
+
 @bp.route('/create', methods=['GET', 'POST'])
 @permiso_required('rentals_create')
 @login_required
@@ -239,6 +322,9 @@ def edit(rental_id):
         return redirect(url_for('rental.show', rental_id=rental_id))
 
     return render_template("Alquileres/edit.html", alquiler=alquiler)
+
+
+
 
 @bp.route("/<int:rental_id>")
 @permiso_required('rentals_show')
