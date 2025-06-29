@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Agregar Localidad</h2>
+<form method="POST">
+  <div class="mb-3">
+    <label for="nombre" class="form-label">Nombre de la localidad</label>
+    <input type="text" class="form-control" id="nombre" name="nombre" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Agregar</button>
+  <a href="{{ url_for('property.index') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

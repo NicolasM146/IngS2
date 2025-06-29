@@ -350,3 +350,43 @@ def reactivate(id):
     db.session.commit()
     flash("Inmueble reactivado correctamente", "success")
     return redirect(url_for('property.show', id=id))
+
+@bp.route("/localidad/agregar", methods=["GET", "POST"])
+@permiso_required('properties_update')
+@login_required
+def agregar_localidad():
+    if request.method == "POST":
+        nombre = request.form.get("nombre").strip()
+
+        if not nombre:
+            flash("Debe ingresar un nombre para la localidad.", "warning")
+        else:
+            existente = Localidad.query.filter_by(nombre=nombre).first()
+            if existente:
+                flash("La localidad ya existe.", "warning")
+            else:
+                nueva = Localidad(nombre=nombre)
+                db.session.add(nueva)
+                db.session.commit()
+                flash("Localidad agregada correctamente.", "success")
+                return redirect(url_for("property.index"))
+
+    return render_template("Propiedades/localidad_agregar.html")
+
+@bp.route("/localidad/eliminar", methods=["GET", "POST"])
+@permiso_required('properties_update')
+@login_required
+def eliminar_localidad():
+    localidades_no_usadas = Localidad.query.outerjoin(Property).filter(Property.id == None).order_by(Localidad.nombre).all()
+
+    if request.method == "POST":
+        localidad_id = request.form.get("localidad_id")
+        localidad = Localidad.query.get(localidad_id)
+
+        if localidad:
+            db.session.delete(localidad)
+            db.session.commit()
+            flash("Localidad eliminada correctamente.", "success")
+            return redirect(url_for("property.index"))
+
+    return render_template("Propiedades/localidad_eliminar.html", localidades=localidades_no_usadas)
