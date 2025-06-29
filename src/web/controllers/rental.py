@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 from src.web.handlers.auth import permiso_required
 from src.core.Reserva.reservation import Reservation
 from datetime import date
+from src.core.Inmueble.localidad.Localidad import Localidad
 
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
@@ -22,19 +23,22 @@ bp = Blueprint('rental', __name__, url_prefix='/rentals')
 @login_required
 def index():
     direccion = request.args.get("direccion")
-    localidad = request.args.get("localidad")
+    localidad_id = request.args.get("localidad_id")
     estado = request.args.get("estado")
 
     alquileres = []
 
-    if request.args:  # Si se presionó "Buscar" (aunque los campos estén vacíos)
+    # Localidades para el select
+    localidades = Localidad.query.order_by(Localidad.nombre).all()
+
+    if request.args:
         query = Rental.query.join(Property)
 
         if direccion:
             query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
 
-        if localidad:
-            query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+        if localidad_id:
+            query = query.filter(Property.localidad_id == int(localidad_id))
 
         if estado == "libre":
             query = query.filter(Rental.is_active == True)
@@ -43,13 +47,17 @@ def index():
 
         alquileres = query.all()
 
-        # Filtro por funciones de Python
         if estado == "reservado":
             alquileres = [a for a in alquileres if a.reserved_today_or_later()]
         elif estado == "no_reservado":
             alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
 
-    return render_template("Alquileres/index.html", alquileres=alquileres)
+    return render_template(
+        "Alquileres/index.html",
+        alquileres=alquileres,
+        localidades=localidades,
+        request_args=request.args
+    )
 
 @bp.route('/create', methods=['GET', 'POST'])
 @permiso_required('rentals_create')

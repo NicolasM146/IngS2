@@ -10,20 +10,32 @@
     <div class="form-row row">
         <div class="form-group col-md-4">
             <label for="direccion">Dirección</label>
-            <input type="text" class="form-control" name="direccion" id="direccion" value="{{ request.args.get('direccion', '') }}">
+            <input type="text" class="form-control" name="direccion" id="direccion"
+                value="{{ request.args.get('direccion', '') }}">
         </div>
         <div class="form-group col-md-3">
             <label for="localidad">Localidad</label>
-            <input type="text" class="form-control" name="localidad" id="localidad" value="{{ request.args.get('localidad', '') }}">
+            <select class="form-control" name="localidad_id" id="localidad">
+                <option value="">Todas</option>
+                {% for localidad in localidades %}
+                <option value="{{ localidad.id }}" {% if request_args.get('localidad_id')==localidad.id|string
+                    %}selected{% endif %}>
+                    {{ localidad.nombre }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
         <div class="form-group col-md-3">
             <label for="estado">Estado</label>
             <select class="form-control" name="estado" id="estado">
                 <option value="">Todos</option>
-                <option value="libre" {% if request.args.get('estado') == 'libre' %}selected{% endif %}>Activo</option>
-                <option value="bloqueado" {% if request.args.get('estado') == 'bloqueado' %}selected{% endif %}>Bloqueado</option>
-                <option value="reservado" {% if request.args.get('estado') == 'reservado' %}selected{% endif %}>Reservado</option>
-                <option value="no_reservado" {% if request.args.get('estado') == 'no_reservado' %}selected{% endif %}>No reservado</option>
+                <option value="libre" {% if request.args.get('estado')=='libre' %}selected{% endif %}>Activo</option>
+                <option value="bloqueado" {% if request.args.get('estado')=='bloqueado' %}selected{% endif %}>Bloqueado
+                </option>
+                <option value="reservado" {% if request.args.get('estado')=='reservado' %}selected{% endif %}>Reservado
+                </option>
+                <option value="no_reservado" {% if request.args.get('estado')=='no_reservado' %}selected{% endif %}>No
+                    reservado</option>
             </select>
         </div>
         <div class="form-group col-md-2 d-flex align-items-end">

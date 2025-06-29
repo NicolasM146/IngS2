@@ -26,7 +26,7 @@ def index():
         if form.direccion.data:
             query = query.filter(Property.direccion.ilike(f'%{form.direccion.data}%'))
         if form.localidad.data:
-            query = query.filter(Property.localidad.ilike(f'%{form.localidad.data}%'))
+            query = query.filter(Property.localidad_id == form.localidad.data.id)
         if form.estado.data:
             query = query.filter(Property.estado == form.estado.data)
         if form.capacidad.data:

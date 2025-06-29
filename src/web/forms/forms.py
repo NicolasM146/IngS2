@@ -60,8 +60,13 @@ class PropertySearchForm(FlaskForm):
     direccion = StringField('Dirección', validators=[Optional()], 
                           render_kw={"placeholder": "Ej: Calle Principal 123"})
     
-    localidad = StringField('Localidad', validators=[Optional()],
-                          render_kw={"placeholder": "Ej: Buenos Aires"})
+    localidad = QuerySelectField(
+        'Localidad',
+        query_factory=localidades_choices,
+        get_label='nombre',
+        allow_blank=True,  # permite dejar el campo vacío para buscar sin filtrar por localidad
+        blank_text="Todas las localidades"
+    )
     
     # Campos de selección
     estado = SelectField('Estado', choices=[

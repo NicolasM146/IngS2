@@ -10,6 +10,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for
 from datetime import date
 from statistics import mean
 from collections import Counter
+from src.core.Inmueble.localidad.Localidad import Localidad
 
 import os
 from dotenv import load_dotenv
@@ -30,15 +31,16 @@ def buscar_alquileres():
     precio_max = request.args.get("precio_max", type=float)
     fecha_inicio = request.args.get("fecha_inicio")
     fecha_fin = request.args.get("fecha_fin")
-    localidad = request.args.get("localidad", type=str)
+    localidad_id = request.args.get("localidad_id", type=int)
     direccion = request.args.get("direccion", type=str)
     habitaciones = request.args.get("habitaciones", type=int)
     cant_personas = request.args.get("cant_personas", type=int)
 
+    localidades = Localidad.query.order_by(Localidad.nombre).all()
     alquileres = []
     busqueda_realizada = False
 
-    if request.args:  # Solo si se presionó "Buscar"
+    if request.args:
         busqueda_realizada = True
         query = Rental.query.join(Rental.property).filter(Rental.is_active == True)
 
@@ -62,8 +64,8 @@ def buscar_alquileres():
             except ValueError:
                 pass
 
-        if localidad:
-            query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+        if localidad_id:
+            query = query.filter(Property.localidad_id == localidad_id)
 
         if direccion:
             query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
@@ -76,7 +78,13 @@ def buscar_alquileres():
 
         alquileres = query.all()
 
-    return render_template("Reservacion/rentals.html", rentals=alquileres, busqueda_realizada=busqueda_realizada)
+    return render_template(
+        "Reservacion/rentals.html",
+        rentals=alquileres,
+        localidades=localidades,
+        busqueda_realizada=busqueda_realizada,
+        request_args=request.args  # para mantener los valores seleccionados
+    )
 
 
 # No se deberia usar esta funcion, existe show() en el controlador rental.
