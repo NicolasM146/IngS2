@@ -99,7 +99,7 @@ def enviar_mail_upgrade(cliente, upgrade_request):
     msg.body = f"""
 Hola {cliente.nombre},
 
-Por los inconvenientes con la reserva en {upgrade_request.old_reservation.property.direccion}.
+Por los inconvenientes con la reserva en {upgrade_request.old_reservation.rental.property.direccion}.
 
 Dirección nueva: {upgrade_request.new_rental.property.direccion}
 Fechas: {fecha_a_mostrar.strftime('%d/%m/%Y')} - {upgrade_request.old_reservation.end_date.strftime('%d/%m/%Y')}
@@ -119,7 +119,8 @@ Gracias por usar nuestro servicio.
         <h2>Hola {cliente.nombre},</h2>
         <p>
             Te contactamos debido a un inconveniente con tu reserva en:<br>
-            <strong>{upgrade_request.old_reservation.property.direccion}</strong>
+            <strong>{upgrade_request.old_reservation.rental.property.direccion}</strong>
+
         </p>
         <p>
             Te proponemos una mejora en:<br>
