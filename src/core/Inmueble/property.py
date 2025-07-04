@@ -1,16 +1,20 @@
 from src.core.database import db
+from src.core.Inmueble.localidad.Localidad import Localidad
 
 class Property(db.Model):
     __tablename__ = 'properties'
 
     id = db.Column(db.Integer, primary_key=True)
     direccion = db.Column(db.String(255), nullable=False)
-    localidad = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.Text)
     # Estados posibles: disponible, baja, ocupado (ocupado si esta alquilado y ocupado al momento de la consulta)
     estado = db.Column(db.String(20), default='disponible') 
     capacidad = db.Column(db.Integer)
     habitaciones = db.Column(db.Integer)
+    
+    localidad_id = db.Column(db.Integer, db.ForeignKey('localidad.id'), nullable=False)
+    localidad = db.relationship('Localidad')
+
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user = db.relationship("User", back_populates="properties")

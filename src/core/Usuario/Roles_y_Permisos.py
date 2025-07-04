@@ -96,6 +96,8 @@ def crear_roles_y_permisos(tabla, coneccion, **kw):
                 "rentals_update": [check_in_out],
                 "rentals_create": [check_in_out],
                 "rentals_destroy": [check_in_out],
+                
+                "reviews_create": [client, check_in_out],
             },
         )
 

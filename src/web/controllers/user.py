@@ -46,3 +46,31 @@ def index():
                            per_page=per_page,
                            total=total,
                            no_results=no_results)
+    
+
+@bp.route('/<int:user_id>', endpoint="show")
+@permiso_required('user_show')
+@login_required
+def show(user_id):
+    user = User.query.get_or_404(user_id)
+    return render_template("users/show.html", user=user)
+
+@bp.route('/<int:user_id>/lock')
+@permiso_required('user_edit')
+@login_required
+def lock(user_id):
+    user = User.query.get_or_404(user_id)
+    user.bloquear()
+    db.session.commit()
+    flash(f"Usuario {user.nombre} bloqueado.", "warning")
+    return redirect(url_for("users.show", user_id=user.id))
+
+@bp.route('/<int:user_id>/unlock')
+@permiso_required('user_edit')
+@login_required
+def unlock(user_id):
+    user = User.query.get_or_404(user_id)
+    user.desbloquear()
+    db.session.commit()
+    flash(f"Usuario {user.nombre} desbloqueado.", "success")
+    return redirect(url_for("users.show", user_id=user.id))

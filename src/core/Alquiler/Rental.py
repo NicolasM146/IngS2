@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from src.core.database import db
+from collections import Counter
 
 class Rental(db.Model):
     __tablename__ = 'rentals'
@@ -42,6 +43,24 @@ class Rental(db.Model):
         ).count() > 0
 
         return has_future_reservation
+    
+    
+    def get_review_summary(self):
+        """
+        Retorna un diccionario con la cantidad de reseñas por estrella.
+        Ej: {1: 2, 2: 0, 3: 3, 4: 1, 5: 4}
+        """
+        star_counts = Counter([review.stars for review in self.reviews])
+        return {i: star_counts.get(i, 0) for i in range(1, 6)}
+    
+    def get_average_rating(self):
+        """
+        Promedio de puntuación del alquiler. None si no tiene reseñas.
+        """
+        if not self.reviews:
+            return None
+        total = sum([r.stars for r in self.reviews])
+        return round(total / len(self.reviews), 2)
 
 # IMPORTAR Property AL FINAL PARA EVITAR CICLO DE IMPORTACION
 from src.core.Inmueble.property import Property

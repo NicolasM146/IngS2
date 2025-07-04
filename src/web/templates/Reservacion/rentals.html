@@ -36,10 +36,16 @@
 
     <div class="row mb-3">
       <div class="col-md-3">
-        <label for="localidad" class="form-label">Localidad:</label>
-        <input type="text" class="form-control" id="localidad" name="localidad"
-          value="{{ request.args.get('localidad', '') }}">
-      </div>
+        <label for="localidad_id" class="form-label">Localidad:</label>
+        <select class="form-select" id="localidad_id" name="localidad_id">
+          <option value="">Todas</option>
+          {% for loc in localidades %}
+          <option value="{{ loc.id }}" {% if request_args.get('localidad_id')==loc.id|string %}selected{% endif %}>
+            {{ loc.nombre }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>s
       <div class="col-md-3">
         <label for="direccion" class="form-label">Dirección:</label>
         <input type="text" class="form-control" id="direccion" name="direccion"
@@ -62,39 +68,39 @@
 
   {% if busqueda_realizada %}
   {% if rentals %}
-    <h2 class="mt-5 mb-4">Resultados</h2>
-    <div class="row g-4">
-      {% for alquiler in rentals %}
-      <div class="col-md-4">
-        <div class="card h-100">
-          {% if alquiler.property.photos %}
-          {% set primary_photo = alquiler.property.photos|selectattr('is_primary')|first or alquiler.property.photos[0] %}
-          <img src="{{ url_for('static', filename='uploads/properties/' + primary_photo.filename) }}" class="card-img-top"
-            alt="{{ alquiler.property.nombre }}" style="height: 200px; object-fit: cover;">
-          {% else %}
-          <div class="card-img-top bg-light text-center py-4" style="height: 200px;">
-            <i class="fas fa-home fa-3x text-secondary mt-4"></i>
-            <p class="mt-2">No hay foto</p>
-          </div>
-          {% endif %}
+  <h2 class="mt-5 mb-4">Resultados</h2>
+  <div class="row g-4">
+    {% for alquiler in rentals %}
+    <div class="col-md-4">
+      <div class="card h-100">
+        {% if alquiler.property.photos %}
+        {% set primary_photo = alquiler.property.photos|selectattr('is_primary')|first or alquiler.property.photos[0] %}
+        <img src="{{ url_for('static', filename='uploads/properties/' + primary_photo.filename) }}" class="card-img-top"
+          alt="{{ alquiler.property.nombre }}" style="height: 200px; object-fit: cover;">
+        {% else %}
+        <div class="card-img-top bg-light text-center py-4" style="height: 200px;">
+          <i class="fas fa-home fa-3x text-secondary mt-4"></i>
+          <p class="mt-2">No hay foto</p>
+        </div>
+        {% endif %}
 
-          <div class="card-body">
-            <h5 class="card-title">{{ alquiler.property.nombre }}</h5>
-            <p class="card-text"><strong>Precio por noche:</strong> ${{ alquiler.price }}</p>
-            <p class="card-text"><strong>Localidad:</strong> {{ alquiler.property.localidad }}</p>
-            <p class="card-text"><strong>Habitaciones:</strong> {{ alquiler.property.habitaciones }}</p>
-            <p class="card-text"><strong>Capacidad:</strong> {{ alquiler.property.capacidad }}</p>
-            <form action="{{ url_for('reservation.ver_alquiler', rental_id=alquiler.id) }}" method="get">
-              <button type="submit" class="btn btn-secondary">Ver</button>
-            </form>
-          </div>
+        <div class="card-body">
+          <h5 class="card-title">{{ alquiler.property.nombre }}</h5>
+          <p class="card-text"><strong>Precio por noche:</strong> ${{ alquiler.price }}</p>
+          <p class="card-text"><strong>Localidad:</strong> {{ alquiler.property.localidad }}</p>
+          <p class="card-text"><strong>Habitaciones:</strong> {{ alquiler.property.habitaciones }}</p>
+          <p class="card-text"><strong>Capacidad:</strong> {{ alquiler.property.capacidad }}</p>
+          <form action="{{ url_for('rental.show', rental_id=alquiler.id) }}" method="get">
+            <button type="submit" class="btn btn-secondary">Ver</button>
+          </form>
         </div>
       </div>
-      {% endfor %}
     </div>
+    {% endfor %}
+  </div>
   {% else %}
-    <p class="mt-5">No se encontraron alquileres.</p>
+  <p class="mt-5">No se encontraron alquileres.</p>
   {% endif %}
-{% endif %}
+  {% endif %}
 </div>
 {% endblock %}

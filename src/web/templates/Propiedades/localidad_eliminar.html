@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>Eliminar Localidad</h2>
+
+{% if localidades %}
+<form method="POST">
+  <div class="mb-3">
+    <label for="localidad_id" class="form-label">Seleccione una localidad para eliminar:</label>
+    <select name="localidad_id" id="localidad_id" class="form-select" required>
+      {% for loc in localidades %}
+      <option value="{{ loc.id }}">{{ loc.nombre }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-danger">Eliminar</button>
+  <a href="{{ url_for('property.index') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% else %}
+<div class="alert alert-info">
+  No hay Localidades sin asignar para eliminar.
+</div>
+<a href="{{ url_for('property.index') }}" class="btn btn-secondary">Volver</a>
+{% endif %}
+{% endblock %}

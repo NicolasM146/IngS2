@@ -44,6 +44,8 @@ class User(UserMixin,db.Model):
     reservations = db.relationship('Reservation', back_populates='user', lazy='dynamic')
 
     compañeros = db.relationship('Compañero', back_populates='user')  
+    
+    reviews = db.relationship("Review", back_populates="user", cascade='all, delete-orphan')
 
 
 

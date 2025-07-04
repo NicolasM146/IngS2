@@ -8,6 +8,7 @@ from src.web.handlers.auth import permiso_required
 import os
 from werkzeug.utils import secure_filename
 from src.core.Inmueble.property_photo import PropertyPhoto
+from src.core.Inmueble.localidad.Localidad import Localidad
 
 bp = Blueprint("property", __name__, url_prefix="/property")
 
@@ -25,7 +26,7 @@ def index():
         if form.direccion.data:
             query = query.filter(Property.direccion.ilike(f'%{form.direccion.data}%'))
         if form.localidad.data:
-            query = query.filter(Property.localidad.ilike(f'%{form.localidad.data}%'))
+            query = query.filter(Property.localidad_id == form.localidad.data.id)
         if form.estado.data:
             query = query.filter(Property.estado == form.estado.data)
         if form.capacidad.data:
@@ -62,8 +63,11 @@ def show(id):
 @permiso_required('properties_create')
 @login_required
 def create():
-
     form = PropertyForm()
+    
+    # Cargar localidades al formulario
+    localidades = Localidad.query.order_by(Localidad.nombre).all()
+    form.localidad.choices = [(loc.id, loc.nombre) for loc in localidades]
 
     if form.validate_on_submit():
         if 'photos' not in request.files:
@@ -71,44 +75,43 @@ def create():
             return redirect(request.url)
             
         files = request.files.getlist('photos')
-        
         valid_files_for_upload = []
         for file in files:
-            if file and file.filename: # Solo procesar si hay archivo y nombre de archivo
+            if file and file.filename:
                 if not PropertyPhoto.allowed_file(file.filename):
                     flash(f'El archivo {file.filename} no tiene una extensión permitida (jpg, png, jpeg, gif)', 'danger')
                     return redirect(request.url)
                 valid_files_for_upload.append(file)
 
-        if not valid_files_for_upload: # Si después de filtrar, no queda ningún archivo válido
+        if not valid_files_for_upload:
             flash('Debe seleccionar al menos una foto válida.', 'danger')
             return redirect(request.url)
-            
+        
         if len(valid_files_for_upload) > 10:
             flash('Máximo 10 fotos permitidas', 'danger')
             return redirect(request.url)
-        
+
         direccion = form.direccion.data.strip()
-        localidad = form.localidad.data.strip()
+        localidad_obj = form.localidad.data    # Esto es un objeto Localidad completo
+        localidad_id = localidad_obj.id
 
-        # Validamos si ya existe una propiedad con esa dirección y localidad
-        propiedad_existente = Property.query.filter_by(direccion=direccion, localidad=localidad).first()
-
+        # Validar si ya existe una propiedad con misma dirección y localidad
+        propiedad_existente = Property.query.filter_by(direccion=direccion, localidad_id=localidad_id).first()
         if propiedad_existente:
             flash('Ya existe una propiedad registrada con esa dirección y localidad.', 'error')
             return render_template("Propiedades/create.html", form=form)
 
         new_property = Property(
-            direccion=form.direccion.data,
-            localidad=form.localidad.data,
+            direccion=direccion,
+            localidad_id=localidad_id,
             capacidad=form.capacidad.data,
             habitaciones=form.habitaciones.data,
             estado=form.estado.data,
             descripcion=form.descripcion.data,
-            user_id=form.usuario_id.data # Usar el usuario seleccionado en el formulario
+            user_id=form.usuario_id.data
         )
         db.session.add(new_property)
-        
+
         try:
             db.session.commit()
         except Exception as e:
@@ -118,7 +121,7 @@ def create():
 
         upload_folder = PropertyPhoto.get_upload_folder()
         os.makedirs(upload_folder, exist_ok=True)
-        
+
         processed_photos_db_objects = []
         primary_photo_set = False
 
@@ -127,12 +130,11 @@ def create():
                 filename = secure_filename(f"{new_property.id}_{idx}_{file_to_save.filename}")
                 filepath = os.path.join(upload_folder, filename)
                 file_to_save.save(filepath)
-                
-                current_photo_is_primary = False
+
+                current_photo_is_primary = not primary_photo_set
                 if not primary_photo_set:
-                    current_photo_is_primary = True
                     primary_photo_set = True
-                
+
                 new_photo = PropertyPhoto(
                     filename=filename,
                     is_primary=current_photo_is_primary,
@@ -146,15 +148,13 @@ def create():
 
         if not processed_photos_db_objects:
             flash('No se pudo guardar ninguna foto. La propiedad no fue creada completamente.', 'danger')
-            # La propiedad ya fue creada, pero sin fotos. Considerar eliminarla si las fotos son obligatorias.
-            # Si se elimina la propiedad aquí, también se deben eliminar los archivos físicos guardados si alguno se procesó antes de un error.
-            db.session.delete(new_property) # Eliminar la propiedad si no se guardaron fotos
+            db.session.delete(new_property)
             db.session.commit()
             return redirect(request.url)
 
         try:
             db.session.commit()
-            flash(f'Inmueble creado correctamente con {len(processed_photos_db_objects)} fotos', 'success')
+            flash(f'Carga del Inmueble exitosa', 'success')
             return redirect(url_for('property.show', id=new_property.id))
         except Exception as e:
             db.session.rollback()
@@ -177,7 +177,7 @@ def edit(id):
     
     if request.method == "POST":
         property_obj.direccion = request.form.get('direccion')
-        property_obj.localidad = request.form.get('localidad')
+        property_obj.localidad_id = int(request.form.get('localidad'))
         property_obj.descripcion = request.form.get('descripcion')
         property_obj.capacidad = request.form.get('capacidad')
         property_obj.habitaciones = request.form.get('habitaciones')
@@ -288,7 +288,11 @@ def edit(id):
         
         return redirect(url_for('property.show', id=id))
     
-    return render_template("Propiedades/edit.html", property=property_obj, users=users) # Pasar como 'property' al template
+    localidades = Localidad.query.order_by(Localidad.nombre).all()
+    tiene_reservas_pendientes = False #Esto definira si se puede modificar o no la Localidad
+    if property_obj.rental and property_obj.rental.reserved_today_or_later():
+        tiene_reservas_pendientes = True
+    return render_template("Propiedades/edit.html", property=property_obj, users=users, localidades=localidades, localidad_bloqueada=tiene_reservas_pendientes)
 
 
 @bp.route("/delete/<int:id>", methods=["POST"])
@@ -350,3 +354,43 @@ def reactivate(id):
     db.session.commit()
     flash("Inmueble reactivado correctamente", "success")
     return redirect(url_for('property.show', id=id))
+
+@bp.route("/localidad/agregar", methods=["GET", "POST"])
+@permiso_required('properties_update')
+@login_required
+def agregar_localidad():
+    if request.method == "POST":
+        nombre = request.form.get("nombre").strip()
+
+        if not nombre:
+            flash("Debe ingresar un nombre para la localidad.", "warning")
+        else:
+            existente = Localidad.query.filter_by(nombre=nombre).first()
+            if existente:
+                flash("La localidad ya existe.", "warning")
+            else:
+                nueva = Localidad(nombre=nombre)
+                db.session.add(nueva)
+                db.session.commit()
+                flash("Localidad agregada correctamente.", "success")
+                return redirect(url_for("property.index"))
+
+    return render_template("Propiedades/localidad_agregar.html")
+
+@bp.route("/localidad/eliminar", methods=["GET", "POST"])
+@permiso_required('properties_update')
+@login_required
+def eliminar_localidad():
+    localidades_no_usadas = Localidad.query.outerjoin(Property).filter(Property.id == None).order_by(Localidad.nombre).all()
+
+    if request.method == "POST":
+        localidad_id = request.form.get("localidad_id")
+        localidad = Localidad.query.get(localidad_id)
+
+        if localidad:
+            db.session.delete(localidad)
+            db.session.commit()
+            flash("Localidad eliminada correctamente.", "success")
+            return redirect(url_for("property.index"))
+
+    return render_template("Propiedades/localidad_eliminar.html", localidades=localidades_no_usadas)

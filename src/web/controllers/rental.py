@@ -12,6 +12,9 @@ from src.web.handlers.auth import permiso_required
 from src.core.Reserva.reservation import Reservation
 from sqlalchemy import and_
 from src.core.Reserva.UpgradeRequest import UpgradeRequest
+from datetime import date
+from src.core.Inmueble.localidad.Localidad import Localidad
+
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
 
@@ -22,19 +25,22 @@ bp = Blueprint('rental', __name__, url_prefix='/rentals')
 @login_required
 def index():
     direccion = request.args.get("direccion")
-    localidad = request.args.get("localidad")
+    localidad_id = request.args.get("localidad_id")
     estado = request.args.get("estado")
 
     alquileres = []
 
-    if request.args:  # Si se presionó "Buscar" (aunque los campos estén vacíos)
+    # Localidades para el select
+    localidades = Localidad.query.order_by(Localidad.nombre).all()
+
+    if request.args:
         query = Rental.query.join(Property)
 
         if direccion:
             query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
 
-        if localidad:
-            query = query.filter(Property.localidad.ilike(f"%{localidad}%"))
+        if localidad_id:
+            query = query.filter(Property.localidad_id == int(localidad_id))
 
         if estado == "libre":
             query = query.filter(Rental.is_active == True)
@@ -43,13 +49,17 @@ def index():
 
         alquileres = query.all()
 
-        # Filtro por funciones de Python
         if estado == "reservado":
             alquileres = [a for a in alquileres if a.reserved_today_or_later()]
         elif estado == "no_reservado":
             alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
 
-    return render_template("Alquileres/index.html", alquileres=alquileres)
+    return render_template(
+        "Alquileres/index.html",
+        alquileres=alquileres,
+        localidades=localidades,
+        request_args=request.args
+    )
 
 @bp.route('/<int:rental_id>/reservas/vigentes')
 @permiso_required("rentals_update")
@@ -67,9 +77,12 @@ from flask_mail import Message
 from flask import url_for
 
 
+from flask_mail import Message
+from flask import url_for
+from datetime import datetime
+
 def enviar_mail_upgrade(cliente, upgrade_request):
-    from src.web import mail  # Importar aquí para evitar import circular
-    from datetime import datetime
+    from src.web import mail  # Evitar import circular
 
     aceptar_url = url_for('rental.upgrade_confirmar', request_id=upgrade_request.id, _external=True)
     rechazar_url = url_for('rental.upgrade_cancelar', request_id=upgrade_request.id, _external=True)
@@ -81,7 +94,8 @@ def enviar_mail_upgrade(cliente, upgrade_request):
     msg = Message("Solicitud de Upgrade de Reserva",
                   sender="noreply@tualquiler.com",
                   recipients=[cliente.email])
-    
+
+    # Texto plano (por si el cliente no soporta HTML)
     msg.body = f"""
 Hola {cliente.nombre},
 
@@ -97,7 +111,35 @@ Fechas: {fecha_a_mostrar.strftime('%d/%m/%Y')} - {upgrade_request.old_reservatio
 
 Gracias por usar nuestro servicio.
 """
+
+    # Versión HTML
+    msg.html = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; color: #333;">
+        <h2>Hola {cliente.nombre},</h2>
+        <p>
+            Te contactamos debido a un inconveniente con tu reserva en:<br>
+            <strong>{upgrade_request.old_reservation.property.direccion}</strong>
+        </p>
+        <p>
+            Te proponemos una mejora en:<br>
+            <strong>{upgrade_request.new_rental.property.direccion}</strong><br>
+            <b>Fechas:</b> {fecha_a_mostrar.strftime('%d/%m/%Y')} - {upgrade_request.old_reservation.end_date.strftime('%d/%m/%Y')}
+        </p>
+        <p>¿Deseás aceptar esta mejora?</p>
+        <p>
+            <a href="{aceptar_url}" style="padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">✅ Aceptar</a>
+            &nbsp;&nbsp;
+            <a href="{rechazar_url}" style="padding: 10px 15px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px;">❌ Rechazar</a>
+        </p>
+        <br>
+        <p>Gracias por usar nuestro servicio.</p>
+    </body>
+    </html>
+    """
+
     mail.send(msg)
+
     
 from sqlalchemy.orm.exc import StaleDataError
 
@@ -331,11 +373,29 @@ def edit(rental_id):
 @login_required
 def show(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
+    """ Comento esto porque no tiene sentido, hay que borrarlo.
     if alquiler.property.user_id != current_user.id:
         flash("No tienes permiso para ver este alquiler.", "danger")
         return redirect(url_for('rental.index'))
+    """
+     # Lógica para permitir reseñar si hay reservas ya iniciadas
+    puede_dejar_resena = Reservation.query.filter_by(
+        user_id=current_user.id,
+        rental_id=alquiler.id
+    ).filter(Reservation.start_date <= date.today()).count() > 0
 
-    return render_template("Alquileres/show.html", alquiler=alquiler)
+    review_summary = alquiler.get_review_summary()
+    average_rating = alquiler.get_average_rating()
+    reviews = sorted(alquiler.reviews, key=lambda r: r.created_at, reverse=True)
+
+    return render_template(
+        "Alquileres/show.html",
+        alquiler=alquiler,
+        review_summary=review_summary,
+        average_rating=average_rating,
+        reviews=reviews,
+        puede_dejar_resena=puede_dejar_resena
+    )
 
 @bp.route("/<int:rental_id>/lock", methods=["POST"])
 @permiso_required('rentals_update')

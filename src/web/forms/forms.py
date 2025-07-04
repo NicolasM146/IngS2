@@ -2,15 +2,25 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, TextAreaField, SelectField, BooleanField, SubmitField
 from wtforms.validators import DataRequired
 from src.core.Usuario.User import User
+from src.core.Inmueble.localidad.Localidad import Localidad
 from wtforms.validators import Optional, NumberRange
 from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms_sqlalchemy.fields import QuerySelectField
+
+def localidades_choices():
+    return Localidad.query.order_by(Localidad.nombre).all()
 
 # Formualrio para registrar o actualizar un Inmueble
 class PropertyForm(FlaskForm):
     direccion = StringField('Dirección', validators=[DataRequired()])
-    localidad = StringField('Localidad', validators=[DataRequired()])
     capacidad = IntegerField('Capacidad', validators=[DataRequired()])
     habitaciones = IntegerField('Habitaciones', validators=[DataRequired()])
+    localidad = QuerySelectField(
+        'Localidad',
+        query_factory=localidades_choices,
+        get_label='nombre',
+        allow_blank=False
+    )
     estado = SelectField('Estado', choices=[
         ('disponible', 'Disponible'), 
         ('ocupado', 'Ocupado')
@@ -50,8 +60,13 @@ class PropertySearchForm(FlaskForm):
     direccion = StringField('Dirección', validators=[Optional()], 
                           render_kw={"placeholder": "Ej: Calle Principal 123"})
     
-    localidad = StringField('Localidad', validators=[Optional()],
-                          render_kw={"placeholder": "Ej: Buenos Aires"})
+    localidad = QuerySelectField(
+        'Localidad',
+        query_factory=localidades_choices,
+        get_label='nombre',
+        allow_blank=True,  # permite dejar el campo vacío para buscar sin filtrar por localidad
+        blank_text="Todas las localidades"
+    )
     
     # Campos de selección
     estado = SelectField('Estado', choices=[

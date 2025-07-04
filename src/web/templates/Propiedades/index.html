@@ -21,7 +21,7 @@
         </div>
         <div class="col-md-3">
             {{ form.localidad.label(class="form-label") }}
-            {{ form.localidad(class="form-control") }}
+            {{ form.localidad(class="form-select") }}
         </div>
         <div class="col-md-2">
             {{ form.estado.label(class="form-label") }}
@@ -52,6 +52,18 @@
 <div class="mb-4">
     <a href="{{ url_for('property.create') }}" class="btn btn-primary">
         <i class="fas fa-plus me-2"></i>Cargar Inmueble
+    </a>
+</div>
+{% endif %}
+
+{% if current_user.tiene_permiso('properties_update') %}
+<div class="mb-4 d-flex gap-2">
+    <a href="{{ url_for('property.agregar_localidad') }}" class="btn btn-success">
+        <i class="fas fa-plus me-2"></i>Agregar Localidad
+    </a>
+
+    <a href="{{ url_for('property.eliminar_localidad') }}" class="btn btn-danger">
+        <i class="fas fa-trash me-2"></i>Eliminar Localidad
     </a>
 </div>
 {% endif %}
@@ -93,8 +105,7 @@
                 </td>
                 <td>{{ property.user.nombre }}</td>
                 <td>
-                    <a href="{{ url_for('property.show', id=property.id) }}" class="btn btn-sm btn-info"
-                        title="Ver">
+                    <a href="{{ url_for('property.show', id=property.id) }}" class="btn btn-sm btn-info" title="Ver">
                         <i class="fas fa-eye"></i>
                     </a>
                 </td>
