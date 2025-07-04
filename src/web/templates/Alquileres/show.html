@@ -37,6 +37,9 @@
             </form>
             {% endif %}
             {% endif %}
+            
+            <!-- Botón de Reserva -->
+            
         </div>
     </div>
 
@@ -53,7 +56,6 @@
         </div>
         {% endif %}
     </div>
-
     <!-- Información del alquiler -->
     <div class="row">
         <div class="col-md-6">
@@ -115,12 +117,17 @@
         </div>
     </div>
 
-    <div class="mt-4">
-        <a href="{{ url_for('rental.index') }}" class="btn btn-secondary">
+    <div class="mt-4 d-flex">
+        <a href="{{ request.referrer or url_for('reservation.buscar_alquileres') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-2"></i> Volver al listado
         </a>
+    
+        {% if alquiler.is_active %}
+        <a href="{{ url_for('reservation.alquilar', rental_id=alquiler.id) }}" class="btn btn-primary ms-2">
+            <i class="fas fa-calendar-check"></i> Reservar
+        </a>
+        {% endif %}
     </div>
-
     <div class="mt-5">
         <h4>Reseñas</h4>
 

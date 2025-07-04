@@ -75,7 +75,7 @@ class User(UserMixin,db.Model):
             if not permiso:
                 raise ValueError(f"El permiso {nombre_permiso} no existe")
             return True
-        if self.rol is None:
+        if self.is_locked or self.rol is None:
             return False
         return self.rol.tiene_permiso(nombre_permiso)
         """
