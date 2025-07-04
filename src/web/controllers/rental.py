@@ -369,7 +369,6 @@ def edit(rental_id):
 
 
 @bp.route("/<int:rental_id>")
-@permiso_required('rentals_show')
 @login_required
 def show(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)

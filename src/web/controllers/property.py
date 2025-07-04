@@ -13,7 +13,7 @@ from src.core.Inmueble.localidad.Localidad import Localidad
 bp = Blueprint("property", __name__, url_prefix="/property")
 
 @bp.route("/", methods=["GET", "POST"])
-@permiso_required('properties_index')
+#@permiso_required('properties_index')
 @login_required
 def index():
     form = PropertySearchForm()
