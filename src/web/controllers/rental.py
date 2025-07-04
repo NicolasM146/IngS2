@@ -143,18 +143,22 @@ Gracias por usar nuestro servicio.
 
     
 from sqlalchemy.orm.exc import StaleDataError
-
 @bp.route('/upgrade/confirmar/<int:request_id>')
 def upgrade_confirmar(request_id):
     try:
-        req = UpgradeRequest.query.with_for_update().get_or_404(request_id)
-        
+        req = UpgradeRequest.query.with_for_update().get(request_id)
+        if not req:
+            flash('Esta solicitud ya no está disponible.', 'warning')
+            return redirect(url_for('rental.index'))
+        # Si ya fue aceptada o rechazada
         if req.accepted is not None:
             flash('Esta solicitud ya fue procesada.', 'warning')
             return redirect(url_for('rental.index'))
 
-        # Crear reserva nueva, borrar reserva vieja y solicitud
+        # Obtener la reserva vieja
         reserva = req.old_reservation
+
+        # Crear nueva reserva con mismos datos, pero en el nuevo alquiler
         nueva_reserva = Reservation(
             start_date=max(datetime.utcnow().date(), reserva.start_date),
             end_date=reserva.end_date,
@@ -164,19 +168,30 @@ def upgrade_confirmar(request_id):
             rental=req.new_rental,
             user=reserva.user,
         )
-        
+
+        # Copiar compañeros
         for c in reserva.compañeros:
             nueva_reserva.compañeros.append(c)
 
+        # Agregar la nueva reserva
         db.session.add(nueva_reserva)
-        db.session.delete(reserva)
+
+        # Borrar primero la solicitud (para liberar la FK)
         db.session.delete(req)
+        db.session.flush()  # 💥 esto es esencial
+
+        # Luego borrar la reserva antigua
+        db.session.delete(reserva)
+
+        # Confirmar todos los cambios
         db.session.commit()
 
         flash('Upgrade confirmado y reserva actualizada.', 'success')
+
     except StaleDataError:
         db.session.rollback()
         flash('La solicitud fue modificada por otro proceso', 'danger')
+
     except Exception as e:
         db.session.rollback()
         flash(f'Ocurrió un error: {e}', 'danger')
@@ -186,21 +201,29 @@ def upgrade_confirmar(request_id):
 
 @bp.route('/upgrade/cancelar/<int:request_id>')
 def upgrade_cancelar(request_id):
-    req = UpgradeRequest.query.get_or_404(request_id)
+    try:
+        req = UpgradeRequest.query.with_for_update().get(request_id)
+        if not req:
+            flash('Esta solicitud ya no está disponible.', 'warning')
+            return redirect(url_for('rental.index'))
+        if req.accepted is not None:
+            flash('Esta solicitud ya fue procesada.', 'warning')
+            return redirect(url_for('rental.index'))
 
-    if req.accepted is not None:
-        flash('Esta solicitud ya fue procesada.', 'warning')
-        return redirect(url_for('rental.index'))
+        # Primero eliminar la solicitud (libera la FK)
+        db.session.delete(req)
+        db.session.flush()  # 🔒 Fuerza el delete en la base antes de continuar
 
-    # Primero borrar la solicitud para liberar la FK
-    db.session.delete(req)
+        # Luego eliminar la reserva original
+        db.session.delete(req.old_reservation)
 
-    # Luego borrar la reserva original
-    db.session.delete(req.old_reservation)
+        db.session.commit()
+        flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
 
-    db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Ocurrió un error: {e}', 'danger')
 
-    flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
     return redirect(url_for('rental.index'))
 
 
@@ -239,6 +262,7 @@ def upgrade_reservation(reservation_id):
             old_reservation=reserva,
             new_rental=nuevo_rental
         )
+
         db.session.add(solicitud)
         db.session.commit()
 
