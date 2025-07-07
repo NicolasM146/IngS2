@@ -37,6 +37,6 @@ def reset():
 
     print("¡Listo! Tablas creadas:")
     
-    cargar_localidades
+    cargar_localidades()
     
     print(db.metadata.tables.keys())
