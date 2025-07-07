@@ -19,8 +19,13 @@ class Property(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     user = db.relationship("User", back_populates="properties")
 
-    rental = db.relationship("Rental", back_populates="property", uselist=False, cascade='all, delete-orphan')
     photos = db.relationship("PropertyPhoto", back_populates="property", cascade='all, delete-orphan')
+    
+    rentals = db.relationship("Rental", back_populates="property", cascade='all, delete-orphan')
+
+@property
+def rental(self):
+    return next((r for r in self.rentals if r.is_active), None)
 
 # IMPORTAR Rental AL FINAL PARA EVITAR CICLO DE IMPORTACION
 from src.core.Alquiler.Rental import Rental

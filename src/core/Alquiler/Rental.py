@@ -12,9 +12,9 @@ class Rental(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     advance_payment = db.Column(db.Boolean, default=False)
 
-    property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), unique=True, nullable=False)
+    property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), unique=False, nullable=False)
 
-    property = db.relationship("Property", back_populates="rental", foreign_keys=[property_id])
+    property = db.relationship("Property", back_populates="rentals")
 
     # Para Review y Reservation, asegurate que también estén importados al final
     reviews = db.relationship("Review", back_populates="rental", cascade='all, delete-orphan')
