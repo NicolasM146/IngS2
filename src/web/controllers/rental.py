@@ -290,10 +290,7 @@ def create():
     propiedades = (
         db.session.query(Property)
         .outerjoin(rental_alias, Property.id == rental_alias.property_id)
-        .filter(
-            Property.user_id == current_user.id,
-            or_(rental_alias.id == None, rental_alias.is_active == False)
-        )
+        .filter(or_(rental_alias.id == None))
         .all()
     )
 
