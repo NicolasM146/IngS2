@@ -10,7 +10,7 @@
     <ul>
         <li><strong>Cliente:</strong> {{ reserva.user.nombre }}</li>
         <li><strong>Email:</strong> {{ reserva.user.email }}</li>
-        <li><strong>Alquiler actual:</strong> {{ reserva.rental.property.direccion }}</li>
+        <li><strong>Alquiler actual:</strong> {{reserva.rental.property.localidad.nombre}}, {{ reserva.rental.property.direccion }}</li>
         <li><strong>Fecha inicio:</strong> {{ reserva.start_date.strftime('%d/%m/%Y') }}</li>
         <li><strong>Fecha fin:</strong> {{ reserva.end_date.strftime('%d/%m/%Y') }}</li>
     </ul>
