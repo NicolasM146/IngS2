@@ -11,6 +11,7 @@ from datetime import date
 from statistics import mean
 from collections import Counter
 from src.core.Inmueble.localidad.Localidad import Localidad
+from src.core.Usuario.User import User
 
 import os
 from dotenv import load_dotenv
@@ -119,10 +120,30 @@ def alquilar(rental_id):
     dias_ocupados = [(r.start_date, r.end_date) for r in reservas]
     hoy = date.today().isoformat()
 
+    
+
     if request.method == "POST":
         start_date_str = request.form.get("start_date")
         end_date_str = request.form.get("end_date")
         payment_method_id = current_user.stripe_payment_method_id
+        user_reservation_id = current_user.id
+
+        users = []
+        if current_user.es_sysadmin:
+            users = User.query.order_by(User.nombre).all()
+
+        if current_user.es_sysadmin:
+            compañeros = []  # vacío al cargar
+        else:
+            compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
+
+        if current_user.es_sysadmin:
+            user_reservation_id = request.form.get("user_reservation_id", type=int)
+            if not user_reservation_id:
+                flash("Debe seleccionar un usuario para asignar la reserva.", "warning")
+            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy, users=users)
+        else:
+            user_reservation_id = current_user.id
 
         try:
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
@@ -213,7 +234,7 @@ def alquilar(rental_id):
                     apellido=apellido,
                     dni=dni,
                     telefono=telefono,
-                    user_id=current_user.id,
+                    user_id=user_reservation_id,
                     fechaNacimiento=fecha_nacimiento,
                     estado_civil=estado_civil,
                     tutor=tutor_str
@@ -228,7 +249,7 @@ def alquilar(rental_id):
             end_date=end_date,
             price_per_night=rental.price,
             rental_id=rental.id,
-            user_id=current_user.id,
+            user_id=user_reservation_id,
             compañeros=acompañantes_seleccionados + nuevos_acompañantes,
             advance_payment=rental.advance_payment
         )
@@ -272,8 +293,11 @@ def alquilar(rental_id):
             db.session.commit()
             flash("Error en el pago, no se realizó la reserva", "danger")
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+    users = []
+    if current_user.es_sysadmin:
+        users = User.query.order_by(User.nombre).all()
 
-    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy, users = users)
 
 
 @bp.route("/eliminar-compañero/<int:id>/<int:rental_id>", methods=["POST"])
@@ -301,3 +325,17 @@ def eliminar_compañero(id, rental_id):
         flash("Acompañante eliminado. Se han actualizado los tutores relacionados.", "info")
 
     return redirect(url_for("reservation.alquilar", rental_id=rental_id))
+
+@bp.route("/acompañantes-usuario/<int:user_id>")
+@login_required
+def acompanantes_usuario(user_id):
+    # Solo admin puede acceder
+    if not current_user.es_sysadmin:
+        return {"error": "No autorizado"}, 403
+
+    acompañantes = Compañero.query.filter_by(user_id=user_id).all()
+    data = [
+        {"id": c.id, "nombre": c.nombre, "apellido": c.apellido, "dni": c.dni}
+        for c in acompañantes
+    ]
+    return {"acompañantes": data}

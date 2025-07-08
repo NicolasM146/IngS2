@@ -132,10 +132,6 @@
                                     
                                     <li><hr class="dropdown-divider"></li>
                                     
-                                    {% if current_user.tiene_permiso('rentals_create') %}
-                                    <li><a class="dropdown-item" href="{{ url_for('rental.create') }}">
-                                        <i class="fas fa-plus-circle me-2"></i>Crear Alquiler Manual</a></li>
-                                    {% endif %}
                                 </ul>
                             </li>
                         {% endif %}
