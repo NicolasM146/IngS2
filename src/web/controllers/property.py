@@ -14,7 +14,7 @@ from src.core.Alquiler.Rental import Rental
 bp = Blueprint("property", __name__, url_prefix="/property")
 
 @bp.route("/", methods=["GET", "POST"])
-#@permiso_required('properties_index')
+@permiso_required('properties_index')
 @login_required
 def index():
     form = PropertySearchForm()
@@ -339,6 +339,7 @@ def deactivate(id):
     if not current_user.tiene_permiso('properties_update'):
         flash("No tienes permisos para dar de baja propiedades", "danger")
         return redirect(url_for('property.show', id=id))
+    
 
     property_obj.estado = 'baja'
     db.session.commit()

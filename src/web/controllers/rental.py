@@ -285,7 +285,10 @@ def create():
     # Subconsulta: propiedades con al menos un alquiler activo
     subquery = (
         db.session.query(Rental.property_id)
-        .filter(Rental.is_active == True)
+        .filter(or_(
+            Rental.is_active == True,
+            Rental.description == "locked"
+        ))
         .subquery()
     )
 
@@ -299,7 +302,6 @@ def create():
     if request.method == 'POST':
         property_id = request.form.get('property_id')
         price = request.form.get('price')
-        description = request.form.get('description')
         advance_payment = request.form.get('advance_payment') == 'true'
 
         propiedad = Property.query.filter_by(id=property_id).first()
@@ -324,10 +326,11 @@ def create():
             property_id=property_id,
             creation_date=datetime.utcnow(),
             price=price_float,
-            description=description,
+            description="",
             is_active=True,
             advance_payment=advance_payment,
         )
+        propiedad.estado = "publicado"
         db.session.add(nuevo_alquiler)
         db.session.commit()
         flash("Carga de Alquiler exitosa", "success")
@@ -418,10 +421,13 @@ def show(rental_id):
 @login_required
 def lock(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
+    # Solo el encargado (check In/Out) puede bloquear o liberar el alquiler.
     if alquiler.property.user_id != current_user.id:
         flash("No tienes permiso para bloquear este alquiler.", "danger")
         return redirect(url_for('rental.show', rental_id=rental_id))
     alquiler.is_active = False
+    alquiler.description = "locked"
+    alquiler.property.estado = "bloqueado"
     db.session.commit()
     flash("Alquiler bloqueado correctamente.", "success")
     return redirect(url_for('rental.show', rental_id=rental_id))
@@ -436,6 +442,8 @@ def unlock(rental_id):
         flash("No tienes permiso para liberar este alquiler.", "danger")
         return redirect(url_for('rental.show', rental_id=rental_id))
     alquiler.is_active = True
+    alquiler.description = ""
+    alquiler.property.estado = "publicado"
     db.session.commit()
     flash("Alquiler liberado correctamente.", "success")
     return redirect(url_for('rental.show', rental_id=rental_id))
@@ -446,11 +454,9 @@ def unlock(rental_id):
 def unpublish(rental_id):
     rental = Rental.query.get_or_404(rental_id)
 
-    if rental.reserved_today_or_later():
-        flash("No se puede quitar la publicación porque tiene reservas futuras o activas.", "danger")
-        return redirect(url_for("rental.index"))
-
+    rental.property.estado = "disponible"
     rental.is_active = False
+    rental.description = "removed"
     db.session.commit()
 
     flash("Publicación eliminada correctamente.", "success")

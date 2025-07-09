@@ -8,7 +8,7 @@ class Property(db.Model):
     direccion = db.Column(db.String(255), nullable=False)
     descripcion = db.Column(db.Text)
     # Estados posibles: disponible, baja, ocupado (ocupado si esta alquilado y ocupado al momento de la consulta)
-    estado = db.Column(db.String(20), default='disponible') 
+    estado = db.Column(db.String(20), default='disponible') # disponible, publicado, baja, bloqueado (cuando bloqueas el alquiler)
     capacidad = db.Column(db.Integer)
     habitaciones = db.Column(db.Integer)
     
@@ -26,6 +26,10 @@ class Property(db.Model):
 @property
 def rental(self):
     return next((r for r in self.rentals if r.is_active), None)
+
+@property
+def puede_ser_eliminado(self):
+    return self.estado in ['disponible', 'baja'] and all(r.reservations.count() == 0 for r in self.rentals)
 
 # IMPORTAR Rental AL FINAL PARA EVITAR CICLO DE IMPORTACION
 from src.core.Alquiler.Rental import Rental

@@ -14,7 +14,13 @@
             <!-- Encabezado -->
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="mb-0">{{ property.direccion }}</h1>
-                <span class="badge bg-{{ 'success' if property.estado == 'disponible' else 'warning' }} fs-6">
+                {% set estado_color = {
+                'disponible': 'success',
+                'publicado': 'success',
+                'bloqueado': 'warning',
+                'baja': 'danger'
+                }[property.estado] %}
+                <span class="badge bg-{{ estado_color }} fs-6">
                     {{ property.estado|capitalize }}
                 </span>
             </div>
@@ -24,30 +30,31 @@
                 <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-indicators">
                         {% for photo in property.photos %}
-                        <button type="button" data-bs-target="#propertyCarousel" 
-                                data-bs-slide-to="{{ loop.index0 }}" 
-                                {% if loop.first %}class="active" aria-current="true"{% endif %}
-                                aria-label="Slide {{ loop.index }}"></button>
+                        <button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="{{ loop.index0 }}" {%
+                            if loop.first %}class="active" aria-current="true" {% endif %}
+                            aria-label="Slide {{ loop.index }}"></button>
                         {% endfor %}
                     </div>
                     <div class="carousel-inner rounded">
                         {% for photo in property.photos %}
                         <div class="carousel-item {% if loop.first %}active{% endif %}">
-                            <img src="{{ url_for('static', filename='uploads/properties/' + photo.filename) }}" 
+                            <img src="{{ url_for('static', filename='uploads/properties/' + photo.filename) }}"
                                 class="d-block w-100" alt="Foto del inmueble" style="height: 400px; object-fit: cover;">
                         </div>
                         {% endfor %}
                     </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                    <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel"
+                        data-bs-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Previous</span>
                     </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                    <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel"
+                        data-bs-slide="next">
                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Next</span>
                     </button>
                 </div>
-</div>
+            </div>
 
             <!-- Detalles principales -->
             <div class="card mb-4">
@@ -104,7 +111,7 @@
                         {% endif %}
 
                         <!-- Botón de eliminar (opcional) -->
-                        {% if current_user.tiene_permiso('properties_destroy') and (not property.rental or property.rental.reservations.count() == 0) %}
+                        {% if current_user.tiene_permiso('properties_destroy') and property.puede_ser_eliminado %}
                         <form action="{{ url_for('property.delete', id=property.id) }}" method="POST" class="d-grid">
                             <button type="submit" class="btn btn-danger"
                                 onclick="return confirm('¿Eliminar el Inmueble con ID = {{property.id}} permanentemente?')">
