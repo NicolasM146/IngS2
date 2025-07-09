@@ -8,10 +8,20 @@
     {% if current_user.es_sysadmin %}
       <div class="form-group mt-3">
         <label for="user_reservation_id">Reservar para otro usuario:</label>
+        <div class="row mb-2">
+          <div class="col-md-6">
+            <input type="text" id="user-filter" class="form-control" placeholder="Filtrar por nombre o email">
+          </div>
+          <div class="col-md-6">
+            <input type="text" id="dni-filter" class="form-control" placeholder="Filtrar por DNI">
+          </div>
+        </div>
         <select name="user_reservation_id" id="user-select" class="form-control" required>
           <option value="" disabled selected>Seleccioná un usuario</option>
           {% for user in users %}
-            <option value="{{ user.id }}">{{ user.nombre }} {{ user.apellido }} ({{ user.email }})</option>
+            <option value="{{ user.id }}" data-nombre="{{ user.nombre }} {{ user.apellido }}" data-email="{{ user.email }}" data-dni="{{ user.dni }}">
+              {{ user.nombre }} {{ user.apellido }} ({{ user.email }}) - DNI: {{ user.dni }}
+            </option>
           {% endfor %}
         </select>
       </div>
@@ -93,7 +103,7 @@
             <input type="hidden" class="hidden-tutor-input" name="nuevo_tutor_hidden[]" value="">
           </div>
           <div class="col-md-12 mt-2 d-flex justify-content-between">
-            <button type="button" class="btn btn-danger btn-sm remove-btn">X</button>
+            <button type="button" class="btn btn-danger btn-sm remove-btn">Eliminar acompañante</button>
             <button type="button" class="btn btn-primary btn-sm guardar-btn">Guardar acompañante</button>
           </div>
         </div>
@@ -499,5 +509,39 @@
       }
     });
   </script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Filtrado de usuarios
+    const userFilter = document.getElementById('user-filter');
+    const dniFilter = document.getElementById('dni-filter');
+    const userSelect = document.getElementById('user-select');
+    
+    if (userFilter && dniFilter && userSelect) {
+      function filterUsers() {
+        const nameFilter = userFilter.value.toLowerCase();
+        const dniFilterValue = dniFilter.value.toLowerCase();
+        
+        Array.from(userSelect.options).forEach(option => {
+          if (option.value === '') return;
+          
+          const nombre = option.getAttribute('data-nombre').toLowerCase();
+          const email = option.getAttribute('data-email').toLowerCase();
+          const dni = option.getAttribute('data-dni').toLowerCase();
+          
+          const matchesName = nombre.includes(nameFilter) || email.includes(nameFilter);
+          const matchesDni = dni.includes(dniFilterValue);
+          
+          option.style.display = (matchesName && matchesDni) ? '' : 'none';
+        });
+      }
+      
+      userFilter.addEventListener('input', filterUsers);
+      dniFilter.addEventListener('input', filterUsers);
+    }
+
+    // Resto del código JavaScript permanece igual
+    // ...
+  });
+</script>
 
 {% endblock %}

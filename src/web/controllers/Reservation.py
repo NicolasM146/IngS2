@@ -12,6 +12,7 @@ from statistics import mean
 from collections import Counter
 from src.core.Inmueble.localidad.Localidad import Localidad
 from src.core.Usuario.User import User
+from src.web.handlers.auth import permiso_required
 
 import os
 from dotenv import load_dotenv
@@ -146,7 +147,7 @@ def alquilar(rental_id):
         if current_user.es_sysadmin:
             compañeros = []  # vacío al cargar
         else:
-            compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
+            compañeros = Compañero.query.filter_by(is_locked=False).all()
 
         if current_user.es_sysadmin:
             user_reservation_id = request.form.get("user_reservation_id", type=int)
@@ -333,7 +334,7 @@ def alquilar(rental_id):
             return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
     users = []
     if current_user.es_sysadmin:
-        users = User.query.order_by(User.nombre).all()
+        users = User.query.filter_by(is_locked=False).order_by(User.nombre).all()
 
     return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy, users = users)
     # Si es GET, renderiza el formulario de reserva
@@ -379,3 +380,4 @@ def acompanantes_usuario(user_id):
         for c in acompañantes
     ]
     return {"acompañantes": data}
+
