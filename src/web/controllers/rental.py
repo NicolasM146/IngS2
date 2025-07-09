@@ -456,7 +456,7 @@ def unpublish(rental_id):
 
     rental.property.estado = "disponible"
     rental.is_active = False
-    rental.description = ""
+    rental.description = "removed"
     db.session.commit()
 
     flash("Publicación eliminada correctamente.", "success")

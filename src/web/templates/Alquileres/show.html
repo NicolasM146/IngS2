@@ -17,7 +17,7 @@
             </a>
             {% endif %}
 
-            {% if current_user.tiene_permiso('rentals_destroy') and alquiler.reservations.count() == 0 %}
+            {% if current_user.tiene_permiso('rentals_destroy') and not alquiler.reservations.count() == 0 %}
             <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" class="ms-2">
                 <button type="submit" class="btn btn-danger"
                     onclick="return confirm('¿Estás seguro de eliminar este alquiler?')">
@@ -34,7 +34,7 @@
                     <i class="fas fa-lock"></i> Bloquear
                 </button>
             </form>
-            {% else %}
+            {% elif not alquiler.property.rental %}
             <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
                 <button type="submit" class="btn btn-success"
                     onclick="return confirm('¿Querés liberar este alquiler?')">
