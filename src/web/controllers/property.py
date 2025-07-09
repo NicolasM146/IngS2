@@ -14,7 +14,7 @@ from src.core.Alquiler.Rental import Rental
 bp = Blueprint("property", __name__, url_prefix="/property")
 
 @bp.route("/", methods=["GET", "POST"])
-#@permiso_required('properties_index')
+@permiso_required('properties_index')
 @login_required
 def index():
     form = PropertySearchForm()
@@ -297,7 +297,8 @@ def edit(id):
     
     localidades = Localidad.query.order_by(Localidad.nombre).all()
     tiene_reservas_pendientes = False #Esto definira si se puede modificar o no la Localidad
-    if property_obj.rental and property_obj.rental.reserved_today_or_later():
+    active_rental = next((r for r in property_obj.rentals if r.is_active), None)
+    if active_rental and active_rental.reserved_today_or_later():
         tiene_reservas_pendientes = True
     return render_template("Propiedades/edit.html", property=property_obj, users=users, localidades=localidades, localidad_bloqueada=tiene_reservas_pendientes)
 
@@ -339,6 +340,7 @@ def deactivate(id):
     if not current_user.tiene_permiso('properties_update'):
         flash("No tienes permisos para dar de baja propiedades", "danger")
         return redirect(url_for('property.show', id=id))
+    
 
     property_obj.estado = 'baja'
     db.session.commit()

@@ -9,7 +9,33 @@
     <tr><th>Nombre</th><td>{{ user.nombre }}</td></tr>
     <tr><th>Email</th><td>{{ user.email }}</td></tr>
     <tr><th>DNI</th><td>{{ user.dni }}</td></tr>
-    <tr><th>Rol</th><td>{{ user.rol.nombre if user.rol else 'Sin rol' }}</td></tr>
+    <tr><th>Rol</th>
+    <td>
+        {% if current_user.es_sysadmin and user.id != current_user.id %}
+        <form method="post" action="{{ url_for('users.update_role', user_id=user.id) }}" class="d-inline">
+            <select name="rol_id" class="form-select d-inline-block" style="width: auto;" onchange="this.form.submit()">
+                
+                <!-- Opción para hacer administrador -->
+                <option value="sysadmin" {% if user.es_sysadmin %}selected{% endif %}>
+                    Administrador del Sistema
+                </option>
+                <!-- Roles normales -->
+                {% for rol in roles %}
+                <option value="{{ rol.id }}" {% if not user.es_sysadmin and user.rol and user.rol.id==rol.id %}selected{% endif %}>
+                    {{ rol.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+        {% else %}
+            {% if user.es_sysadmin %}
+                <span class="badge bg-danger">Administrador del Sistema</span>
+            {% else %}
+                {{ user.rol.nombre if user.rol else 'Sin rol' }}
+            {% endif %}
+        {% endif %}
+    </td>
+</tr>
     <tr><th>Teléfono</th><td>{{ user.telefono }}</td></tr>
     <tr><th>Fecha de nacimiento</th><td>{{ user.fecha_nacimiento }}</td></tr>
     <tr><th>Estado</th><td>{{ 'Bloqueado' if user.is_locked else 'Activo' }}</td></tr>

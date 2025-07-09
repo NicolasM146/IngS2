@@ -70,8 +70,8 @@ def crear_roles_y_permisos(tabla, coneccion, **kw):
     Crea los roles por defecto y les asigna todos los permisos.
     """
     with Session(coneccion) as sesion:
-        check_in_out = crear_rol(tabla, sesion, "CheckInOut") 
-        client = crear_rol(tabla, sesion, "client") 
+        check_in_out = crear_rol(tabla, sesion, "Encargado") 
+        client = crear_rol(tabla, sesion, "Cliente") 
         # Al crear nuevos permisos, agréguenlos a la lista
         # (siempre dejen una coma en el último item, así hay menos posibilidades de errores al mergear)
         crear_y_asignar_permisos(
