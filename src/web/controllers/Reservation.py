@@ -141,7 +141,6 @@ def alquilar(rental_id):
             user_reservation_id = request.form.get("user_reservation_id", type=int)
             if not user_reservation_id:
                 flash("Debe seleccionar un usuario para asignar la reserva.", "warning")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy, users=users)
         else:
             user_reservation_id = current_user.id
 
