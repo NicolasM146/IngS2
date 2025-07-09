@@ -302,7 +302,6 @@ def create():
     if request.method == 'POST':
         property_id = request.form.get('property_id')
         price = request.form.get('price')
-        description = request.form.get('description')
         advance_payment = request.form.get('advance_payment') == 'true'
 
         propiedad = Property.query.filter_by(id=property_id).first()
@@ -327,10 +326,11 @@ def create():
             property_id=property_id,
             creation_date=datetime.utcnow(),
             price=price_float,
-            description=description,
+            description="",
             is_active=True,
             advance_payment=advance_payment,
         )
+        propiedad.estado = "publicado"
         db.session.add(nuevo_alquiler)
         db.session.commit()
         flash("Carga de Alquiler exitosa", "success")
@@ -427,6 +427,7 @@ def lock(rental_id):
         return redirect(url_for('rental.show', rental_id=rental_id))
     alquiler.is_active = False
     alquiler.description = "locked"
+    alquiler.property.estado = "bloqueado"
     db.session.commit()
     flash("Alquiler bloqueado correctamente.", "success")
     return redirect(url_for('rental.show', rental_id=rental_id))
@@ -442,6 +443,7 @@ def unlock(rental_id):
         return redirect(url_for('rental.show', rental_id=rental_id))
     alquiler.is_active = True
     alquiler.description = ""
+    alquiler.property.estado = "publicado"
     db.session.commit()
     flash("Alquiler liberado correctamente.", "success")
     return redirect(url_for('rental.show', rental_id=rental_id))
@@ -452,7 +454,9 @@ def unlock(rental_id):
 def unpublish(rental_id):
     rental = Rental.query.get_or_404(rental_id)
 
+    rental.property.estado = "disponible"
     rental.is_active = False
+    rental.description = ""
     db.session.commit()
 
     flash("Publicación eliminada correctamente.", "success")
