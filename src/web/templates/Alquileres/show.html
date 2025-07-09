@@ -34,7 +34,7 @@
                     <i class="fas fa-lock"></i> Bloquear
                 </button>
             </form>
-            {% elif not alquiler.property.rental %}
+            {% elif alquiler.property.estado == 'disponible' %}
             <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
                 <button type="submit" class="btn btn-success"
                     onclick="return confirm('¿Querés liberar este alquiler?')">
