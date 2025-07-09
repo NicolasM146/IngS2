@@ -297,7 +297,8 @@ def edit(id):
     
     localidades = Localidad.query.order_by(Localidad.nombre).all()
     tiene_reservas_pendientes = False #Esto definira si se puede modificar o no la Localidad
-    if property_obj.rental and property_obj.rental.reserved_today_or_later():
+    active_rental = next((r for r in property_obj.rentals if r.is_active), None)
+    if active_rental and active_rental.reserved_today_or_later():
         tiene_reservas_pendientes = True
     return render_template("Propiedades/edit.html", property=property_obj, users=users, localidades=localidades, localidad_bloqueada=tiene_reservas_pendientes)
 
