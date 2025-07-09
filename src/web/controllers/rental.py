@@ -285,7 +285,10 @@ def create():
     # Subconsulta: propiedades con al menos un alquiler activo
     subquery = (
         db.session.query(Rental.property_id)
-        .filter(Rental.is_active == True)
+        .filter(or_(
+            Rental.is_active == True,
+            Rental.description == "locked"
+        ))
         .subquery()
     )
 
@@ -418,10 +421,12 @@ def show(rental_id):
 @login_required
 def lock(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
+    # Solo el encargado (check In/Out) puede bloquear o liberar el alquiler.
     if alquiler.property.user_id != current_user.id:
         flash("No tienes permiso para bloquear este alquiler.", "danger")
         return redirect(url_for('rental.show', rental_id=rental_id))
     alquiler.is_active = False
+    alquiler.description = "locked"
     db.session.commit()
     flash("Alquiler bloqueado correctamente.", "success")
     return redirect(url_for('rental.show', rental_id=rental_id))
@@ -436,6 +441,7 @@ def unlock(rental_id):
         flash("No tienes permiso para liberar este alquiler.", "danger")
         return redirect(url_for('rental.show', rental_id=rental_id))
     alquiler.is_active = True
+    alquiler.description = ""
     db.session.commit()
     flash("Alquiler liberado correctamente.", "success")
     return redirect(url_for('rental.show', rental_id=rental_id))
@@ -445,10 +451,6 @@ def unlock(rental_id):
 @login_required
 def unpublish(rental_id):
     rental = Rental.query.get_or_404(rental_id)
-
-    if rental.reserved_today_or_later():
-        flash("No se puede quitar la publicación porque tiene reservas futuras o activas.", "danger")
-        return redirect(url_for("rental.index"))
 
     rental.is_active = False
     db.session.commit()
