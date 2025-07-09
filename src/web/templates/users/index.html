@@ -9,6 +9,19 @@
 
 {% block content %}
 <h1 class="mb-4">Gestión de Usuarios</h1>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Tu información</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3"><strong>Nombre:</strong> {{ current_user.nombre }}</div>
+            <div class="col-md-3"><strong>Email:</strong> {{ current_user.email }}</div>
+            <div class="col-md-3"><strong>Rol:</strong> {{ current_user.rol.nombre if current_user.rol else 'Administrador del Sistema' }}</div>
+            <div class="col-md-3"><strong>Estado:</strong> {{ 'Bloqueado' if current_user.is_locked else 'Activo' }}</div>
+        </div>
+    </div>
+</div>
 <form method="get" class="mb-4">
     <div class="form-row row">
         <div class="form-group col-md-3">
@@ -73,7 +86,11 @@
                 <td>{{ user.fecha_nacimiento }}</td>
                 <td>{{ 'Bloqueado' if user.is_locked else 'Activo' }}</td>
                 <td>
-                    <a href="{{ url_for('users.show', user_id=user.id) }}" class="btn btn-sm btn-primary">Ver</a>
+                    {% if user.id != current_user_id %}
+                        <a href="{{ url_for('users.show', user_id=user.id) }}" class="btn btn-sm btn-primary">Ver</a>
+                    {% else %}
+                        <span class="text-muted">(Tú)</span>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

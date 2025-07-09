@@ -68,7 +68,7 @@ class User(UserMixin,db.Model):
     def desbloquear(self):
         self.is_locked = False
 
-    # En User.py, modificar el método tiene_permiso para que funcione correctamente
+
     def tiene_permiso(self, nombre_permiso):
         if self.es_sysadmin:
             return True

@@ -45,8 +45,8 @@ def index():
                            page=page,
                            per_page=per_page,
                            total=total,
-                           no_results=no_results)
-    
+                           no_results=no_results,
+                           current_user_id=current_user.id)  # Añadir esta línea
 
 @bp.route('/<int:user_id>', endpoint="show")
 @permiso_required('user_show')
