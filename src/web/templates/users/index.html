@@ -60,6 +60,7 @@
                 <th>Rol</th>
                 <th>Fecha de Nacimiento</th>
                 <th>Estado</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -68,7 +69,7 @@
                 <td>{{ user.nombre }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.dni }}</td>
-                <td>{{ user.rol.nombre if user.rol else 'Sin rol' }}</td>
+                <td>{{ user.rol.nombre if user.rol else 'Administrador del Sistema' }}</td>
                 <td>{{ user.fecha_nacimiento }}</td>
                 <td>{{ 'Bloqueado' if user.is_locked else 'Activo' }}</td>
                 <td>
