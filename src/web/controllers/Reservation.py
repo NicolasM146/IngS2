@@ -220,17 +220,9 @@ def alquilar(rental_id):
 
                 # Si el tutor seleccionado es el usuario actual, se convierte a string
                 if tutor == "current_user":
-                    tutor_str = f"{current_user.nombre} {current_user.apellido}"
+                    tutor_str = f"{current_user.nombre}"
                 else:
                     tutor_str = tutor
-
-                # Verifica que el tutor exista en los acompañantes seleccionados o nuevos
-                tutor_valido = any(
-                    f"{c.nombre} {c.apellido}" == tutor_str for c in acompañantes_seleccionados + nuevos_acompañantes
-                )
-                if not tutor_valido:
-                    flash(f"El tutor {tutor_str} no es válido o fue eliminado.", "danger")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
             else:
                 tutor_str = None  # No se necesita tutor si es mayor de edad
 
