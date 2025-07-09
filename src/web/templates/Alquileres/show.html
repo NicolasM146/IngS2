@@ -26,34 +26,33 @@
     </form>
     {% endif %}
 
-    {% if current_user.tiene_permiso('rentals_update') %}
-        {% if alquiler.is_active %}
-        <form action="{{ url_for('rental.lock', rental_id=alquiler.id) }}" method="POST" class="d-inline">
-            <button type="submit" class="btn btn-secondary"
-                onclick="return confirm('¿Querés bloquear este alquiler?')">
-                <i class="fas fa-lock"></i> Bloquear
-            </button>
-        </form>
-        {% elif not alquiler.property.rental %}
-        <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="d-inline">
-            <button type="submit" class="btn btn-success"
-                onclick="return confirm('¿Querés liberar este alquiler?')">
-                <i class="fas fa-lock-open"></i> Liberar
-            </button>
-        </form>
-        {% endif %}
-        
-        <form method="post" action="{{ url_for('rental.unpublish', rental_id=alquiler.id) }}" class="d-inline">
-            <button type="submit" class="btn btn-warning" {% if not alquiler.is_active %}disabled{% endif %}>
-                <i class="fas fa-eye-slash"></i> Quitar Publicación
-            </button>
-        </form>
-        
-        <a href="{{ url_for('property.show', id=alquiler.property.id) }}" class="btn btn-primary">
-            <i class="fas fa-eye"></i> Ver Inmueble
-        </a>
-    {% endif %}
-</div>
+            {% if current_user.tiene_permiso('rentals_update') %}
+            {% if alquiler.is_active %}
+            <form action="{{ url_for('rental.lock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                <button type="submit" class="btn btn-secondary"
+                    onclick="return confirm('¿Querés bloquear este alquiler?')">
+                    <i class="fas fa-lock"></i> Bloquear
+                </button>
+            </form>
+            {% elif alquiler.property.estado == 'disponible' %}
+            <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                <button type="submit" class="btn btn-success"
+                    onclick="return confirm('¿Querés liberar este alquiler?')">
+                    <i class="fas fa-lock-open"></i> Liberar
+                </button>
+            </form>
+            {% endif %}
+            <form method="post" action="{{ url_for('rental.unpublish', rental_id=alquiler.id) }}"
+                style="display:inline;"
+                onsubmit="return confirm('¿Estás seguro de que deseas quitar la publicación de este alquiler?');">
+                <button type="submit" class="btn btn-warning" {% if not alquiler.is_active %}disabled{% endif %}>
+                    <i class="fas fa-eye-slash"></i> Quitar Publicación
+                </button>
+            </form>
+            <a href="{{ url_for('property.show', id=alquiler.property.id) }}" class="btn btn-primary ms-2">
+                <i class="fas fa-eye"></i> Ver Inmueble
+            </a>
+            {% endif %}
 
             <!-- Botón de Reserva -->
 

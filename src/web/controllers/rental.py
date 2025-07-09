@@ -26,6 +26,7 @@ def index():
     direccion = request.args.get("direccion")
     localidad_id = request.args.get("localidad_id")
     estado = request.args.get("estado")
+    incluir_despublicados = request.args.get("incluir_despublicados") is not None
 
     alquileres = []
 
@@ -43,15 +44,33 @@ def index():
 
         if estado == "libre":
             query = query.filter(Rental.is_active == True)
+            alquileres = query.all()
         elif estado == "bloqueado":
-            query = query.filter(Rental.is_active == False)
-
-        alquileres = query.all()
-
-        if estado == "reservado":
+            query = query.filter(Rental.is_active == False, Rental.description == "locked")
+            alquileres = query.all()
+        elif estado == "reservado":
+            query = query.filter(Rental.is_active == True)
+            alquileres = query.all()
             alquileres = [a for a in alquileres if a.reserved_today_or_later()]
         elif estado == "no_reservado":
+            query = query.filter(Rental.is_active == True)
+            alquileres = query.all()
             alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
+        else:
+            alquileres = query.all()
+
+        # 💡 Agregamos des-publicados si se pidió
+        if incluir_despublicados:
+            despub_query = Rental.query.join(Property).filter(
+                Rental.is_active == False,
+                Rental.description != "locked"
+            )
+            if direccion:
+                despub_query = despub_query.filter(Property.direccion.ilike(f"%{direccion}%"))
+            if localidad_id:
+                despub_query = despub_query.filter(Property.localidad_id == int(localidad_id))
+
+            alquileres += despub_query.all()
 
     return render_template(
         "Alquileres/index.html",
@@ -59,6 +78,8 @@ def index():
         localidades=localidades,
         request_args=request.args
     )
+
+
 
 @bp.route('/<int:rental_id>/reservas/vigentes')
 @permiso_required("rentals_update")

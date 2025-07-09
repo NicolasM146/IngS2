@@ -99,10 +99,12 @@
                 <td>{{ property.capacidad }}</td>
                 <td>{{ property.habitaciones }}</td>
                 <td>
-                    {% set color =
-                    'success' if property.estado in ['disponible', 'publicado'] else
-                    'danger' if property.estado == 'baja' else
-                    'warning' %}
+                    {% set color = {
+                    'disponible': 'success',
+                    'publicado': 'success',
+                    'baja': 'danger',
+                    'bloqueado': 'warning'
+                    }[property.estado] %}
                     <span class="badge bg-{{ color }}">
                         {{ property.estado|capitalize }}
                     </span>

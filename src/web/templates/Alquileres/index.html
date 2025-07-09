@@ -32,15 +32,28 @@
                 <option value="libre" {% if request.args.get('estado')=='libre' %}selected{% endif %}>Activo</option>
                 <option value="bloqueado" {% if request.args.get('estado')=='bloqueado' %}selected{% endif %}>Bloqueado
                 </option>
+                <option value="despublicado" {% if request.args.get('estado')=='despublicado' %}selected{% endif %}>
+                    Des-publicado</option>
                 <option value="reservado" {% if request.args.get('estado')=='reservado' %}selected{% endif %}>Reservado
                 </option>
                 <option value="no_reservado" {% if request.args.get('estado')=='no_reservado' %}selected{% endif %}>No
                     reservado</option>
             </select>
+
         </div>
         <div class="form-group col-md-2 d-flex align-items-end">
             <button type="submit" class="btn btn-success w-100">Buscar</button>
         </div>
+        <div class="form-group col-md-2 d-flex align-items-end">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="incluir_despublicados" id="incluir_despublicados"
+                    {% if request.args.get('incluir_despublicados') %}checked{% endif %}>
+                <label class="form-check-label" for="incluir_despublicados">
+                    Incluir alquileres des-publicados
+                </label>
+            </div>
+        </div>
+
     </div>
 </form>
 {% if alquileres %}
