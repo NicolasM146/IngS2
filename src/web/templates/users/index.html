@@ -24,9 +24,9 @@
             <label for="rol">Rol</label>
             <select class="form-control" name="rol" id="rol">
                 <option value="" {% if request.args.get('rol', '' )=='' %}selected{% endif %}>Todos</option>
-                <option value="CheckInOut" {% if request.args.get('rol')=='CheckInOut' %}selected{% endif %}>CheckInOut
+                <option value="Encargado" {% if request.args.get('rol')=='Encargado' %}selected{% endif %}>Encargado
                 </option>
-                <option value="Client" {% if request.args.get('rol')=='client' %}selected{% endif %}>Client</option>
+                <option value="Cliente" {% if request.args.get('rol')=='Cliente' %}selected{% endif %}>Cliente</option>
             </select>
         </div>
         <div class="form-group col-md-2">
@@ -69,7 +69,7 @@
                 <td>{{ user.nombre }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.dni }}</td>
-                <td>{{ user.rol.nombre if user.rol else 'Administrador del Sistema' }}</td>
+                <td>{{ user.rol.nombre if user.rol else 'Adminisrador del Sistema' }}</td>
                 <td>{{ user.fecha_nacimiento }}</td>
                 <td>{{ 'Bloqueado' if user.is_locked else 'Activo' }}</td>
                 <td>

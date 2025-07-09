@@ -35,7 +35,7 @@ def register():
         # En esta versión se espera recibir un payment_method_id token desde frontend (Stripe Elements)
         payment_method_id = request.form.get("payment_method_id")
 
-        rol_cliente = Rol.query.filter_by(nombre="client").first()
+        rol_cliente = Rol.query.filter_by(nombre="Cliente").first()
 
         
         # Validaciones usuario

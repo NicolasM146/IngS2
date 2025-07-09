@@ -98,16 +98,7 @@ def update_role(user_id):
         # Asignar administrador
         user.es_sysadmin = True
         user.rol = None  # Opcional: quitar rol si es administrador
-        flash("Usuario asignado como administrador.", "success")
-    elif rol_id == 'remove_sysadmin':
-        # Quitar administrador y asignar rol de cliente por defecto
-        user.es_sysadmin = False
-        cliente_rol = Rol.query.filter_by(nombre='client').first()
-        if cliente_rol:
-            user.rol = cliente_rol
-            flash("Se quitó el estado de administrador y se asignó rol de cliente.", "success")
-        else:
-            flash("Error: No se encontró el rol de cliente.", "danger")
+        flash("Rol actualizado correctamente.", "success")
     elif rol_id:
         # Asignación de rol normal
         rol = Rol.query.get(rol_id)
