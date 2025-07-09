@@ -381,3 +381,15 @@ def acompanantes_usuario(user_id):
     ]
     return {"acompañantes": data}
 
+@bp.route("/mis-reservas")
+@login_required
+def mis_reservas():
+    # Trae todas las reservas del usuario actual
+    reservas = Reservation.query.filter_by(user_id=current_user.id).order_by(Reservation.start_date.desc()).all()
+
+    if not reservas:
+        mensaje = "No tenés reservas realizadas aún."
+    else:
+        mensaje = None
+
+    return render_template("Reservacion/mis_reservas.html", reservas=reservas, mensaje=mensaje)
