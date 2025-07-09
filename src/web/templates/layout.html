@@ -107,7 +107,7 @@
                         Buscar Alquileres
                     </a>
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('reservation.mis_reservas') }}" class="btn btn-primary">Mis Reservas</a>
+                        <a href="{{ url_for('reservation.mis_reservas') }}" class="btn btn-primary me-2">Mis Reservas</a>
                     {% endif %}
 
                     {% if current_user.is_authenticated %}
