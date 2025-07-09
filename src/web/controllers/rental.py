@@ -163,7 +163,7 @@ def upgrade_confirmar(request_id):
             end_date=reserva.end_date,
             price_per_night=reserva.price_per_night,
             advance_payment=reserva.advance_payment,
-            status='pending',
+            status='Pendiente',
             rental=req.new_rental,
             user=reserva.user,
         )
