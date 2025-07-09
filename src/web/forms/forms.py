@@ -68,13 +68,13 @@ class PropertySearchForm(FlaskForm):
         blank_text="Todas las localidades"
     )
     
-    # Campos de selección
     estado = SelectField('Estado', choices=[
-        ('', 'Todos los estados'),
+        ('', 'Todos'),
         ('disponible', 'Disponible'),
-        ('ocupado', 'Ocupado'),
-        ('dado_de_baja', 'Dado de baja'),
-    ], validators=[Optional()])
+        ('publicado', 'Publicado'),
+        ('baja', 'Baja'),
+        ('bloqueado', 'Bloqueado')
+    ])
     
     capacidad = SelectField('Capacidad', choices=[
         ('', 'Cualquier capacidad'),
