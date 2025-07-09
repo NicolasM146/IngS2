@@ -9,6 +9,7 @@ import os
 from werkzeug.utils import secure_filename
 from src.core.Inmueble.property_photo import PropertyPhoto
 from src.core.Inmueble.localidad.Localidad import Localidad
+from src.core.Alquiler.Rental import Rental
 
 bp = Blueprint("property", __name__, url_prefix="/property")
 
@@ -33,10 +34,16 @@ def index():
             query = query.filter(Property.capacidad == int(form.capacidad.data))
         if form.habitaciones.data:
             query = query.filter(Property.habitaciones == int(form.habitaciones.data))
+        subquery = (
+            db.session.query(Rental.property_id)
+            .filter(Rental.is_active == True)
+            .subquery()
+        )
+
         if form.publicado.data == 'si':
-            query = query.filter(Property.rental != None)
+            query = query.filter(Property.id.in_(subquery))
         elif form.publicado.data == 'no':
-            query = query.filter(Property.rental == None)
+            query = query.filter(~Property.id.in_(subquery))
 
         
         properties = query.all()

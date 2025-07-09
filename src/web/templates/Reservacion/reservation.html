@@ -26,7 +26,7 @@
       <input type="date" name="end_date" id="end_date" class="form-control" required min="{{ hoy }}">
     </div>
 
-    v<div class="form-group mt-3">
+    <div class="form-group mt-3">
   <label>Acompañantes registrados:</label>
   <div id="acompanantes-container">
     <p id="acompanantes-instruccion">
@@ -59,13 +59,16 @@
     <div id="companieros-container">
       <div class="companiero-entry">
         <div class="row mb-2">
-          <div class="col-md-4">
+          <div class="col-md-3">
             <input type="text" class="form-control" name="nuevo_nombre[]" placeholder="Nombre" autocomplete="off">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
+            <input type="text" class="form-control" name="nuevo_apellido[]" placeholder="Apellido" autocomplete="off">
+          </div>
+          <div class="col-md-3">
             <input type="text" class="form-control" name="nuevo_dni[]" placeholder="DNI" autocomplete="off">
           </div>
-          <div class="col-md-4">
+          <div class="col-md-3">
             <input type="text" class="form-control" name="nuevo_telefono[]" placeholder="Teléfono" autocomplete="off">
           </div>
         </div>
@@ -292,13 +295,16 @@
     entry.classList.add('companiero-entry');
     entry.innerHTML = `
       <div class="row mb-2">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <input type="text" class="form-control" name="nuevo_nombre[]" placeholder="Nombre" autocomplete="off">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+          <input type="text" class="form-control" name="nuevo_apellido[]" placeholder="Apellido" autocomplete="off">
+        </div>
+        <div class="col-md-3">
           <input type="text" class="form-control" name="nuevo_dni[]" placeholder="DNI" autocomplete="off">
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <input type="text" class="form-control" name="nuevo_telefono[]" placeholder="Teléfono" autocomplete="off">
         </div>
       </div>

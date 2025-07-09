@@ -6,7 +6,7 @@
         <h2>Detalle del Alquiler</h2>
         <div class="btn-group">
             {% if current_user.tiene_permiso('rentals_update') %}
-                <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id) }}" class="btn btn-info ms-2">
+            <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id) }}" class="btn btn-info ms-2">
                 <i class="fas fa-calendar-alt"></i> Ver Reservas
             </a>
             {% endif %}
@@ -42,10 +42,21 @@
                 </button>
             </form>
             {% endif %}
+            <form method="post" action="{{ url_for('rental.unpublish', rental_id=alquiler.id) }}"
+                style="display:inline;"
+                onsubmit="return confirm('¿Estás seguro de que deseas quitar la publicación de este alquiler?');">
+                <button type="submit" class="btn btn-warning" {% if not alquiler.is_active or
+                    alquiler.reserved_today_or_later() %}disabled{% endif %}>
+                    <i class="fas fa-eye-slash"></i> Quitar Publicación
+                </button>
+            </form>
+            <a href="{{ url_for('property.show', id=alquiler.property.id) }}" class="btn btn-primary ms-2">
+                <i class="fas fa-eye"></i> Ver Inmueble
+            </a>
             {% endif %}
-            
+
             <!-- Botón de Reserva -->
-            
+
         </div>
     </div>
 
@@ -127,7 +138,7 @@
         <a href="{{ request.referrer or url_for('reservation.buscar_alquileres') }}" class="btn btn-secondary">
             <i class="fas fa-arrow-left me-2"></i> Volver al listado
         </a>
-    
+
         {% if alquiler.is_active %}
         <a href="{{ url_for('reservation.alquilar', rental_id=alquiler.id) }}" class="btn btn-primary ms-2">
             <i class="fas fa-calendar-check"></i> Reservar

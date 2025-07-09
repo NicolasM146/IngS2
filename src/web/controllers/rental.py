@@ -18,7 +18,6 @@ from src.core.Inmueble.localidad.Localidad import Localidad
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
 
-#se agrego el filtrado en la ruta index
 
 @bp.route('/', methods=['GET'])
 @permiso_required('rentals_index')
@@ -99,7 +98,7 @@ def enviar_mail_upgrade(cliente, upgrade_request):
     msg.body = f"""
 Hola {cliente.nombre},
 
-Por los inconvenientes con la reserva en {upgrade_request.old_reservation.rental.property.direccion}.
+Por los inconvenientes con la reserva en{upgrade_request.old_reservation.rental.property.localidad.nombre}, {upgrade_request.old_reservation.rental.property.direccion}.
 
 Dirección nueva: {upgrade_request.new_rental.property.direccion}
 Fechas: {fecha_a_mostrar.strftime('%d/%m/%Y')} - {upgrade_request.old_reservation.end_date.strftime('%d/%m/%Y')}
@@ -119,12 +118,12 @@ Gracias por usar nuestro servicio.
         <h2>Hola {cliente.nombre},</h2>
         <p>
             Te contactamos debido a un inconveniente con tu reserva en:<br>
-            <strong>{upgrade_request.old_reservation.rental.property.direccion}</strong>
+            <strong>{upgrade_request.old_reservation.rental.property.localidad.nombre}, {upgrade_request.old_reservation.rental.property.direccion}</strong>
 
         </p>
         <p>
             Te proponemos una mejora en:<br>
-            <strong>{upgrade_request.new_rental.property.direccion}</strong><br>
+            <strong>{upgrade_request.new_rental.property.localidad.nombre}, {upgrade_request.new_rental.property.direccion}</strong><br>
             <b>Fechas:</b> {fecha_a_mostrar.strftime('%d/%m/%Y')} - {upgrade_request.old_reservation.end_date.strftime('%d/%m/%Y')}
         </p>
         <p>¿Deseás aceptar esta mejora?</p>
@@ -283,14 +282,17 @@ def upgrade_reservation(reservation_id):
 @permiso_required('rentals_create')
 @login_required
 def create():
-    # Alias para Rental
-    rental_alias = aliased(Rental)
+    # Subconsulta: propiedades con al menos un alquiler activo
+    subquery = (
+        db.session.query(Rental.property_id)
+        .filter(Rental.is_active == True)
+        .subquery()
+    )
 
-    # Propiedades del usuario sin alquiler activo
+    # Queremos propiedades que NO están en la subconsulta de activos
     propiedades = (
         db.session.query(Property)
-        .outerjoin(rental_alias, Property.id == rental_alias.property_id)
-        .filter(or_(rental_alias.id == None))
+        .filter(~Property.id.in_(subquery))  # "~" = NOT
         .all()
     )
 
@@ -300,16 +302,14 @@ def create():
         description = request.form.get('description')
         advance_payment = request.form.get('advance_payment') == 'true'
 
-        # Validar propiedad seleccionada
-        propiedad = Property.query.filter_by(id=property_id, user_id=current_user.id).first()
+        propiedad = Property.query.filter_by(id=property_id).first()
         if not propiedad:
-            flash("La propiedad seleccionada no es válida o no te pertenece.", "danger")
+            flash("No se encuentra en el sistema, la propiedad seleccionada.", "danger")
             return redirect(url_for('rental.create'))
 
-        # Validar que no exista ya un alquiler para esa propiedad (property_id es unique)
-        alquiler_existente = Rental.query.filter_by(property_id=property_id).first()
+        alquiler_existente = Rental.query.filter_by(property_id=property_id, is_active=True).first()
         if alquiler_existente:
-            flash("Ya existe un alquiler asociado a esta propiedad.", "warning")
+            flash("Ya existe un alquiler activo asociado a esta propiedad.", "warning")
             return redirect(url_for('rental.create'))
 
         try:
@@ -394,11 +394,6 @@ def edit(rental_id):
 @login_required
 def show(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
-    """ Comento esto porque no tiene sentido, hay que borrarlo.
-    if alquiler.property.user_id != current_user.id:
-        flash("No tienes permiso para ver este alquiler.", "danger")
-        return redirect(url_for('rental.index'))
-    """
      # Lógica para permitir reseñar si hay reservas ya iniciadas
     puede_dejar_resena = Reservation.query.filter_by(
         user_id=current_user.id,
@@ -444,3 +439,19 @@ def unlock(rental_id):
     db.session.commit()
     flash("Alquiler liberado correctamente.", "success")
     return redirect(url_for('rental.show', rental_id=rental_id))
+
+@bp.route("/<int:rental_id>/unpublish", methods=["POST"])
+@permiso_required('rentals_update')
+@login_required
+def unpublish(rental_id):
+    rental = Rental.query.get_or_404(rental_id)
+
+    if rental.reserved_today_or_later():
+        flash("No se puede quitar la publicación porque tiene reservas futuras o activas.", "danger")
+        return redirect(url_for("rental.index"))
+
+    rental.is_active = False
+    db.session.commit()
+
+    flash("Publicación eliminada correctamente.", "success")
+    return redirect(url_for("rental.index"))

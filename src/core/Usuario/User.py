@@ -78,6 +78,5 @@ class User(UserMixin,db.Model):
         if self.is_locked or self.rol is None:
             return False
         return self.rol.tiene_permiso(nombre_permiso)
-        return True
     def __repr__(self):
         return f'<User {self.username}>'
