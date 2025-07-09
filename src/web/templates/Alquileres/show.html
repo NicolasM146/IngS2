@@ -4,27 +4,27 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Detalle del Alquiler</h2>
-        <div class="btn-group">
-            {% if current_user.tiene_permiso('rentals_update') %}
-            <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id) }}" class="btn btn-info ms-2">
-                <i class="fas fa-calendar-alt"></i> Ver Reservas
-            </a>
-            {% endif %}
+<div class="d-flex flex-wrap align-items-center gap-2"> <!-- Contenedor flexible con espaciado uniforme -->
+    {% if current_user.tiene_permiso('rentals_update') %}
+    <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id) }}" class="btn btn-info">
+        <i class="fas fa-calendar-alt"></i> Ver Reservas
+    </a>
+    {% endif %}
 
-            {% if current_user.tiene_permiso('rentals_update') %}
-            <a href="{{ url_for('rental.edit', rental_id=alquiler.id) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Actualizar
-            </a>
-            {% endif %}
+    {% if current_user.tiene_permiso('rentals_update') %}
+    <a href="{{ url_for('rental.edit', rental_id=alquiler.id) }}" class="btn btn-warning">
+        <i class="fas fa-edit"></i> Actualizar
+    </a>
+    {% endif %}
 
-            {% if current_user.tiene_permiso('rentals_destroy') and not alquiler.reservations.count() == 0 %}
-            <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" class="ms-2">
-                <button type="submit" class="btn btn-danger"
-                    onclick="return confirm('¿Estás seguro de eliminar este alquiler?')">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
-            </form>
-            {% endif %}
+    {% if current_user.tiene_permiso('rentals_destroy') and not alquiler.reservations.count() == 0 %}
+    <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" class="d-inline">
+        <button type="submit" class="btn btn-danger"
+            onclick="return confirm('¿Estás seguro de eliminar este alquiler?')">
+            <i class="fas fa-trash"></i> Eliminar
+        </button>
+    </form>
+    {% endif %}
 
             {% if current_user.tiene_permiso('rentals_update') %}
             {% if alquiler.is_active %}
