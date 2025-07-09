@@ -23,7 +23,7 @@ def index():
     page = int(request.args.get('page', 1))
     per_page = 10
 
-    query = db.session.query(User)
+    query = db.session.query(User).filter(User.id != current_user.id)
 
     if nombre:
         query = query.filter(User.nombre.ilike(f'%{nombre}%'))
@@ -53,7 +53,8 @@ def index():
 @login_required
 def show(user_id):
     user = User.query.get_or_404(user_id)
-    return render_template("users/show.html", user=user)
+    roles = Rol.query.all()  # Añadir esta línea para pasar los roles a la vista
+    return render_template("users/show.html", user=user, roles=roles)
 
 @bp.route('/<int:user_id>/lock')
 @permiso_required('user_edit')
@@ -73,4 +74,51 @@ def unlock(user_id):
     user.desbloquear()
     db.session.commit()
     flash(f"Usuario {user.nombre} desbloqueado.", "success")
+    return redirect(url_for("users.show", user_id=user.id))
+
+@bp.route('/<int:user_id>/update_role', methods=['POST'])
+@permiso_required('user_edit')
+@login_required
+def update_role(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Evitar que un usuario se edite a sí mismo
+    if user.id == current_user.id:
+        flash("No puedes modificarte a ti mismo.", "danger")
+        return redirect(url_for("users.show", user_id=user.id))
+    
+    # Solo sysadmin puede editar roles
+    if not current_user.es_sysadmin:
+        flash("No tienes permisos para realizar esta acción.", "danger")
+        return redirect(url_for("users.show", user_id=user.id))
+    
+    rol_id = request.form.get('rol_id')
+    
+    if rol_id == 'sysadmin':
+        # Asignar administrador
+        user.es_sysadmin = True
+        user.rol = None  # Opcional: quitar rol si es administrador
+        flash("Usuario asignado como administrador.", "success")
+    elif rol_id == 'remove_sysadmin':
+        # Quitar administrador y asignar rol de cliente por defecto
+        user.es_sysadmin = False
+        cliente_rol = Rol.query.filter_by(nombre='client').first()
+        if cliente_rol:
+            user.rol = cliente_rol
+            flash("Se quitó el estado de administrador y se asignó rol de cliente.", "success")
+        else:
+            flash("Error: No se encontró el rol de cliente.", "danger")
+    elif rol_id:
+        # Asignación de rol normal
+        rol = Rol.query.get(rol_id)
+        if rol:
+            user.rol = rol
+            user.es_sysadmin = False  # Quitar admin al asignar rol
+            flash("Rol actualizado correctamente.", "success")
+        else:
+            flash("Rol no válido.", "danger")
+    else:
+        flash("Debes seleccionar una opción.", "danger")
+    
+    db.session.commit()
     return redirect(url_for("users.show", user_id=user.id))
