@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from src.core.Inmueble.property_photo import PropertyPhoto
 from src.core.Inmueble.localidad.Localidad import Localidad
 from src.core.Alquiler.Rental import Rental
+from src.core.Usuario.Roles_y_Permisos import Rol
 
 bp = Blueprint("property", __name__, url_prefix="/property")
 
@@ -75,6 +76,10 @@ def create():
     # Cargar localidades al formulario
     localidades = Localidad.query.order_by(Localidad.nombre).all()
     form.localidad.choices = [(loc.id, loc.nombre) for loc in localidades]
+
+    # Filtro los usuarios check In/Out para seleccionarlo como encargado
+    usuarios_encargados = User.query.join(Rol).filter(Rol.nombre == "Encargado").order_by(User.nombre).all()
+    form.usuario_id.choices = [(u.id, u.nombre) for u in usuarios_encargados]
 
     if form.validate_on_submit():
         if 'photos' not in request.files:
