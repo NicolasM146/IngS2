@@ -232,22 +232,21 @@ def upgrade_cancelar(request_id):
             flash('Esta solicitud ya fue procesada.', 'warning')
             return redirect(url_for('rental.index'))
 
-        # Primero eliminar la solicitud (libera la FK)
+        # Cambiar el estado de la reserva original a "Cancelada"
+        reserva = req.old_reservation
+        reserva.status = "Cancelada"
+        
+        # Eliminar solo la solicitud de upgrade
         db.session.delete(req)
-        db.session.flush()  # 🔒 Fuerza el delete en la base antes de continuar
-
-        # Luego eliminar la reserva original
-        db.session.delete(req.old_reservation)
-
+        
         db.session.commit()
-        flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
+        flash('Upgrade rechazado. La reserva original fue cancelada.', 'info')
 
     except Exception as e:
         db.session.rollback()
         flash(f'Ocurrió un error: {e}', 'danger')
 
     return redirect(url_for('rental.index'))
-
 
     
 @bp.route('/reserva/<int:reservation_id>/upgrade', methods=['GET', 'POST'])
