@@ -37,14 +37,14 @@
       <input type="date" name="end_date" id="end_date" class="form-control" required min="{{ hoy }}">
     </div>
 
-      <hr>
-      <h4>Agregar nuevos acompañantes</h4>
-      <div id="companieros-container"></div>
+    <hr>
+    <h4>Agregar nuevos acompañantes</h4>
+    <div id="companieros-container"></div>
 
-      <button type="button" class="btn btn-secondary mt-2" id="add-compa-btn">Agregar otro acompañante</button>
+    <button type="button" class="btn btn-secondary mt-2" id="add-compa-btn">Agregar otro acompañante</button>
 
 
-      <button type="submit" class="btn btn-success mt-4 d-block">Confirmar reserva</button>
+    <button type="submit" class="btn btn-success mt-4 d-block">Confirmar reserva</button>
   </form>
 
   <hr>
@@ -306,6 +306,8 @@
   });
 
   function actualizarTutoresEliminados(nombreEliminado) {
+    if (!nombreEliminado || nombreEliminado.trim() === "") return;  // 🛡️ No hacer nada si el nombre está vacío
+
     document.querySelectorAll('.companiero-entry').forEach(entry => {
       const tutorSelect = entry.querySelector('.tutor-select');
       if (tutorSelect) {
@@ -321,7 +323,7 @@
             tutorDisplay.remove();
           }
 
-          // Mostrar advertencia si es necesario
+          // Mostrar advertencia si es menor
           const edad = calcularEdad(entry.querySelector('input[name="nuevo_nacimiento[]"]').value);
           if (edad < 18) {
             alert(`El tutor "${nombreEliminado}" fue eliminado. Por favor seleccione un nuevo tutor para el menor.`);
