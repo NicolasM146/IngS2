@@ -15,7 +15,7 @@ class Reservation(db.Model):
     end_date = db.Column(db.Date, nullable=False)
     price_per_night = db.Column(db.Float, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(20), default='Pendiente') # Pendiente, Vigente, terminada, cancelada
+    status = db.Column(db.String(20), default='Pendiente')  # Pendiente, Vigente, Terminada, Cancelada
     advance_payment = db.Column(db.Boolean, default=False)
 
     rental_id = db.Column(db.Integer, db.ForeignKey('rentals.id'), nullable=False)
@@ -38,6 +38,6 @@ class Reservation(db.Model):
         passive_deletes=True
     )
 
-    def esta_vigente(self) -> bool:
+def esta_vigente(self) -> bool:
         hoy = datetime.utcnow().date()
-        return self.start_date <= hoy <= self.end_date
+        return self.start_date <= hoy <= self.end_date and self.status != 'Cancelada'
