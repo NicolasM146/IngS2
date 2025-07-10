@@ -128,7 +128,9 @@ def alquilar(rental_id):
     dias_ocupados = [(r.start_date, r.end_date) for r in reservas]
 
     # Obtiene la fecha actual como string ISO (formato 'YYYY-MM-DD') para usar como mínimo en inputs
-    hoy = date.today().isoformat()
+    hoy = (date.today() + timedelta(days=1)).isoformat()
+    
+    manana = (date.today() + timedelta(days=1)).isoformat()
 
     # Si es un POST, entonces se está enviando una reserva
     if request.method == "POST":
@@ -328,7 +330,7 @@ def alquilar(rental_id):
     if current_user.es_sysadmin:
         users = User.query.filter_by(is_locked=False).order_by(User.nombre).all()
 
-    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy, users = users)
+    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=manana, users = users)
     # Si es GET, renderiza el formulario de reserva
     return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 

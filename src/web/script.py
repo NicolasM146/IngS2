@@ -66,7 +66,7 @@ def procesar_pagos_pendientes():
             )
 
             if intento_pago.status == 'succeeded':
-                reserva.status = 'confirmada'
+                reserva.status = 'Confirmada'
                 db.session.commit()
                 print(f"✅ Pago exitoso | Reserva {reserva.id} | Localidad y Direccion {reserva.rental.property.localidad.nombre} {reserva.rental.property.direccion} | Monto: ${monto_a_cobrar:.2f}")
             else:
