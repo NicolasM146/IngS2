@@ -39,7 +39,7 @@
                     </td>
                     <td>{{ r.rental.property.direccion }}</td>
                     <td>
-                        {% if r.status in ['Vigente', 'Pendiente'] %}
+                        {% if r.status in ['Vigente', 'Pendiente', 'vigente'] %}
                         <a href="{{ url_for('rental.upgrade_reservation', reservation_id=r.id) }}" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-arrow-up"></i> Mejorar Reserva
                         </a>
