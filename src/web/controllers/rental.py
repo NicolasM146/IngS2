@@ -398,18 +398,16 @@ def delete(rental_id):  # Cambia el parámetro para que coincida con la ruta
     flash("Alquiler eliminado correctamente.", "success")
     return redirect(url_for('rental.index'))
 
-# Agrega esta nueva ruta al final del archivo rental.py
 @bp.route("/<int:rental_id>/edit", methods=["GET", "POST"])
 @permiso_required('rentals_update')
 @login_required
 def edit(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
     
-    # Anteriormente se verificaba si el usuario actual era el que estaba almacenado como encargado del Inmueble alquilado, no tenia sentido.
-    
     if request.method == 'POST':
         price = request.form.get('price')
         advance_payment = request.form.get('advance_payment') == 'true'
+        has_refund = request.form.get('has_refund') == 'true'
 
         try:
             price_float = float(price)
@@ -417,16 +415,27 @@ def edit(rental_id):
                 raise ValueError("Precio inválido")
         except:
             flash("El precio debe ser un número positivo válido.", "danger")
-            return redirect(url_for('rental.edit', rental_id=rental_id))
+            return render_template("Alquileres/edit.html", alquiler=alquiler)
+
+        # Validación: no se permite reintegro si no hay pago adelantado
+        if has_refund and not advance_payment:
+            flash("No se puede marcar reintegro si no se habilita el pago adelantado.", "warning")
+            # Pre-actualiza los valores para que el form los muestre correctamente
+            alquiler.price = price_float
+            alquiler.advance_payment = advance_payment
+            alquiler.has_refund = has_refund
+            return render_template("Alquileres/edit.html", alquiler=alquiler)
 
         alquiler.price = price_float
         alquiler.advance_payment = advance_payment
+        alquiler.has_refund = has_refund
         
         db.session.commit()
         flash("Alquiler actualizado con éxito", "success")
         return redirect(url_for('rental.show', rental_id=rental_id))
 
     return render_template("Alquileres/edit.html", alquiler=alquiler)
+
 
 
 
