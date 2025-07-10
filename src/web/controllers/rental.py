@@ -14,6 +14,7 @@ from sqlalchemy import and_
 from src.core.Reserva.UpgradeRequest import UpgradeRequest
 from datetime import date
 from src.core.Inmueble.localidad.Localidad import Localidad
+from src.core.Resenia.Review import Review
 
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
@@ -439,7 +440,8 @@ def edit(rental_id):
 @login_required
 def show(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
-     # Lógica para permitir reseñar si hay reservas ya iniciadas
+    ya_reviso = Review.query.filter_by(user_id=current_user.id, rental_id=alquiler.id).first() is not None
+    # Lógica para permitir reseñar si hay reservas ya iniciadas
     puede_dejar_resena = Reservation.query.filter_by(
         user_id=current_user.id,
         rental_id=alquiler.id
@@ -450,13 +452,14 @@ def show(rental_id):
     reviews = sorted(alquiler.reviews, key=lambda r: r.created_at, reverse=True)
 
     return render_template(
-        "Alquileres/show.html",
-        alquiler=alquiler,
-        review_summary=review_summary,
-        average_rating=average_rating,
-        reviews=reviews,
-        puede_dejar_resena=puede_dejar_resena
-    )
+    "Alquileres/show.html",
+    alquiler=alquiler,
+    review_summary=review_summary,
+    average_rating=average_rating,
+    reviews=reviews,
+    puede_dejar_resena=puede_dejar_resena,
+    ya_reviso=ya_reviso
+)
 
 
 

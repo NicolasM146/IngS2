@@ -27,21 +27,21 @@
             {% endif %}
 
             {% if current_user.tiene_permiso('rentals_update') and alquiler.description != "removed" %}
-                {% if alquiler.is_active %}
-                <form action="{{ url_for('rental.lock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
-                    <button type="submit" class="btn btn-secondary"
-                        onclick="return confirm('¿Querés bloquear este alquiler?')">
-                        <i class="fas fa-lock"></i> Bloquear
-                    </button>
-                </form>
-                {% elif alquiler.description == "locked" %}
-                <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
-                    <button type="submit" class="btn btn-success"
-                        onclick="return confirm('¿Querés liberar este alquiler?')">
-                        <i class="fas fa-lock-open"></i> Liberar
-                    </button>
-                </form>
-                {% endif %}
+            {% if alquiler.is_active %}
+            <form action="{{ url_for('rental.lock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                <button type="submit" class="btn btn-secondary"
+                    onclick="return confirm('¿Querés bloquear este alquiler?')">
+                    <i class="fas fa-lock"></i> Bloquear
+                </button>
+            </form>
+            {% elif alquiler.description == "locked" %}
+            <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                <button type="submit" class="btn btn-success"
+                    onclick="return confirm('¿Querés liberar este alquiler?')">
+                    <i class="fas fa-lock-open"></i> Liberar
+                </button>
+            </form>
+            {% endif %}
             {% endif %}
             {% if alquiler.is_active %}
             <form method="post" action="{{ url_for('rental.unpublish', rental_id=alquiler.id) }}"
@@ -50,12 +50,12 @@
                 <button type="submit" class="btn btn-warning">
                     <i class="fas fa-eye-slash"></i> Quitar Publicación
                 </button>
-                </form>
+            </form>
             {% endif %}
 
-                <a href="{{ url_for('property.show', id=alquiler.property.id) }}" class="btn btn-primary ms-2">
-                    <i class="fas fa-eye"></i> Ver Inmueble
-                </a>
+            <a href="{{ url_for('property.show', id=alquiler.property.id) }}" class="btn btn-primary ms-2">
+                <i class="fas fa-eye"></i> Ver Inmueble
+            </a>
 
             <!-- Botón de Reserva -->
 
@@ -211,7 +211,7 @@
             {% endfor %}
         </div>
         {% endif %}
-        {% if current_user.tiene_permiso('reviews_create') and puede_dejar_resena %}
+        {% if current_user.tiene_permiso('reviews_create') and puede_dejar_resena and not ya_reviso %}
         <button type="button" onclick="mostrarFormulario()">Agregar Reseña</button>
         <div id="formulario-resena" style="display: none; margin-top: 1rem;">
             <form action="{{ url_for('review.create', rental_id=alquiler.id) }}" method="POST">
