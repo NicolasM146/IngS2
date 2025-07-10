@@ -31,7 +31,7 @@ class PropertyForm(FlaskForm):
         coerce=int,
         choices=[],
         validators=[DataRequired()],
-        description="Seleccione el dueño del inmueble"
+        description="Seleccione el encargado del inmueble"
     )
     #Formulario para subir fotos de un Inmueble   
     
