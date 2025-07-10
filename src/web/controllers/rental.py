@@ -382,11 +382,6 @@ def create():
 def delete(rental_id):  # Cambia el parámetro para que coincida con la ruta
     alquiler = Rental.query.get_or_404(rental_id)
 
-    # Solo permitir borrar si el alquiler pertenece al usuario actual
-    if alquiler.property.user_id != current_user.id:
-        flash("No tienes permiso para borrar este alquiler.", "danger")
-        return redirect(url_for('rental.index'))
-
     reservas_activas = alquiler.reservations.count()  # como es lazy='dynamic', count() consulta la DB
     if reservas_activas > 0:
         flash("No se puede eliminar el alquiler porque tiene reservas asociadas.", "danger")

@@ -102,6 +102,9 @@
                         <li class="list-group-item">
                             <strong>Pago adelantado:</strong> {{ 'Si' if alquiler.advance_payment else 'No'}}
                         </li>
+                        <li class="list-group-item">
+                            <strong>Tiene reintegro:</strong> {{ 'Sí' if alquiler.has_refund else 'No' }}
+                        </li>
                     </ul>
                 </div>
             </div>
