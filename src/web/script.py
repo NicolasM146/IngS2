@@ -18,7 +18,7 @@ def procesar_pagos_pendientes():
     # Buscar reservas que comienzan mañana y están pendientes
     reservas_pendientes = Reservation.query.filter(
         Reservation.start_date == fecha_mañana,
-        Reservation.status == 'pending'  # Solo reservas en estado inicial
+        Reservation.status == 'Pendiente'  # Solo reservas en estado inicial
     ).all()
     
     for reserva in reservas_pendientes:

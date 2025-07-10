@@ -13,19 +13,21 @@
     <td>
         {% if current_user.es_sysadmin and user.id != current_user.id %}
         <form method="post" action="{{ url_for('users.update_role', user_id=user.id) }}" class="d-inline">
-            <select name="rol_id" class="form-select d-inline-block" style="width: auto;" onchange="this.form.submit()">
-                
-                <!-- Opción para hacer administrador -->
-                <option value="sysadmin" {% if user.es_sysadmin %}selected{% endif %}>
-                    Administrador del Sistema
-                </option>
-                <!-- Roles normales -->
-                {% for rol in roles %}
-                <option value="{{ rol.id }}" {% if not user.es_sysadmin and user.rol and user.rol.id==rol.id %}selected{% endif %}>
-                    {{ rol.nombre }}
-                </option>
-                {% endfor %}
-            </select>
+            <div class="d-flex align-items-center gap-2">
+                <select name="rol_id" class="form-select" style="width: auto;">
+                    <!-- Opción para hacer administrador -->
+                    <option value="sysadmin" {% if user.es_sysadmin %}selected{% endif %}>
+                        Administrador del Sistema
+                    </option>
+                    <!-- Roles normales -->
+                    {% for rol in roles %}
+                    <option value="{{ rol.id }}" {% if not user.es_sysadmin and user.rol and user.rol.id==rol.id %}selected{% endif %}>
+                        {{ rol.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Confirmar</button>
+            </div>
         </form>
         {% else %}
             {% if user.es_sysadmin %}
