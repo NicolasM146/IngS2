@@ -43,7 +43,7 @@
             </form>
             {% endif %}
             {% endif %}
-            {% if alquiler.is_active %}
+            {% if alquiler.is_active and current_user.tiene_permiso('rentals_update') %}
             <form method="post" action="{{ url_for('rental.unpublish', rental_id=alquiler.id) }}"
                 style="display:inline;"
                 onsubmit="return confirm('¿Estás seguro de que deseas quitar la publicación de este alquiler?');">
