@@ -389,11 +389,6 @@ def mis_reservas():
 
     reservas = query.order_by(Reservation.start_date.desc()).all()
 
-    # Determinar estado "Vigente" para las reservas que no están canceladas
-    for reserva in reservas:
-        if reserva.status == 'Pendiente' and reserva.start_date <= hoy <= reserva.end_date:
-            reserva.status = 'Vigente'
-
     return render_template("Reservacion/mis_reservas.html", reservas=reservas, hoy=hoy)
 
 

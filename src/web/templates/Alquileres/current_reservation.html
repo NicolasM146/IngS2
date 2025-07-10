@@ -1,56 +1,65 @@
 {% extends 'layout.html' %}
 
-{% block title %}Reservas Vigentes{% endblock %}
+{% block title %}Reservas del Alquiler{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-4">Reservas Vigentes</h2>
+    <h2 class="mb-4">Reservas</h2>
 
     {% if reservas %}
-    <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Cliente</th>
-                <th>Correo</th>
-                <th>Inicio</th>
-                <th>Fin</th>
-                <th>Estado</th>
-                <th>Dirección del Alquiler</th>
-                <th>Acción</th>  {# <-- Nueva columna para el botón Upgrade #}
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in reservas %}
-            <tr>
-                <td>{{ r.id }}</td>
-                <td>{{ r.user.nombre or 'Sin nombre' }}</td>
-                <td>{{ r.user.email }}</td>
-                <td>{{ r.start_date.strftime('%d/%m/%Y') }}</td>
-                <td>{{ r.end_date.strftime('%d/%m/%Y') }}</td>
-                <td>
-                    <span class="badge bg-{{ 'success' if r.status == 'confirmed' else 'warning' }}">
-                        {{ r.status|capitalize }}
-                    </span>
-                </td>
-                <td>{{ r.rental.property.direccion }}</td>
-                <td>
-                    <a href="{{ url_for('rental.upgrade_reservation', reservation_id=r.id) }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-arrow-up"></i> Mejorar Reserva
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Correo</th>
+                    <th>Inicio</th>
+                    <th>Fin</th>
+                    <th>Estado</th>
+                    <th>Dirección</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reservas %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td>{{ r.user.nombre or 'Sin nombre' }}</td>
+                    <td>{{ r.user.email }}</td>
+                    <td>{{ r.start_date.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ r.end_date.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if r.status == 'Pendiente' %}bg-warning text-dark
+                            {% elif r.status == 'Vigente' %}bg-success
+                            {% elif r.status == 'Terminada' %}bg-secondary
+                            {% elif r.status == 'Cancelada' %}bg-danger
+                            {% else %}bg-info{% endif %}">
+                            {{ r.status|capitalize }}
+                        </span>
+                    </td>
+                    <td>{{ r.rental.property.direccion }}</td>
+                    <td>
+                        {% if r.status in ['Vigente', 'Pendiente'] %}
+                        <a href="{{ url_for('rental.upgrade_reservation', reservation_id=r.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-arrow-up"></i> Mejorar Reserva
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
     <div class="alert alert-info">
-        No hay reservas vigentes actualmente.
+        No hay reservas para este alquiler.
     </div>
     {% endif %}
 
     <a href="{{ url_for('rental.index') }}" class="btn btn-secondary mt-3">
-        <i class="fas fa-arrow-left me-2"></i>Volver al listado de reservas
+        <i class="fas fa-arrow-left me-2"></i> Volver
     </a>
 </div>
 {% endblock %}

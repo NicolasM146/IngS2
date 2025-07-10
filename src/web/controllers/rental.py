@@ -85,12 +85,14 @@ def index():
 @permiso_required("rentals_update")
 @login_required
 def listado_de_reservas(rental_id):
-    hoy = datetime.utcnow().date()
     reservas = Reservation.query.filter(
-        Reservation.end_date > hoy,
         Reservation.rental_id == rental_id
     ).order_by(Reservation.start_date).all()
-    return render_template("Alquileres/current_reservation.html", reservas=reservas)
+    
+    hoy = datetime.utcnow().date()
+    return render_template("Alquileres/current_reservation.html", 
+                         reservas=reservas,
+                         hoy=hoy)
 
 #####################################
 from flask_mail import Message
