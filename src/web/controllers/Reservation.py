@@ -377,13 +377,22 @@ def acompanantes_usuario(user_id):
 @login_required
 def mis_reservas():
     hoy = datetime.utcnow().date()
+    estado = request.args.get('estado')
 
-    reservas = Reservation.query.filter(
+    query = Reservation.query.filter(
         Reservation.user_id == current_user.id,
         Reservation.end_date >= hoy
-    ).order_by(Reservation.start_date.desc()).all()
+    )
 
+    if estado:
+        query = query.filter(Reservation.status == estado)
 
+    reservas = query.order_by(Reservation.start_date.desc()).all()
+
+    # Determinar estado "Vigente" para las reservas que no están canceladas
+    for reserva in reservas:
+        if reserva.status == 'Pendiente' and reserva.start_date <= hoy <= reserva.end_date:
+            reserva.status = 'Vigente'
 
     return render_template("Reservacion/mis_reservas.html", reservas=reservas, hoy=hoy)
 
