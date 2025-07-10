@@ -58,9 +58,10 @@ def buscar_alquileres():
                 ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
 
                 subquery = db.session.query(Reservation.rental_id).filter(
-                    Reservation.start_date <= ff,
-                    Reservation.end_date >= fi
-                ).subquery()
+                Reservation.start_date <= ff,
+                Reservation.end_date >= fi,
+                Reservation.status != 'Cancelada'  # Filtramos reservas canceladas
+            ).subquery()
 
                 query = query.filter(~Rental.id.in_(subquery))
             except ValueError:
@@ -121,14 +122,16 @@ def alquilar(rental_id):
     # Trae todos los compañeros (acompañantes previamente guardados) asociados al usuario actual
     compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
 
-    # Trae todas las reservas asociadas a ese alquiler
-    reservas = Reservation.query.filter_by(rental_id=rental_id).all()
-
+    # Trae todas las reservas NO canceladas asociadas a ese alquiler
+    reservas = Reservation.query.filter_by(rental_id=rental_id).filter(Reservation.status != 'Cancelada').all()
+    
     # Crea una lista con tuplas (inicio, fin) de las fechas ocupadas
     dias_ocupados = [(r.start_date, r.end_date) for r in reservas]
 
     # Obtiene la fecha actual como string ISO (formato 'YYYY-MM-DD') para usar como mínimo en inputs
-    hoy = date.today().isoformat()
+    hoy = (date.today() + timedelta(days=1)).isoformat()
+    
+    manana = (date.today() + timedelta(days=1)).isoformat()
 
     # Si es un POST, entonces se está enviando una reserva
     if request.method == "POST":
@@ -328,7 +331,7 @@ def alquilar(rental_id):
     if current_user.es_sysadmin:
         users = User.query.filter_by(is_locked=False).order_by(User.nombre).all()
 
-    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy, users = users)
+    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=manana, users = users)
     # Si es GET, renderiza el formulario de reserva
     return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
 
@@ -388,11 +391,6 @@ def mis_reservas():
         query = query.filter(Reservation.status == estado)
 
     reservas = query.order_by(Reservation.start_date.desc()).all()
-
-    # Determinar estado "Vigente" para las reservas que no están canceladas
-    for reserva in reservas:
-        if reserva.status == 'Pendiente' and reserva.start_date <= hoy <= reserva.end_date:
-            reserva.status = 'Vigente'
 
     return render_template("Reservacion/mis_reservas.html", reservas=reservas, hoy=hoy)
 

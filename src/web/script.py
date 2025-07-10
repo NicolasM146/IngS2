@@ -12,6 +12,20 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 def procesar_pagos_pendientes():
     """Cobra el pago faltante 1 día antes del check-in"""
+    
+    reservas_a_terminar = Reservation.query.filter(
+        Reservation.end_date < hoy,
+        Reservation.status == 'Confirmada'
+    ).all()
+
+    for reserva in reservas_a_terminar:
+        reserva.status = 'Terminada'
+        print(f"Reserva {reserva.id} marcada como TERMINADA (fecha fin: {reserva.end_date})")
+
+    if reservas_a_terminar:
+        db.session.commit()
+        
+        
     hoy = date.today()
     fecha_mañana = hoy + timedelta(days=1)
 
@@ -66,7 +80,7 @@ def procesar_pagos_pendientes():
             )
 
             if intento_pago.status == 'succeeded':
-                reserva.status = 'confirmada'
+                reserva.status = 'Confirmada'
                 db.session.commit()
                 print(f"✅ Pago exitoso | Reserva {reserva.id} | Localidad y Direccion {reserva.rental.property.localidad.nombre} {reserva.rental.property.direccion} | Monto: ${monto_a_cobrar:.2f}")
             else:
