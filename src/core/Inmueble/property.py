@@ -31,5 +31,9 @@ def rental(self):
 def puede_ser_eliminado(self):
     return self.estado in ['disponible', 'baja'] and all(r.reservations.count() == 0 for r in self.rentals)
 
+@property
+def puede_darse_de_baja(self):
+    return self.estado in ['disponible']
+
 # IMPORTAR Rental AL FINAL PARA EVITAR CICLO DE IMPORTACION
 from src.core.Alquiler.Rental import Rental
