@@ -418,7 +418,7 @@
   }
 
   // Validar fechas con días ocupados y tutores para menores
-  const diasOcupados = {{ dias_ocupados| tojson }};
+  const diasOcupados = JSON.parse('{{ dias_ocupados | tojson | safe }}');
   document.getElementById('reserva-form').addEventListener('submit', function (e) {
     // Validar tutores para menores primero
     const tutoresFaltantes = [];
