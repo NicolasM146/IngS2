@@ -91,6 +91,7 @@ def listado_de_reservas(rental_id):
     ).order_by(Reservation.start_date).all()
     
     hoy = datetime.utcnow().date()
+    origin = request.args.get('origin', 'index')
     return render_template("Alquileres/current_reservation.html", 
                          reservas=reservas,
                          hoy=hoy)
