@@ -263,7 +263,12 @@ def upgrade_cancelar(request_id):
             flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
 
         # Eliminar la reserva original
-        db.session.delete(reserva)
+        # Cambiar el estado de la reserva original a "Cancelada"
+        reserva.status = "Cancelada"
+        
+        # Eliminar solo la solicitud de upgrade
+        db.session.delete(req)
+        
         db.session.commit()
 
     except Exception as e:
