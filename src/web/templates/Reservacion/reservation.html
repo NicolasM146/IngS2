@@ -39,49 +39,7 @@
 
       <hr>
       <h4>Agregar nuevos acompañantes</h4>
-      <div id="companieros-container">
-        <div class="companiero-entry">
-          <div class="row mb-2">
-            <div class="col-md-3">
-              <input type="text" class="form-control" name="nuevo_nombre[]" placeholder="Nombre" autocomplete="off">
-            </div>
-            <div class="col-md-3">
-              <input type="text" class="form-control" name="nuevo_apellido[]" placeholder="Apellido" autocomplete="off">
-            </div>
-            <div class="col-md-3">
-              <input type="text" class="form-control" name="nuevo_dni[]" placeholder="DNI" autocomplete="off">
-            </div>
-            <div class="col-md-3">
-              <input type="text" class="form-control" name="nuevo_telefono[]" placeholder="Teléfono" autocomplete="off">
-            </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <input type="date" class="form-control nacimiento-nuevo-input" name="nuevo_nacimiento[]">
-            </div>
-            <div class="col-md-3">
-              <select class="form-control" name="nuevo_estado_civil[]">
-                <option value="" selected disabled>Estado Civil</option>
-                <option value="soltero/a">Soltero/a</option>
-                <option value="casado/a">Casado/a</option>
-                <option value="viudo/a">Viudo/a</option>
-              </select>
-            </div>
-            <div class="col-md-5 tutor-select-container" style="display: none;">
-              <select class="form-control tutor-select" name="nuevo_tutor[]">
-                <option value="" selected disabled>Seleccionar tutor</option>
-                <option value="current_user">Yo mismo ({{ current_user.nombre }})</option>
-              </select>
-              <!-- Campo oculto para asegurar el envío del tutor seleccionado -->
-              <input type="hidden" class="hidden-tutor-input" name="nuevo_tutor_hidden[]" value="">
-            </div>
-            <div class="col-md-12 mt-2 d-flex justify-content-between">
-              <button type="button" class="btn btn-danger btn-sm remove-btn">Eliminar acompañante</button>
-              <button type="button" class="btn btn-primary btn-sm guardar-btn">Guardar acompañante</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div id="companieros-container"></div>
 
       <button type="button" class="btn btn-secondary mt-2" id="add-compa-btn">Agregar otro acompañante</button>
 
