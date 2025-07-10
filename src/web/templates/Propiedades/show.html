@@ -111,7 +111,7 @@
                         {% endif %}
 
                         <!-- Botón de eliminar (opcional) -->
-                        {% if current_user.tiene_permiso('properties_destroy') and property.puede_ser_eliminado %}
+                        {% if current_user.tiene_permiso('properties_destroy') and property.puede_darse_de_baja %}
                         <form action="{{ url_for('property.delete', id=property.id) }}" method="POST" class="d-grid">
                             <button type="submit" class="btn btn-danger"
                                 onclick="return confirm('¿Eliminar el Inmueble con ID = {{property.id}} permanentemente?')">
