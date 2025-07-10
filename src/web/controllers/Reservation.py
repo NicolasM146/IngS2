@@ -147,7 +147,7 @@ def alquilar(rental_id):
         if current_user.es_sysadmin:
             compañeros = []  # vacío al cargar
         else:
-            compañeros = Compañero.query.filter_by(is_locked=False).all()
+            compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
 
         if current_user.es_sysadmin:
             user_reservation_id = request.form.get("user_reservation_id", type=int)
