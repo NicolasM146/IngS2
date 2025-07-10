@@ -6,25 +6,26 @@
 
   <form method="post" action="" id="reserva-form">
     {% if current_user.es_sysadmin %}
-      <div class="form-group mt-3">
-        <label for="user_reservation_id">Reservar para otro usuario:</label>
-        <div class="row mb-2">
-          <div class="col-md-6">
-            <input type="text" id="user-filter" class="form-control" placeholder="Filtrar por nombre o email">
-          </div>
-          <div class="col-md-6">
-            <input type="text" id="dni-filter" class="form-control" placeholder="Filtrar por DNI">
-          </div>
+    <div class="form-group mt-3">
+      <label for="user_reservation_id">Reservar para otro usuario:</label>
+      <div class="row mb-2">
+        <div class="col-md-6">
+          <input type="text" id="user-filter" class="form-control" placeholder="Filtrar por nombre o email">
         </div>
-        <select name="user_reservation_id" id="user-select" class="form-control" required>
-          <option value="" disabled selected>Seleccioná un usuario</option>
-          {% for user in users %}
-            <option value="{{ user.id }}" data-nombre="{{ user.nombre }} {{ user.apellido }}" data-email="{{ user.email }}" data-dni="{{ user.dni }}">
-              {{ user.nombre }} {{ user.apellido }} ({{ user.email }}) - DNI: {{ user.dni }}
-            </option>
-          {% endfor %}
-        </select>
+        <div class="col-md-6">
+          <input type="text" id="dni-filter" class="form-control" placeholder="Filtrar por DNI">
+        </div>
       </div>
+      <select name="user_reservation_id" id="user-select" class="form-control" required>
+        <option value="" disabled selected>Seleccioná un usuario</option>
+        {% for user in users %}
+        <option value="{{ user.id }}" data-nombre="{{ user.nombre }} {{ user.apellido }}" data-email="{{ user.email }}"
+          data-dni="{{ user.dni }}">
+          {{ user.nombre }} {{ user.apellido }} ({{ user.email }}) - DNI: {{ user.dni }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
     {% endif %}
     <div class="form-group">
       <label for="start_date">Fecha de inicio:</label>
@@ -36,84 +37,56 @@
       <input type="date" name="end_date" id="end_date" class="form-control" required min="{{ hoy }}">
     </div>
 
-    <div class="form-group mt-3">
-  <label>Acompañantes registrados:</label>
-  <div id="acompanantes-container">
-    <p id="acompanantes-instruccion">
-  {% if current_user.es_sysadmin %}
-    Seleccioná un usuario para cargar sus acompañantes.
-  {% elif compañeros %}
-    Marcá los acompañantes que quieras incluir.
-  {% else %}
-    No tenés acompañantes registrados.
-  {% endif %}
-</p>
-
-  {% if not current_user.es_sysadmin and compañeros %}
-    {% for compa in compañeros %}
-      <div class="form-check d-flex justify-content-between align-items-center mb-2">
-        <div>
-          <input class="form-check-input" type="checkbox" name="compañeros[]" value="{{ compa.id }}" id="compa{{ compa.id }}">
-          <label class="form-check-label" for="compa{{ compa.id }}">
-            {{ compa.nombre }} (DNI: {{ compa.dni }})
-          </label>
-        </div>
-        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarCompañero('{{ compa.id }}', '{{ rental.id }}')">Eliminar</button>
-      </div>
-    {% endfor %}
-  {% endif %}
-  </div>
-
-    <hr>
-    <h4>Agregar nuevos acompañantes</h4>
-    <div id="companieros-container">
-      <div class="companiero-entry">
-        <div class="row mb-2">
-          <div class="col-md-3">
-            <input type="text" class="form-control" name="nuevo_nombre[]" placeholder="Nombre" autocomplete="off">
+      <hr>
+      <h4>Agregar nuevos acompañantes</h4>
+      <div id="companieros-container">
+        <div class="companiero-entry">
+          <div class="row mb-2">
+            <div class="col-md-3">
+              <input type="text" class="form-control" name="nuevo_nombre[]" placeholder="Nombre" autocomplete="off">
+            </div>
+            <div class="col-md-3">
+              <input type="text" class="form-control" name="nuevo_apellido[]" placeholder="Apellido" autocomplete="off">
+            </div>
+            <div class="col-md-3">
+              <input type="text" class="form-control" name="nuevo_dni[]" placeholder="DNI" autocomplete="off">
+            </div>
+            <div class="col-md-3">
+              <input type="text" class="form-control" name="nuevo_telefono[]" placeholder="Teléfono" autocomplete="off">
+            </div>
           </div>
-          <div class="col-md-3">
-            <input type="text" class="form-control" name="nuevo_apellido[]" placeholder="Apellido" autocomplete="off">
-          </div>
-          <div class="col-md-3">
-            <input type="text" class="form-control" name="nuevo_dni[]" placeholder="DNI" autocomplete="off">
-          </div>
-          <div class="col-md-3">
-            <input type="text" class="form-control" name="nuevo_telefono[]" placeholder="Teléfono" autocomplete="off">
-          </div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-4">
-            <input type="date" class="form-control nacimiento-nuevo-input" name="nuevo_nacimiento[]">
-          </div>
-          <div class="col-md-3">
-            <select class="form-control" name="nuevo_estado_civil[]">
-              <option value="" selected disabled>Estado Civil</option>
-              <option value="soltero/a">Soltero/a</option>
-              <option value="casado/a">Casado/a</option>
-              <option value="viudo/a">Viudo/a</option>
-            </select>
-          </div>
-          <div class="col-md-5 tutor-select-container" style="display: none;">
-            <select class="form-control tutor-select" name="nuevo_tutor[]">
-              <option value="" selected disabled>Seleccionar tutor</option>
-              <option value="current_user">Yo mismo ({{ current_user.nombre }})</option>
-            </select>
-            <!-- Campo oculto para asegurar el envío del tutor seleccionado -->
-            <input type="hidden" class="hidden-tutor-input" name="nuevo_tutor_hidden[]" value="">
-          </div>
-          <div class="col-md-12 mt-2 d-flex justify-content-between">
-            <button type="button" class="btn btn-danger btn-sm remove-btn">Eliminar acompañante</button>
-            <button type="button" class="btn btn-primary btn-sm guardar-btn">Guardar acompañante</button>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <input type="date" class="form-control nacimiento-nuevo-input" name="nuevo_nacimiento[]">
+            </div>
+            <div class="col-md-3">
+              <select class="form-control" name="nuevo_estado_civil[]">
+                <option value="" selected disabled>Estado Civil</option>
+                <option value="soltero/a">Soltero/a</option>
+                <option value="casado/a">Casado/a</option>
+                <option value="viudo/a">Viudo/a</option>
+              </select>
+            </div>
+            <div class="col-md-5 tutor-select-container" style="display: none;">
+              <select class="form-control tutor-select" name="nuevo_tutor[]">
+                <option value="" selected disabled>Seleccionar tutor</option>
+                <option value="current_user">Yo mismo ({{ current_user.nombre }})</option>
+              </select>
+              <!-- Campo oculto para asegurar el envío del tutor seleccionado -->
+              <input type="hidden" class="hidden-tutor-input" name="nuevo_tutor_hidden[]" value="">
+            </div>
+            <div class="col-md-12 mt-2 d-flex justify-content-between">
+              <button type="button" class="btn btn-danger btn-sm remove-btn">Eliminar acompañante</button>
+              <button type="button" class="btn btn-primary btn-sm guardar-btn">Guardar acompañante</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <button type="button" class="btn btn-secondary mt-2" id="add-compa-btn">Agregar otro acompañante</button>
-    
+      <button type="button" class="btn btn-secondary mt-2" id="add-compa-btn">Agregar otro acompañante</button>
 
-    <button type="submit" class="btn btn-success mt-4 d-block">Confirmar reserva</button>
+
+      <button type="submit" class="btn btn-success mt-4 d-block">Confirmar reserva</button>
   </form>
 
   <hr>
@@ -400,23 +373,6 @@
     });
   }
 
-  function eliminarCompañero(compaId, rentalId) {
-    if (confirm("¿Querés eliminar este acompañante?")) {
-      fetch(`/reservacion/eliminar-compañero/${compaId}/${rentalId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        }
-      }).then(response => {
-        if (response.redirected) {
-          window.location.href = response.url;
-        } else {
-          alert("No se pudo eliminar el acompañante.");
-        }
-      });
-    }
-  }
-
   // Validar fechas con días ocupados y tutores para menores
   const diasOcupados = JSON.parse('{{ dias_ocupados | tojson | safe }}');
   document.getElementById('reserva-form').addEventListener('submit', function (e) {
@@ -475,66 +431,31 @@
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const userSelect = document.getElementById('user-select'); // o el id que tenga el select de usuarios
-      const acompanantesContainer = document.getElementById('acompanantes-container'); // el div donde mostrarás los checkboxes
-
-      if (userSelect) {
-        userSelect.addEventListener('change', function () {
-          const userId = this.value;
-          if (!userId) {
-            acompanantesContainer.innerHTML = '';
-            return;
-          }
-
-          fetch(`/reservacion/acompañantes-usuario/${userId}`)
-            .then(response => response.json())
-            .then(data => {
-              acompanantesContainer.innerHTML = ''; // limpiar
-
-              data.acompañantes.forEach(c => {
-                const div = document.createElement('div');
-                div.innerHTML = `
-                  <input type="checkbox" name="compañeros[]" value="${c.id}" id="compa${c.id}">
-                  <label for="compa${c.id}">${c.nombre} ${c.apellido} (DNI: ${c.dni})</label>
-                `;
-                acompanantesContainer.appendChild(div);
-              });
-            })
-            .catch(err => {
-              console.error('Error al cargar acompañantes:', err);
-              acompanantesContainer.innerHTML = '<p>Error cargando acompañantes.</p>';
-            });
-        });
-      }
-    });
-  </script>
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     // Filtrado de usuarios
     const userFilter = document.getElementById('user-filter');
     const dniFilter = document.getElementById('dni-filter');
     const userSelect = document.getElementById('user-select');
-    
+
     if (userFilter && dniFilter && userSelect) {
       function filterUsers() {
         const nameFilter = userFilter.value.toLowerCase();
         const dniFilterValue = dniFilter.value.toLowerCase();
-        
+
         Array.from(userSelect.options).forEach(option => {
           if (option.value === '') return;
-          
+
           const nombre = option.getAttribute('data-nombre').toLowerCase();
           const email = option.getAttribute('data-email').toLowerCase();
           const dni = option.getAttribute('data-dni').toLowerCase();
-          
+
           const matchesName = nombre.includes(nameFilter) || email.includes(nameFilter);
           const matchesDni = dni.includes(dniFilterValue);
-          
+
           option.style.display = (matchesName && matchesDni) ? '' : 'none';
         });
       }
-      
+
       userFilter.addEventListener('input', filterUsers);
       dniFilter.addEventListener('input', filterUsers);
     }
