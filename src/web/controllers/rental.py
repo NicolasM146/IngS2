@@ -305,7 +305,6 @@ def upgrade_reservation(reservation_id):
 @permiso_required('rentals_create')
 @login_required
 def create():
-    # Subconsulta: propiedades con al menos un alquiler activo
     subquery = (
         db.session.query(Rental.property_id)
         .filter(or_(
@@ -315,10 +314,9 @@ def create():
         .subquery()
     )
 
-    # Queremos propiedades que NO están en la subconsulta de activos
     propiedades = (
         db.session.query(Property)
-        .filter(~Property.id.in_(subquery))  # "~" = NOT
+        .filter(~Property.id.in_(subquery))
         .all()
     )
 
@@ -326,6 +324,7 @@ def create():
         property_id = request.form.get('property_id')
         price = request.form.get('price')
         advance_payment = request.form.get('advance_payment') == 'true'
+        has_refund = request.form.get('has_refund') == 'true'  # nuevo campo
 
         propiedad = Property.query.filter_by(id=property_id).first()
         if not propiedad:
@@ -345,6 +344,15 @@ def create():
             flash("El precio debe ser un número positivo válido.", "danger")
             return redirect(url_for('rental.create'))
 
+        # Validación: no se permite reintegro si no hay pago adelantado
+        if has_refund and not advance_payment:
+            flash("No se puede marcar reintegro si no se habilita el pago adelantado.", "warning")
+            return render_template("Alquileres/create.html", propiedades=propiedades,
+                                   selected_property_id=int(property_id),
+                                   price=price,
+                                   advance_payment=advance_payment,
+                                   has_refund=has_refund)
+            
         nuevo_alquiler = Rental(
             property_id=property_id,
             creation_date=datetime.utcnow(),
@@ -352,14 +360,21 @@ def create():
             description="",
             is_active=True,
             advance_payment=advance_payment,
+            has_refund=has_refund  # nuevo campo
         )
+
         propiedad.estado = "publicado"
         db.session.add(nuevo_alquiler)
         db.session.commit()
         flash("Carga de Alquiler exitosa", "success")
         return redirect(url_for('rental.index'))
-
+    
+    if not propiedades:
+        flash("Debe cargar algún Inmueble primero.", "warning")
+        return redirect(url_for('rental.index'))
+    
     return render_template("Alquileres/create.html", propiedades=propiedades)
+
 
 @bp.route("/<int:rental_id>/delete", methods=["POST"])
 @permiso_required('rentals_destroy')

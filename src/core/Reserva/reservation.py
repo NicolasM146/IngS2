@@ -17,6 +17,7 @@ class Reservation(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default='Pendiente')  # Pendiente, Vigente, Terminada, Cancelada
     advance_payment = db.Column(db.Boolean, default=False)
+    has_refund = db.Column(db.Boolean, default=False)
 
     rental_id = db.Column(db.Integer, db.ForeignKey('rentals.id'), nullable=False)
     rental = db.relationship("Rental", back_populates="reservations")
