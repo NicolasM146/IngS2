@@ -376,12 +376,46 @@ def acompanantes_usuario(user_id):
 @bp.route("/mis-reservas")
 @login_required
 def mis_reservas():
-    # Trae todas las reservas del usuario actual
-    reservas = Reservation.query.filter_by(user_id=current_user.id).order_by(Reservation.start_date.desc()).all()
+    hoy = datetime.utcnow().date()
 
-    if not reservas:
-        mensaje = "No tenés reservas realizadas aún."
+    reservas = Reservation.query.filter(
+        Reservation.user_id == current_user.id,
+        Reservation.end_date >= hoy
+    ).order_by(Reservation.start_date.desc()).all()
+
+
+
+    return render_template("Reservacion/mis_reservas.html", reservas=reservas, hoy=hoy)
+
+
+from flask import flash, redirect, url_for, abort
+from datetime import datetime
+
+@bp.route('/reservas/<int:reserva_id>/cancelar', methods=['POST'])
+@login_required
+def cancelar(reserva_id):
+    reserva = Reservation.query.get_or_404(reserva_id)
+
+    # Verifica que la reserva pertenezca al usuario actual
+    if reserva.user_id != current_user.id:
+        abort(403)
+
+    hoy = datetime.utcnow().date()
+
+    # No permite cancelar si la reserva ya comenzó o terminó
+    if reserva.start_date <= hoy:
+        flash("No podés cancelar una reserva que ya comenzó o finalizó.", "danger")
+        return redirect(url_for('reservation.mis_reservas'))
+
+    # Mensaje según si hubo pago adelantado
+    if reserva.advance_payment:
+        mensaje = "Su reserva fue cancelada, se le reintegrará el valor de la reserva del alquiler."
     else:
-        mensaje = None
+        mensaje = "Su reserva fue cancelada."
 
-    return render_template("Reservacion/mis_reservas.html", reservas=reservas, mensaje=mensaje)
+    # Cambia el estado a Cancelada (en vez de borrar)
+    reserva.status = "Cancelada"
+    db.session.commit()
+
+    flash(mensaje, "success")
+    return redirect(url_for('reservation.mis_reservas'))

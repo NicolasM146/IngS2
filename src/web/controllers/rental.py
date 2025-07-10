@@ -184,7 +184,7 @@ def upgrade_confirmar(request_id):
             end_date=reserva.end_date,
             price_per_night=reserva.price_per_night,
             advance_payment=reserva.advance_payment,
-            status='pending',
+            status='Pendiente',
             rental=req.new_rental,
             user=reserva.user,
         )
@@ -436,6 +436,8 @@ def show(rental_id):
         reviews=reviews,
         puede_dejar_resena=puede_dejar_resena
     )
+
+
 
 @bp.route("/<int:rental_id>/lock", methods=["POST"])
 @permiso_required('rentals_update')
