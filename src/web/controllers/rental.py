@@ -437,6 +437,8 @@ def show(rental_id):
         puede_dejar_resena=puede_dejar_resena
     )
 
+
+
 @bp.route("/<int:rental_id>/lock", methods=["POST"])
 @permiso_required('rentals_update')
 @login_required

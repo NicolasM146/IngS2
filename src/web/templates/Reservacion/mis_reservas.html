@@ -4,8 +4,8 @@
   <div class="container mt-4">
     <h2>Mis Reservas</h2>
 
-    {% if mensaje %}
-      <div class="alert alert-info">{{ mensaje }}</div>
+    {% if reservas|length == 0 %}
+      <div class="alert alert-info">No tenés reservas vigentes.</div>
     {% else %}
       <table class="table table-striped">
         <thead>
@@ -20,12 +20,27 @@
         <tbody>
           {% for reserva in reservas %}
           <tr>
-            <td><a href="{{ url_for('rental.show', rental_id=reserva.rental.id) }}">{{ reserva.rental.property.titulo }}</a></td>
+            <td>
+              <a href="{{ url_for('rental.show', rental_id=reserva.rental.id) }}">
+                {{ reserva.rental.property.titulo }}
+              </a>
+            </td>
             <td>{{ reserva.start_date.strftime('%d/%m/%Y') }}</td>
             <td>{{ reserva.end_date.strftime('%d/%m/%Y') }}</td>
             <td>${{ reserva.price_per_night }}</td>
             <td>
-              <!-- Podrías agregar botones para editar/cancelar reserva si lo querés -->
+              {% if reserva.start_date > hoy and reserva.status != 'Cancelada' %}
+                <form method="POST" action="{{ url_for('reservation.cancelar', reserva_id=reserva.id) }}" style="display:inline;">
+                  <button type="submit" class="btn btn-danger btn-sm"
+                          onclick="return confirm('¿Estás seguro de que querés cancelar esta reserva?')">
+                    Cancelar
+                  </button>
+                </form>
+              {% elif reserva.status == 'Cancelada' %}
+                <span class="text-muted">Cancelada</span>
+              {% else %}
+                <span class="text-muted">No cancelable</span>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}
