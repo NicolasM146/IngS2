@@ -306,15 +306,17 @@ def alquilar(rental_id):
             # Si se requiere adelanto, se cobra el 20%
             if rental.advance_payment:
                 total_a_pagar = int(precio_usd * noches * 100 * 0.2)
-                stripe.PaymentIntent.create(
-                    amount=total_a_pagar,
-                    currency="usd",
-                    customer=cliente.id,
-                    payment_method=payment_method_id,
-                    off_session=True,
-                    confirm=True,
-                    description=f"Reserva inmueble {rental.id} - Usuario {current_user.id}",
+                intent = stripe.PaymentIntent.create(
+                amount=total_a_pagar,
+                currency="usd",
+                customer=cliente.id,
+                payment_method=payment_method_id,
+                off_session=True,
+                confirm=True,
+                description=f"Reserva inmueble {rental.id} - Usuario {current_user.id}",
                 )
+            nueva_reserva.stripe_payment_intent_id = intent.id  # 💾 Guardás el ID del pago
+            db.session.commit()
 
             flash("Reserva Exitosa", "success")
             return redirect(url_for("home"))

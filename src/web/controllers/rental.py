@@ -220,6 +220,14 @@ def upgrade_confirmar(request_id):
 
     return redirect(url_for('rental.index'))
 
+from datetime import date, timedelta
+
+
+import stripe  # asegúrate que esté importado y configurado con API key
+import os
+from dotenv import load_dotenv
+load_dotenv()
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 @bp.route('/upgrade/cancelar/<int:request_id>')
 def upgrade_cancelar(request_id):
@@ -232,15 +240,29 @@ def upgrade_cancelar(request_id):
             flash('Esta solicitud ya fue procesada.', 'warning')
             return redirect(url_for('rental.index'))
 
-        # Primero eliminar la solicitud (libera la FK)
+        reserva = req.old_reservation
+
+        # Primero eliminar la solicitud
         db.session.delete(req)
-        db.session.flush()  # 🔒 Fuerza el delete en la base antes de continuar
+        db.session.flush()
 
-        # Luego eliminar la reserva original
-        db.session.delete(req.old_reservation)
+        # Validar reintegro
+        if reserva.advance_payment and reserva.stripe_payment_intent_id:
+            dias_para_inicio = (reserva.start_date - date.today()).days
+            if dias_para_inicio > 7 and reserva.has_refund:
+                try:
+                    stripe.Refund.create(payment_intent=reserva.stripe_payment_intent_id)
+                    flash('Upgrade rechazado. Se canceló la reserva original y se reintegró el pago anticipado.', 'info')
+                except Exception as e:
+                    flash(f'No se pudo realizar el reintegro: {e}', 'warning')
+            else:
+                flash('Upgrade rechazado. No se puede reintegrar porque faltan menos de 7 días para el inicio de la reserva.', 'info')
+        else:
+            flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
 
+        # Eliminar la reserva original
+        db.session.delete(reserva)
         db.session.commit()
-        flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
 
     except Exception as e:
         db.session.rollback()

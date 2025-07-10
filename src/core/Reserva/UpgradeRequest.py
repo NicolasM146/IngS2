@@ -7,7 +7,7 @@ class UpgradeRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     old_reservation_id = db.Column(
-        db.Integer,
+        db.Integer, 
         db.ForeignKey('reservations.id', ondelete='CASCADE'),
         nullable=False
     )
