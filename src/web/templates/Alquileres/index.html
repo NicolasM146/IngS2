@@ -60,7 +60,6 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>ID</th>
             <th>Fecha de creación</th>
             <th>Precio por noche</th>
             <th>Dirección</th>
@@ -72,7 +71,6 @@
     <tbody>
         {% for alquiler in alquileres %}
         <tr>
-            <td>{{ alquiler.id }}</td>
             <td>{{ alquiler.creation_date.strftime('%d/%m/%Y') if alquiler.creation_date else 'N/D' }}</td>
             <td>${{ alquiler.price | round(2) }}</td>
             <td>{{ alquiler.property.direccion }}</td>

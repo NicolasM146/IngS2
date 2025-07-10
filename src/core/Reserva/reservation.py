@@ -19,6 +19,7 @@ class Reservation(db.Model):
     advance_payment = db.Column(db.Boolean, default=False)
     
     stripe_payment_intent_id = db.Column(db.String(100), nullable=True)
+    has_refund = db.Column(db.Boolean, default=False)
 
     rental_id = db.Column(db.Integer, db.ForeignKey('rentals.id'), nullable=False)
     rental = db.relationship("Rental", back_populates="reservations")
@@ -40,6 +41,9 @@ class Reservation(db.Model):
         passive_deletes=True
     )
 
-def esta_vigente(self) -> bool:
-        hoy = datetime.utcnow().date()
-        return self.start_date <= hoy <= self.end_date and self.status != 'Cancelada'
+    def esta_vigente(self) -> bool:
+            hoy = datetime.utcnow().date()
+            return self.start_date <= hoy <= self.end_date and self.status != 'Cancelada'
+
+    def esta_activa(self):
+        return self.status not in ['Cancelada', 'Terminada']

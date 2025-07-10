@@ -14,6 +14,7 @@ from sqlalchemy import and_
 from src.core.Reserva.UpgradeRequest import UpgradeRequest
 from datetime import date
 from src.core.Inmueble.localidad.Localidad import Localidad
+from src.core.Resenia.Review import Review
 
 
 bp = Blueprint('rental', __name__, url_prefix='/rentals')
@@ -90,6 +91,7 @@ def listado_de_reservas(rental_id):
     ).order_by(Reservation.start_date).all()
     
     hoy = datetime.utcnow().date()
+    origin = request.args.get('origin', 'index')
     return render_template("Alquileres/current_reservation.html", 
                          reservas=reservas,
                          hoy=hoy)
@@ -270,7 +272,6 @@ def upgrade_cancelar(request_id):
 
     return redirect(url_for('rental.index'))
 
-
     
 @bp.route('/reserva/<int:reservation_id>/upgrade', methods=['GET', 'POST'])
 @permiso_required('reservations_update')
@@ -327,7 +328,6 @@ def upgrade_reservation(reservation_id):
 @permiso_required('rentals_create')
 @login_required
 def create():
-    # Subconsulta: propiedades con al menos un alquiler activo
     subquery = (
         db.session.query(Rental.property_id)
         .filter(or_(
@@ -337,17 +337,18 @@ def create():
         .subquery()
     )
 
-    # Queremos propiedades que NO están en la subconsulta de activos
     propiedades = (
-        db.session.query(Property)
-        .filter(~Property.id.in_(subquery))  # "~" = NOT
-        .all()
-    )
+    db.session.query(Property)
+    .filter(~Property.id.in_(subquery))
+    .filter(Property.estado == "disponible")
+    .all()
+)
 
     if request.method == 'POST':
         property_id = request.form.get('property_id')
         price = request.form.get('price')
         advance_payment = request.form.get('advance_payment') == 'true'
+        has_refund = request.form.get('has_refund') == 'true'  # nuevo campo
 
         propiedad = Property.query.filter_by(id=property_id).first()
         if not propiedad:
@@ -367,6 +368,15 @@ def create():
             flash("El precio debe ser un número positivo válido.", "danger")
             return redirect(url_for('rental.create'))
 
+        # Validación: no se permite reintegro si no hay pago adelantado
+        if has_refund and not advance_payment:
+            flash("No se puede marcar reintegro si no se habilita el pago adelantado.", "warning")
+            return render_template("Alquileres/create.html", propiedades=propiedades,
+                                   selected_property_id=int(property_id),
+                                   price=price,
+                                   advance_payment=advance_payment,
+                                   has_refund=has_refund)
+            
         nuevo_alquiler = Rental(
             property_id=property_id,
             creation_date=datetime.utcnow(),
@@ -374,25 +384,27 @@ def create():
             description="",
             is_active=True,
             advance_payment=advance_payment,
+            has_refund=has_refund  # nuevo campo
         )
+
         propiedad.estado = "publicado"
         db.session.add(nuevo_alquiler)
         db.session.commit()
         flash("Carga de Alquiler exitosa", "success")
         return redirect(url_for('rental.index'))
-
+    
+    if not propiedades:
+        flash("Debe cargar algún Inmueble primero.", "warning")
+        return redirect(url_for('rental.index'))
+    
     return render_template("Alquileres/create.html", propiedades=propiedades)
+
 
 @bp.route("/<int:rental_id>/delete", methods=["POST"])
 @permiso_required('rentals_destroy')
 @login_required
 def delete(rental_id):  # Cambia el parámetro para que coincida con la ruta
     alquiler = Rental.query.get_or_404(rental_id)
-
-    # Solo permitir borrar si el alquiler pertenece al usuario actual
-    if alquiler.property.user_id != current_user.id:
-        flash("No tienes permiso para borrar este alquiler.", "danger")
-        return redirect(url_for('rental.index'))
 
     reservas_activas = alquiler.reservations.count()  # como es lazy='dynamic', count() consulta la DB
     if reservas_activas > 0:
@@ -405,18 +417,16 @@ def delete(rental_id):  # Cambia el parámetro para que coincida con la ruta
     flash("Alquiler eliminado correctamente.", "success")
     return redirect(url_for('rental.index'))
 
-# Agrega esta nueva ruta al final del archivo rental.py
 @bp.route("/<int:rental_id>/edit", methods=["GET", "POST"])
 @permiso_required('rentals_update')
 @login_required
 def edit(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
     
-    # Anteriormente se verificaba si el usuario actual era el que estaba almacenado como encargado del Inmueble alquilado, no tenia sentido.
-    
     if request.method == 'POST':
         price = request.form.get('price')
         advance_payment = request.form.get('advance_payment') == 'true'
+        has_refund = request.form.get('has_refund') == 'true'
 
         try:
             price_float = float(price)
@@ -424,10 +434,20 @@ def edit(rental_id):
                 raise ValueError("Precio inválido")
         except:
             flash("El precio debe ser un número positivo válido.", "danger")
-            return redirect(url_for('rental.edit', rental_id=rental_id))
+            return render_template("Alquileres/edit.html", alquiler=alquiler)
+
+        # Validación: no se permite reintegro si no hay pago adelantado
+        if has_refund and not advance_payment:
+            flash("No se puede marcar reintegro si no se habilita el pago adelantado.", "warning")
+            # Pre-actualiza los valores para que el form los muestre correctamente
+            alquiler.price = price_float
+            alquiler.advance_payment = advance_payment
+            alquiler.has_refund = has_refund
+            return render_template("Alquileres/edit.html", alquiler=alquiler)
 
         alquiler.price = price_float
         alquiler.advance_payment = advance_payment
+        alquiler.has_refund = has_refund
         
         db.session.commit()
         flash("Alquiler actualizado con éxito", "success")
@@ -438,11 +458,13 @@ def edit(rental_id):
 
 
 
+
 @bp.route("/<int:rental_id>")
 @login_required
 def show(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
-     # Lógica para permitir reseñar si hay reservas ya iniciadas
+    ya_reviso = Review.query.filter_by(user_id=current_user.id, rental_id=alquiler.id).first() is not None
+    # Lógica para permitir reseñar si hay reservas ya iniciadas
     puede_dejar_resena = Reservation.query.filter_by(
         user_id=current_user.id,
         rental_id=alquiler.id
@@ -453,13 +475,14 @@ def show(rental_id):
     reviews = sorted(alquiler.reviews, key=lambda r: r.created_at, reverse=True)
 
     return render_template(
-        "Alquileres/show.html",
-        alquiler=alquiler,
-        review_summary=review_summary,
-        average_rating=average_rating,
-        reviews=reviews,
-        puede_dejar_resena=puede_dejar_resena
-    )
+    "Alquileres/show.html",
+    alquiler=alquiler,
+    review_summary=review_summary,
+    average_rating=average_rating,
+    reviews=reviews,
+    puede_dejar_resena=puede_dejar_resena,
+    ya_reviso=ya_reviso
+)
 
 
 

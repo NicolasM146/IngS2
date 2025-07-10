@@ -86,7 +86,7 @@ def crear_roles_y_permisos(tabla, coneccion, **kw):
                 "user_destroy": [],
                 
                 "properties_index": [],
-                "properties_show": [],
+                "properties_show": [check_in_out],
                 "properties_update": [],
                 "properties_create": [],
                 "properties_destroy": [],

@@ -75,7 +75,7 @@
                             <p><strong><i class="fas fa-users me-2"></i>Capacidad:</strong> {{ property.capacidad }}
                                 personas</p>
                             <p><strong><i class="fas fa-user-tie me-2"></i>Encargado:</strong> {{ property.user.nombre
-                                }} - ID: {{property.user.id}}</p>
+                                }}</p>
                         </div>
                     </div>
                 </div>
@@ -104,14 +104,14 @@
                             <i class="fas fa-arrow-left me-2"></i>Volver al listado
                         </a>
 
-                        {% if current_user.tiene_permiso('properties_update') %}
+                        {% if current_user.tiene_permiso('properties_update') and property.estado != 'baja' %}
                         <a href="{{ url_for('property.edit', id=property.id) }}" class="btn btn-warning">
                             <i class="fas fa-edit me-2"></i>Actualizar
                         </a>
                         {% endif %}
 
                         <!-- Botón de eliminar (opcional) -->
-                        {% if current_user.tiene_permiso('properties_destroy') and property.puede_ser_eliminado %}
+                        {% if current_user.tiene_permiso('properties_destroy') and property.puede_darse_de_baja %}
                         <form action="{{ url_for('property.delete', id=property.id) }}" method="POST" class="d-grid">
                             <button type="submit" class="btn btn-danger"
                                 onclick="return confirm('¿Eliminar el Inmueble con ID = {{property.id}} permanentemente?')">

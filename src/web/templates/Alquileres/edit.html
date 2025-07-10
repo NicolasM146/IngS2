@@ -21,7 +21,15 @@
         </select>
     </div>
 
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" value="true" id="has_refund" name="has_refund" {% if
+            alquiler.has_refund %}checked{% endif %}>
+        <label class="form-check-label" for="has_refund">
+            Tiene reintegro
+        </label>
+    </div>
+
     <button type="submit" class="btn btn-primary">Confirmar</button>
-    <a href="{{ url_for('rental.index') }}" class="btn btn-secondary">Cancelar</a>
+    <a href="{{ url_for('rental.show', rental_id=alquiler.id) }}" class="btn btn-secondary">Cancelar</a>
 </form>
 {% endblock %}
