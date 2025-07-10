@@ -104,7 +104,7 @@
                             <i class="fas fa-arrow-left me-2"></i>Volver al listado
                         </a>
 
-                        {% if current_user.tiene_permiso('properties_update') %}
+                        {% if current_user.tiene_permiso('properties_update') and property.estado != 'baja' %}
                         <a href="{{ url_for('property.edit', id=property.id) }}" class="btn btn-warning">
                             <i class="fas fa-edit me-2"></i>Actualizar
                         </a>
