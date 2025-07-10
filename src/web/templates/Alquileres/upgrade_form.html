@@ -29,7 +29,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Confirmar Upgrade</button>
-        <a href="{{ url_for('rental.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
+        <a href="{{ url_for('rental.listado_de_reservas', rental_id=reserva.rental_id) }}" class="btn btn-secondary ms-2">Cancelar</a>
 
     </form>
 </div>

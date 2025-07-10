@@ -30,6 +30,6 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Confirmar</button>
-    <a href="{{ url_for('rental.index') }}" class="btn btn-secondary">Cancelar</a>
+    <a href="{{ url_for('rental.show', rental_id=alquiler.id) }}" class="btn btn-secondary">Cancelar</a>
 </form>
 {% endblock %}
