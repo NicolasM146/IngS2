@@ -315,10 +315,11 @@ def create():
     )
 
     propiedades = (
-        db.session.query(Property)
-        .filter(~Property.id.in_(subquery))
-        .all()
-    )
+    db.session.query(Property)
+    .filter(~Property.id.in_(subquery))
+    .filter(Property.estado == "disponible")
+    .all()
+)
 
     if request.method == 'POST':
         property_id = request.form.get('property_id')
