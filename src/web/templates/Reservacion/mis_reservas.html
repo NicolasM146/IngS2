@@ -4,8 +4,27 @@
   <div class="container mt-4">
     <h2>Mis Reservas</h2>
 
-    {% if mensaje %}
-      <div class="alert alert-info">{{ mensaje }}</div>
+    <!-- Formulario de filtrado -->
+    <form method="get" class="mb-4">
+      <div class="row">
+        <div class="col-md-4">
+          <label for="estado" class="form-label">Filtrar por estado:</label>
+          <select name="estado" id="estado" class="form-select">
+            <option value="">Todos</option>
+            <option value="Pendiente" {% if request.args.get('estado') == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+            <option value="Vigente" {% if request.args.get('estado') == 'Vigente' %}selected{% endif %}>Vigente</option>
+            <option value="Terminada" {% if request.args.get('estado') == 'Terminada' %}selected{% endif %}>Terminada</option>
+            <option value="Cancelada" {% if request.args.get('estado') == 'Cancelada' %}selected{% endif %}>Cancelada</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary">Filtrar</button>
+        </div>
+      </div>
+    </form>
+
+    {% if reservas|length == 0 %}
+      <div class="alert alert-info">No se encontraron reservas.</div>
     {% else %}
       <table class="table table-striped">
         <thead>
@@ -14,18 +33,46 @@
             <th>Fecha Inicio</th>
             <th>Fecha Fin</th>
             <th>Precio por noche</th>
+            <th>Estado</th>
             <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           {% for reserva in reservas %}
           <tr>
-            <td><a href="{{ url_for('rental.show', rental_id=reserva.rental.id) }}">{{ reserva.rental.property.titulo }}</a></td>
+            <td>
+              {{ reserva.rental.property.titulo }}
+              <a href="{{ url_for('rental.show', rental_id=reserva.rental.id) }}" class="btn btn-primary btn-sm ms-2">
+                Ver
+              </a>
+            </td>
             <td>{{ reserva.start_date.strftime('%d/%m/%Y') }}</td>
             <td>{{ reserva.end_date.strftime('%d/%m/%Y') }}</td>
             <td>${{ reserva.price_per_night }}</td>
             <td>
-              <!-- Podrías agregar botones para editar/cancelar reserva si lo querés -->
+              {% if reserva.status == 'Pendiente' %}
+                <span class="badge bg-warning text-dark">{{ reserva.status }}</span>
+              {% elif reserva.status == 'Vigente' %}
+                <span class="badge bg-success">{{ reserva.status }}</span>
+              {% elif reserva.status == 'Terminada' %}
+                <span class="badge bg-secondary">{{ reserva.status }}</span>
+              {% elif reserva.status == 'Cancelada' %}
+                <span class="badge bg-danger">{{ reserva.status }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if reserva.start_date > hoy and reserva.status != 'Cancelada' %}
+                <form method="POST" action="{{ url_for('reservation.cancelar', reserva_id=reserva.id) }}" style="display:inline;">
+                  <button type="submit" class="btn btn-danger btn-sm"
+                          onclick="return confirm('¿Estás seguro de que querés cancelar esta reserva?')">
+                    Cancelar
+                  </button>
+                </form>
+              {% elif reserva.status == 'Cancelada' %}
+                <span class="text-muted">Cancelada</span>
+              {% else %}
+                <span class="text-muted">No cancelable</span>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}

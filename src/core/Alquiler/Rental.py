@@ -11,6 +11,7 @@ class Rental(db.Model):
     description = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True)
     advance_payment = db.Column(db.Boolean, default=False)
+    has_refund = db.Column(db.Boolean, default=False) # Debe tener advance_payment = True para que has_refund = True
 
     property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), unique=False, nullable=False)
 

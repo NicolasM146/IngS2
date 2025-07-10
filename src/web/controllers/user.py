@@ -17,7 +17,7 @@ session = Session()
 @login_required
 def index():
     nombre = request.args.get('nombre')
-    email = request.args.get('email')
+    dni = request.args.get('dni')
     rol = request.args.get('rol')
     estado = request.args.get('estado')
     page = int(request.args.get('page', 1))
@@ -27,10 +27,13 @@ def index():
 
     if nombre:
         query = query.filter(User.nombre.ilike(f'%{nombre}%'))
-    if email:
-        query = query.filter(User.email.ilike(f'%{email}%'))
+    if dni:
+        query = query.filter(User.dni.ilike(f'%{dni}%'))
     if rol:
-        query = query.join(User.rol).filter(Rol.nombre == rol)
+        if rol == 'sysadmin':
+            query = query.filter(User.es_sysadmin == True)
+        else:
+            query = query.join(User.rol).filter(Rol.nombre == rol)
     if estado == 'activo':
         query = query.filter(User.is_locked == False)
     elif estado == 'bloqueado':
@@ -41,12 +44,12 @@ def index():
     no_results = total == 0
 
     return render_template('users/index.html',
-                           users=users,
-                           page=page,
-                           per_page=per_page,
-                           total=total,
-                           no_results=no_results,
-                           current_user_id=current_user.id)  # Añadir esta línea
+                         users=users,
+                         page=page,
+                         per_page=per_page,
+                         total=total,
+                         no_results=no_results,
+                         current_user_id=current_user.id)
 
 @bp.route('/<int:user_id>', endpoint="show")
 @permiso_required('user_show')

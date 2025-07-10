@@ -58,9 +58,10 @@ def buscar_alquileres():
                 ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
 
                 subquery = db.session.query(Reservation.rental_id).filter(
-                    Reservation.start_date <= ff,
-                    Reservation.end_date >= fi
-                ).subquery()
+                Reservation.start_date <= ff,
+                Reservation.end_date >= fi,
+                Reservation.status != 'Cancelada'  # Filtramos reservas canceladas
+            ).subquery()
 
                 query = query.filter(~Rental.id.in_(subquery))
             except ValueError:
@@ -118,17 +119,16 @@ def alquilar(rental_id):
     # Obtiene el alquiler según el ID recibido
     rental = Rental.query.get_or_404(rental_id)
 
-    # Trae todos los compañeros (acompañantes previamente guardados) asociados al usuario actual
-    compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
-
-    # Trae todas las reservas asociadas a ese alquiler
-    reservas = Reservation.query.filter_by(rental_id=rental_id).all()
-
+    # Trae todas las reservas NO canceladas asociadas a ese alquiler
+    reservas = Reservation.query.filter_by(rental_id=rental_id).filter(Reservation.status != 'Cancelada').all()
+    
     # Crea una lista con tuplas (inicio, fin) de las fechas ocupadas
     dias_ocupados = [(r.start_date, r.end_date) for r in reservas]
 
     # Obtiene la fecha actual como string ISO (formato 'YYYY-MM-DD') para usar como mínimo en inputs
-    hoy = date.today().isoformat()
+    hoy = (date.today() + timedelta(days=1)).isoformat()
+    
+    manana = (date.today() + timedelta(days=1)).isoformat()
 
     # Si es un POST, entonces se está enviando una reserva
     if request.method == "POST":
@@ -147,7 +147,7 @@ def alquilar(rental_id):
         if current_user.es_sysadmin:
             compañeros = []  # vacío al cargar
         else:
-            compañeros = Compañero.query.filter_by(is_locked=False).all()
+            compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
 
         if current_user.es_sysadmin:
             user_reservation_id = request.form.get("user_reservation_id", type=int)
@@ -162,31 +162,25 @@ def alquilar(rental_id):
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
         except ValueError:
             flash("Formato de fecha inválido.", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+            return render_template("Reservacion/reservation.html", rental=rental, dias_ocupados=dias_ocupados, hoy=hoy)
 
         # Valida que las fechas sean correctas
         if start_date >= end_date:
             flash("La fecha de inicio no puede ser posterior o igual a la fecha de fin.", "warning")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+            return render_template("Reservacion/reservation.html", rental=rental, dias_ocupados=dias_ocupados, hoy=hoy)
 
         # Valida que no se superpongan las fechas con reservas ya existentes
         for ocupado_inicio, ocupado_fin in dias_ocupados:
             if start_date <= ocupado_fin and end_date >= ocupado_inicio:
                 flash(f"Las fechas elegidas se superponen con una reserva existente del {ocupado_inicio.strftime('%d/%m/%Y')} al {ocupado_fin.strftime('%d/%m/%Y')}.", "danger")
-                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+                return render_template("Reservacion/reservation.html", rental=rental, dias_ocupados=dias_ocupados, hoy=hoy)
 
         # Valida que el método de pago sea válido
         if not payment_method_id or not isinstance(payment_method_id, str):
             flash("Método de pago inválido.", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
-
-        # Se obtienen los IDs de los acompañantes seleccionados ya existentes
-        acompañantes_ids = list(map(int, request.form.getlist("compañeros[]")))
-
-        # Se obtienen los objetos Compañero correspondientes a esos IDs
-        acompañantes_seleccionados = Compañero.query.filter(
-            Compañero.id.in_(acompañantes_ids), Compañero.user_id == current_user.id
-        ).all()
+            return render_template("Reservacion/reservation.html", rental=rental, dias_ocupados=dias_ocupados, hoy=hoy)
+        
+        acompañantes_seleccionados = []
 
         # Se obtienen los datos ingresados para nuevos acompañantes desde el formulario
         nuevos_nombres = request.form.getlist("nuevo_nombre[]")
@@ -229,13 +223,13 @@ def alquilar(rental_id):
                 edad = hoy_fecha.year - fecha_nacimiento.year - ((hoy_fecha.month, hoy_fecha.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
             except ValueError:
                 flash(f"Fecha de nacimiento inválida para {nombre} {apellido}.", "danger")
-                return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+                return render_template("Reservacion/reservation.html", rental=rental, dias_ocupados=dias_ocupados, hoy=hoy)
 
             # Si el acompañante es menor de edad, se valida la existencia de tutor
             if edad < 18:
                 if not tutor:
                     flash(f"El acompañante {nombre} {apellido} es menor de edad ({edad} años).", "warning")
-                    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+                    return render_template("Reservacion/reservation.html", rental=rental, dias_ocupados=dias_ocupados, hoy=hoy)
 
                 # Si el tutor seleccionado es el usuario actual, se convierte a string
                 if tutor == "current_user":
@@ -323,14 +317,12 @@ def alquilar(rental_id):
             db.session.delete(nueva_reserva)
             db.session.commit()
             flash("Error en el pago, no se realizó la reserva", "danger")
-            return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+            return render_template("Reservacion/reservation.html", rental=rental, dias_ocupados=dias_ocupados, hoy=hoy)
     users = []
     if current_user.es_sysadmin:
         users = User.query.filter_by(is_locked=False).order_by(User.nombre).all()
 
-    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy, users = users)
-    # Si es GET, renderiza el formulario de reserva
-    return render_template("Reservacion/reservation.html", rental=rental, compañeros=compañeros, dias_ocupados=dias_ocupados, hoy=hoy)
+    return render_template("Reservacion/reservation.html", rental=rental, dias_ocupados=dias_ocupados, hoy=manana, users = users)
 
 
 @bp.route("/eliminar-compañero/<int:id>/<int:rental_id>", methods=["POST"])
@@ -376,12 +368,50 @@ def acompanantes_usuario(user_id):
 @bp.route("/mis-reservas")
 @login_required
 def mis_reservas():
-    # Trae todas las reservas del usuario actual
-    reservas = Reservation.query.filter_by(user_id=current_user.id).order_by(Reservation.start_date.desc()).all()
+    hoy = datetime.utcnow().date()
+    estado = request.args.get('estado')
 
-    if not reservas:
-        mensaje = "No tenés reservas realizadas aún."
+    query = Reservation.query.filter(
+        Reservation.user_id == current_user.id,
+        Reservation.end_date >= hoy
+    )
+
+    if estado:
+        query = query.filter(Reservation.status == estado)
+
+    reservas = query.order_by(Reservation.start_date.desc()).all()
+
+    return render_template("Reservacion/mis_reservas.html", reservas=reservas, hoy=hoy)
+
+
+from flask import flash, redirect, url_for, abort
+from datetime import datetime
+
+@bp.route('/reservas/<int:reserva_id>/cancelar', methods=['POST'])
+@login_required
+def cancelar(reserva_id):
+    reserva = Reservation.query.get_or_404(reserva_id)
+
+    # Verifica que la reserva pertenezca al usuario actual
+    if reserva.user_id != current_user.id:
+        abort(403)
+
+    hoy = datetime.utcnow().date()
+
+    # No permite cancelar si la reserva ya comenzó o terminó
+    if reserva.start_date <= hoy:
+        flash("No podés cancelar una reserva que ya comenzó o finalizó.", "danger")
+        return redirect(url_for('reservation.mis_reservas'))
+
+    # Mensaje según si hubo pago adelantado
+    if reserva.advance_payment:
+        mensaje = "Su reserva fue cancelada, se le reintegrará el valor de la reserva del alquiler."
     else:
-        mensaje = None
+        mensaje = "Su reserva fue cancelada."
 
-    return render_template("Reservacion/mis_reservas.html", reservas=reservas, mensaje=mensaje)
+    # Cambia el estado a Cancelada (en vez de borrar)
+    reserva.status = "Cancelada"
+    db.session.commit()
+
+    flash(mensaje, "success")
+    return redirect(url_for('reservation.mis_reservas'))

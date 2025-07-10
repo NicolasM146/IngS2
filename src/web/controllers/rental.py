@@ -26,6 +26,7 @@ def index():
     direccion = request.args.get("direccion")
     localidad_id = request.args.get("localidad_id")
     estado = request.args.get("estado")
+    incluir_despublicados = request.args.get("incluir_despublicados") is not None
 
     alquileres = []
 
@@ -43,15 +44,33 @@ def index():
 
         if estado == "libre":
             query = query.filter(Rental.is_active == True)
+            alquileres = query.all()
         elif estado == "bloqueado":
-            query = query.filter(Rental.is_active == False)
-
-        alquileres = query.all()
-
-        if estado == "reservado":
+            query = query.filter(Rental.is_active == False, Rental.description == "locked")
+            alquileres = query.all()
+        elif estado == "reservado":
+            query = query.filter(Rental.is_active == True)
+            alquileres = query.all()
             alquileres = [a for a in alquileres if a.reserved_today_or_later()]
         elif estado == "no_reservado":
+            query = query.filter(Rental.is_active == True)
+            alquileres = query.all()
             alquileres = [a for a in alquileres if not a.reserved_today_or_later()]
+        else:
+            alquileres = query.all()
+
+        # 💡 Agregamos des-publicados si se pidió
+        if incluir_despublicados:
+            despub_query = Rental.query.join(Property).filter(
+                Rental.is_active == False,
+                Rental.description != "locked"
+            )
+            if direccion:
+                despub_query = despub_query.filter(Property.direccion.ilike(f"%{direccion}%"))
+            if localidad_id:
+                despub_query = despub_query.filter(Property.localidad_id == int(localidad_id))
+
+            alquileres += despub_query.all()
 
     return render_template(
         "Alquileres/index.html",
@@ -60,16 +79,20 @@ def index():
         request_args=request.args
     )
 
+
+
 @bp.route('/<int:rental_id>/reservas/vigentes')
 @permiso_required("rentals_update")
 @login_required
 def listado_de_reservas(rental_id):
-    hoy = datetime.utcnow().date()
     reservas = Reservation.query.filter(
-        Reservation.end_date > hoy,
         Reservation.rental_id == rental_id
     ).order_by(Reservation.start_date).all()
-    return render_template("Alquileres/current_reservation.html", reservas=reservas)
+    
+    hoy = datetime.utcnow().date()
+    return render_template("Alquileres/current_reservation.html", 
+                         reservas=reservas,
+                         hoy=hoy)
 
 #####################################
 from flask_mail import Message
@@ -163,7 +186,7 @@ def upgrade_confirmar(request_id):
             end_date=reserva.end_date,
             price_per_night=reserva.price_per_night,
             advance_payment=reserva.advance_payment,
-            status='pending',
+            status='Pendiente',
             rental=req.new_rental,
             user=reserva.user,
         )
@@ -209,22 +232,21 @@ def upgrade_cancelar(request_id):
             flash('Esta solicitud ya fue procesada.', 'warning')
             return redirect(url_for('rental.index'))
 
-        # Primero eliminar la solicitud (libera la FK)
+        # Cambiar el estado de la reserva original a "Cancelada"
+        reserva = req.old_reservation
+        reserva.status = "Cancelada"
+        
+        # Eliminar solo la solicitud de upgrade
         db.session.delete(req)
-        db.session.flush()  # 🔒 Fuerza el delete en la base antes de continuar
-
-        # Luego eliminar la reserva original
-        db.session.delete(req.old_reservation)
-
+        
         db.session.commit()
-        flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
+        flash('Upgrade rechazado. La reserva original fue cancelada.', 'info')
 
     except Exception as e:
         db.session.rollback()
         flash(f'Ocurrió un error: {e}', 'danger')
 
     return redirect(url_for('rental.index'))
-
 
     
 @bp.route('/reserva/<int:reservation_id>/upgrade', methods=['GET', 'POST'])
@@ -282,7 +304,6 @@ def upgrade_reservation(reservation_id):
 @permiso_required('rentals_create')
 @login_required
 def create():
-    # Subconsulta: propiedades con al menos un alquiler activo
     subquery = (
         db.session.query(Rental.property_id)
         .filter(or_(
@@ -292,17 +313,18 @@ def create():
         .subquery()
     )
 
-    # Queremos propiedades que NO están en la subconsulta de activos
     propiedades = (
-        db.session.query(Property)
-        .filter(~Property.id.in_(subquery))  # "~" = NOT
-        .all()
-    )
+    db.session.query(Property)
+    .filter(~Property.id.in_(subquery))
+    .filter(Property.estado == "disponible")
+    .all()
+)
 
     if request.method == 'POST':
         property_id = request.form.get('property_id')
         price = request.form.get('price')
         advance_payment = request.form.get('advance_payment') == 'true'
+        has_refund = request.form.get('has_refund') == 'true'  # nuevo campo
 
         propiedad = Property.query.filter_by(id=property_id).first()
         if not propiedad:
@@ -322,6 +344,15 @@ def create():
             flash("El precio debe ser un número positivo válido.", "danger")
             return redirect(url_for('rental.create'))
 
+        # Validación: no se permite reintegro si no hay pago adelantado
+        if has_refund and not advance_payment:
+            flash("No se puede marcar reintegro si no se habilita el pago adelantado.", "warning")
+            return render_template("Alquileres/create.html", propiedades=propiedades,
+                                   selected_property_id=int(property_id),
+                                   price=price,
+                                   advance_payment=advance_payment,
+                                   has_refund=has_refund)
+            
         nuevo_alquiler = Rental(
             property_id=property_id,
             creation_date=datetime.utcnow(),
@@ -329,25 +360,27 @@ def create():
             description="",
             is_active=True,
             advance_payment=advance_payment,
+            has_refund=has_refund  # nuevo campo
         )
+
         propiedad.estado = "publicado"
         db.session.add(nuevo_alquiler)
         db.session.commit()
         flash("Carga de Alquiler exitosa", "success")
         return redirect(url_for('rental.index'))
-
+    
+    if not propiedades:
+        flash("Debe cargar algún Inmueble primero.", "warning")
+        return redirect(url_for('rental.index'))
+    
     return render_template("Alquileres/create.html", propiedades=propiedades)
+
 
 @bp.route("/<int:rental_id>/delete", methods=["POST"])
 @permiso_required('rentals_destroy')
 @login_required
 def delete(rental_id):  # Cambia el parámetro para que coincida con la ruta
     alquiler = Rental.query.get_or_404(rental_id)
-
-    # Solo permitir borrar si el alquiler pertenece al usuario actual
-    if alquiler.property.user_id != current_user.id:
-        flash("No tienes permiso para borrar este alquiler.", "danger")
-        return redirect(url_for('rental.index'))
 
     reservas_activas = alquiler.reservations.count()  # como es lazy='dynamic', count() consulta la DB
     if reservas_activas > 0:
@@ -360,18 +393,16 @@ def delete(rental_id):  # Cambia el parámetro para que coincida con la ruta
     flash("Alquiler eliminado correctamente.", "success")
     return redirect(url_for('rental.index'))
 
-# Agrega esta nueva ruta al final del archivo rental.py
 @bp.route("/<int:rental_id>/edit", methods=["GET", "POST"])
 @permiso_required('rentals_update')
 @login_required
 def edit(rental_id):
     alquiler = Rental.query.get_or_404(rental_id)
     
-    # Anteriormente se verificaba si el usuario actual era el que estaba almacenado como encargado del Inmueble alquilado, no tenia sentido.
-    
     if request.method == 'POST':
         price = request.form.get('price')
         advance_payment = request.form.get('advance_payment') == 'true'
+        has_refund = request.form.get('has_refund') == 'true'
 
         try:
             price_float = float(price)
@@ -379,16 +410,27 @@ def edit(rental_id):
                 raise ValueError("Precio inválido")
         except:
             flash("El precio debe ser un número positivo válido.", "danger")
-            return redirect(url_for('rental.edit', rental_id=rental_id))
+            return render_template("Alquileres/edit.html", alquiler=alquiler)
+
+        # Validación: no se permite reintegro si no hay pago adelantado
+        if has_refund and not advance_payment:
+            flash("No se puede marcar reintegro si no se habilita el pago adelantado.", "warning")
+            # Pre-actualiza los valores para que el form los muestre correctamente
+            alquiler.price = price_float
+            alquiler.advance_payment = advance_payment
+            alquiler.has_refund = has_refund
+            return render_template("Alquileres/edit.html", alquiler=alquiler)
 
         alquiler.price = price_float
         alquiler.advance_payment = advance_payment
+        alquiler.has_refund = has_refund
         
         db.session.commit()
         flash("Alquiler actualizado con éxito", "success")
         return redirect(url_for('rental.show', rental_id=rental_id))
 
     return render_template("Alquileres/edit.html", alquiler=alquiler)
+
 
 
 
@@ -415,6 +457,8 @@ def show(rental_id):
         reviews=reviews,
         puede_dejar_resena=puede_dejar_resena
     )
+
+
 
 @bp.route("/<int:rental_id>/lock", methods=["POST"])
 @permiso_required('rentals_update')

@@ -4,21 +4,21 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Detalle del Alquiler</h2>
-        <div class="btn-group">
+        <div class="d-flex flex-wrap align-items-center gap-2"> <!-- Contenedor flexible con espaciado uniforme -->
             {% if current_user.tiene_permiso('rentals_update') %}
-            <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id) }}" class="btn btn-info ms-2">
+            <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id) }}" class="btn btn-info">
                 <i class="fas fa-calendar-alt"></i> Ver Reservas
             </a>
             {% endif %}
 
-            {% if current_user.tiene_permiso('rentals_update') %}
+            {% if current_user.tiene_permiso('rentals_update') and alquiler.description != "removed" %}
             <a href="{{ url_for('rental.edit', rental_id=alquiler.id) }}" class="btn btn-warning">
                 <i class="fas fa-edit"></i> Actualizar
             </a>
             {% endif %}
 
-            {% if current_user.tiene_permiso('rentals_destroy') and not alquiler.reservations.count() == 0 %}
-            <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+            {% if current_user.tiene_permiso('rentals_destroy') and alquiler.reservations.count() == 0 %}
+            <form action="{{ url_for('rental.delete', rental_id=alquiler.id) }}" method="POST" class="d-inline">
                 <button type="submit" class="btn btn-danger"
                     onclick="return confirm('¿Estás seguro de eliminar este alquiler?')">
                     <i class="fas fa-trash"></i> Eliminar
@@ -26,33 +26,36 @@
             </form>
             {% endif %}
 
-            {% if current_user.tiene_permiso('rentals_update') %}
-            {% if alquiler.is_active %}
-            <form action="{{ url_for('rental.lock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
-                <button type="submit" class="btn btn-secondary"
-                    onclick="return confirm('¿Querés bloquear este alquiler?')">
-                    <i class="fas fa-lock"></i> Bloquear
-                </button>
-            </form>
-            {% elif not alquiler.property.rental %}
-            <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
-                <button type="submit" class="btn btn-success"
-                    onclick="return confirm('¿Querés liberar este alquiler?')">
-                    <i class="fas fa-lock-open"></i> Liberar
-                </button>
-            </form>
+            {% if current_user.tiene_permiso('rentals_update') and alquiler.description != "removed" %}
+                {% if alquiler.is_active %}
+                <form action="{{ url_for('rental.lock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                    <button type="submit" class="btn btn-secondary"
+                        onclick="return confirm('¿Querés bloquear este alquiler?')">
+                        <i class="fas fa-lock"></i> Bloquear
+                    </button>
+                </form>
+                {% elif alquiler.description == "locked" %}
+                <form action="{{ url_for('rental.unlock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
+                    <button type="submit" class="btn btn-success"
+                        onclick="return confirm('¿Querés liberar este alquiler?')">
+                        <i class="fas fa-lock-open"></i> Liberar
+                    </button>
+                </form>
+                {% endif %}
             {% endif %}
+            {% if alquiler.is_active %}
             <form method="post" action="{{ url_for('rental.unpublish', rental_id=alquiler.id) }}"
                 style="display:inline;"
                 onsubmit="return confirm('¿Estás seguro de que deseas quitar la publicación de este alquiler?');">
-                <button type="submit" class="btn btn-warning" {% if not alquiler.is_active %}disabled{% endif %}>
+                <button type="submit" class="btn btn-warning">
                     <i class="fas fa-eye-slash"></i> Quitar Publicación
                 </button>
-            </form>
-            <a href="{{ url_for('property.show', id=alquiler.property.id) }}" class="btn btn-primary ms-2">
-                <i class="fas fa-eye"></i> Ver Inmueble
-            </a>
+                </form>
             {% endif %}
+
+                <a href="{{ url_for('property.show', id=alquiler.property.id) }}" class="btn btn-primary ms-2">
+                    <i class="fas fa-eye"></i> Ver Inmueble
+                </a>
 
             <!-- Botón de Reserva -->
 
@@ -84,14 +87,25 @@
                         <li class="list-group-item">
                             <strong>Precio por noche:</strong> ${{ alquiler.price }}
                         </li>
+                        {% if current_user.tiene_permiso('rentals_index') %}
                         <li class="list-group-item">
                             <strong>Estado:</strong>
-                            <span class="badge bg-{{ 'success' if alquiler.is_active else 'secondary' }}">
-                                {{ 'Activo' if alquiler.is_active else 'Bloqueado' }}
-                            </span>
+                            {% if alquiler.is_active %}
+                            <span class="badge bg-success">Activo</span>
+                            {% elif alquiler.description == "locked" %}
+                            <span class="badge bg-warning text-dark">Bloqueado</span>
+                            {% elif alquiler.description == "removed" %}
+                            <span class="badge bg-secondary">Des-publicado</span>
+                            {% else %}
+                            <span class="badge bg-dark">Desconocido</span>
+                            {% endif %}
                         </li>
+                        {% endif %}
                         <li class="list-group-item">
                             <strong>Pago adelantado:</strong> {{ 'Si' if alquiler.advance_payment else 'No'}}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Tiene reintegro:</strong> {{ 'Sí' if alquiler.has_refund else 'No' }}
                         </li>
                     </ul>
                 </div>
@@ -120,13 +134,19 @@
                         <li class="list-group-item">
                             <strong>Descripción:</strong> {{ alquiler.property.descripcion }}
                         </li>
+                        {% if current_user.tiene_permiso('rentals_index') %}
                         <li class="list-group-item">
                             <strong>Estado:</strong>
-                            <span
-                                class="badge bg-{{ 'success' if alquiler.property.estado == 'disponible' else 'warning' }}">
+                            {% set color =
+                            'success' if alquiler.property.estado in ['disponible', 'publicado'] else
+                            'danger' if alquiler.property.estado == 'baja' else
+                            'warning'
+                            %}
+                            <span class="badge bg-{{ color }}">
                                 {{ alquiler.property.estado|capitalize }}
                             </span>
                         </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>

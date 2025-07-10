@@ -31,7 +31,7 @@ class PropertyForm(FlaskForm):
         coerce=int,
         choices=[],
         validators=[DataRequired()],
-        description="Seleccione el dueño del inmueble"
+        description="Seleccione el encargado del inmueble"
     )
     #Formulario para subir fotos de un Inmueble   
     
@@ -68,13 +68,13 @@ class PropertySearchForm(FlaskForm):
         blank_text="Todas las localidades"
     )
     
-    # Campos de selección
     estado = SelectField('Estado', choices=[
-        ('', 'Todos los estados'),
+        ('', 'Todos'),
         ('disponible', 'Disponible'),
-        ('ocupado', 'Ocupado'),
-        ('dado_de_baja', 'Dado de baja'),
-    ], validators=[Optional()])
+        ('publicado', 'Publicado'),
+        ('baja', 'Baja'),
+        ('bloqueado', 'Bloqueado')
+    ])
     
     capacidad = SelectField('Capacidad', choices=[
         ('', 'Cualquier capacidad'),

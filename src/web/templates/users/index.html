@@ -17,8 +17,13 @@
         <div class="row">
             <div class="col-md-3"><strong>Nombre:</strong> {{ current_user.nombre }}</div>
             <div class="col-md-3"><strong>Email:</strong> {{ current_user.email }}</div>
-            <div class="col-md-3"><strong>Rol:</strong> {{ current_user.rol.nombre if current_user.rol else 'Administrador del Sistema' }}</div>
+            <div class="col-md-3"><strong>DNI:</strong> {{ current_user.dni }}</div>
+            <div class="col-md-3"><strong>Rol:</strong> 
+                {{ 'Administrador del Sistema' if current_user.es_sysadmin else current_user.rol.nombre }}
+            </div>
+            <div class="col-md-3"><strong>Fecha de nacimiento:</strong> {{ current_user.fecha_nacimiento }}</div>
             <div class="col-md-3"><strong>Estado:</strong> {{ 'Bloqueado' if current_user.is_locked else 'Activo' }}</div>
+            
         </div>
     </div>
 </div>
@@ -30,15 +35,17 @@
                 value="{{ request.args.get('nombre', '') }}">
         </div>
         <div class="form-group col-md-3">
-            <label for="email">Email</label>
-            <input type="text" class="form-control" name="email" id="email" value="{{ request.args.get('email', '') }}">
+            <label for="dni">DNI</label>
+            <input type="text" class="form-control" name="dni" id="dni" value="{{ request.args.get('dni', '') }}">
         </div>
         <div class="form-group col-md-3">
             <label for="rol">Rol</label>
             <select class="form-control" name="rol" id="rol">
-                <option value="" {% if request.args.get('rol', '' )=='' %}selected{% endif %}>Todos</option>
-                <option value="Encargado" {% if request.args.get('rol')=='Encargado' %}selected{% endif %}>Encargado
+                <option value="" {% if request.args.get('rol', '')=='' %}selected{% endif %}>Todos</option>
+                <option value="sysadmin" {% if request.args.get('rol')=='sysadmin' %}selected{% endif %}>
+                    Administrador del Sistema
                 </option>
+                <option value="Encargado" {% if request.args.get('rol')=='Encargado' %}selected{% endif %}>Encargado</option>
                 <option value="Cliente" {% if request.args.get('rol')=='Cliente' %}selected{% endif %}>Cliente</option>
             </select>
         </div>
@@ -69,7 +76,7 @@
             <tr>
                 <th>Nombre</th>
                 <th>Email</th>
-                <th>Dni</th>
+                <th>DNI</th>
                 <th>Rol</th>
                 <th>Fecha de Nacimiento</th>
                 <th>Estado</th>
@@ -82,7 +89,7 @@
                 <td>{{ user.nombre }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.dni }}</td>
-                <td>{{ user.rol.nombre if user.rol else 'Adminisrador del Sistema' }}</td>
+                <td>{{ user.rol.nombre if user.rol else 'Administrador del Sistema' }}</td>
                 <td>{{ user.fecha_nacimiento }}</td>
                 <td>{{ 'Bloqueado' if user.is_locked else 'Activo' }}</td>
                 <td>

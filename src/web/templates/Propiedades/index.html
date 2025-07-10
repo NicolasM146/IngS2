@@ -80,7 +80,6 @@
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
             <tr>
-                <th>ID</th>
                 <th>Dirección</th>
                 <th>Localidad</th>
                 <th>Capacidad</th>
@@ -93,16 +92,17 @@
         <tbody>
             {% for property in properties %}
             <tr>
-                <td>{{ property.id }}</td>
                 <td>{{ property.direccion }}</td>
                 <td>{{ property.localidad }}</td>
                 <td>{{ property.capacidad }}</td>
                 <td>{{ property.habitaciones }}</td>
                 <td>
-                    {% set color =
-                    'success' if property.estado in ['disponible', 'publicado'] else
-                    'danger' if property.estado == 'baja' else
-                    'warning' %}
+                    {% set color = {
+                    'disponible': 'success',
+                    'publicado': 'success',
+                    'baja': 'danger',
+                    'bloqueado': 'warning'
+                    }[property.estado] %}
                     <span class="badge bg-{{ color }}">
                         {{ property.estado|capitalize }}
                     </span>
