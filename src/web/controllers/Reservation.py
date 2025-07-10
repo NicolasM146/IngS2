@@ -58,9 +58,10 @@ def buscar_alquileres():
                 ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
 
                 subquery = db.session.query(Reservation.rental_id).filter(
-                    Reservation.start_date <= ff,
-                    Reservation.end_date >= fi
-                ).subquery()
+                Reservation.start_date <= ff,
+                Reservation.end_date >= fi,
+                Reservation.status != 'Cancelada'  # Filtramos reservas canceladas
+            ).subquery()
 
                 query = query.filter(~Rental.id.in_(subquery))
             except ValueError:
@@ -121,9 +122,9 @@ def alquilar(rental_id):
     # Trae todos los compañeros (acompañantes previamente guardados) asociados al usuario actual
     compañeros = Compañero.query.filter_by(user_id=current_user.id).all()
 
-    # Trae todas las reservas asociadas a ese alquiler
-    reservas = Reservation.query.filter_by(rental_id=rental_id).all()
-
+    # Trae todas las reservas NO canceladas asociadas a ese alquiler
+    reservas = Reservation.query.filter_by(rental_id=rental_id).filter(Reservation.status != 'Cancelada').all()
+    
     # Crea una lista con tuplas (inicio, fin) de las fechas ocupadas
     dias_ocupados = [(r.start_date, r.end_date) for r in reservas]
 

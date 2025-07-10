@@ -41,3 +41,6 @@ class Reservation(db.Model):
 def esta_vigente(self) -> bool:
         hoy = datetime.utcnow().date()
         return self.start_date <= hoy <= self.end_date and self.status != 'Cancelada'
+
+def esta_activa(self):
+    return self.status not in ['Cancelada', 'Terminada']
