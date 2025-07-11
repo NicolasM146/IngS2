@@ -77,7 +77,7 @@ def procesar_pagos_pendientes():
                 monto_a_cobrar = monto_total
                 descripcion = f"Pago completo de reserva #{reserva.id}"
 
-            cotizacion_usd = 1000  # Ajustar según valor real
+            cotizacion_usd = 1275  # Dolar blue 11/07/2025
             monto_usd = int((monto_a_cobrar / cotizacion_usd) * 100)  # Stripe usa centavos
 
             intento_pago = stripe.PaymentIntent.create(
