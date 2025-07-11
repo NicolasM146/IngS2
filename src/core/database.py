@@ -16,7 +16,7 @@ def config(app):
     return app
 
 def reset():
-    from src.core.Inmueble.localidad.Cargar_localidades import cargar_localidades
+    from src.core.Inmueble.localidad.Cargar_localidades import cargar_localidades,cargar_datos_prueba
     """Resetea la base de datos: borra y crea todas las tablas."""
     print("Importando modelos...")
     # Importá todos los modelos para que SQLAlchemy los conozca
@@ -38,5 +38,6 @@ def reset():
     print("¡Listo! Tablas creadas:")
     
     cargar_localidades()
+    cargar_datos_prueba()
     
     print(db.metadata.tables.keys())
