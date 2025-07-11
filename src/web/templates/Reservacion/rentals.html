@@ -88,6 +88,7 @@
           <h5 class="card-title">{{ alquiler.property.nombre }}</h5>
           <p class="card-text"><strong>Precio por noche:</strong> ${{ alquiler.price }}</p>
           <p class="card-text"><strong>Localidad:</strong> {{ alquiler.property.localidad }}</p>
+          <p class="card-text"><strong>Direccion:</strong> {{ alquiler.property.direccion }}</p>
           <p class="card-text"><strong>Habitaciones:</strong> {{ alquiler.property.habitaciones }}</p>
           <p class="card-text"><strong>Capacidad:</strong> {{ alquiler.property.capacidad }}</p>
           <form action="{{ url_for('rental.show', rental_id=alquiler.id) }}" method="get">

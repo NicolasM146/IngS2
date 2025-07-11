@@ -73,6 +73,7 @@ def cargar_datos_prueba():
             dni="11111111",
             nacionalidad="Argentina",
             email="cliente_prueba@example.com",
+            email_confirmed=True,
             telefono="000000000",
             fecha_nacimiento=date(1990,1,1),
             username="clientetest",
