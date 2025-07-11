@@ -11,22 +11,34 @@ load_dotenv()
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 def procesar_pagos_pendientes():
-    """Cobra el pago faltante 1 día antes del check-in"""
-    
-    reservas_a_terminar = Reservation.query.filter(
-        Reservation.end_date < hoy,
+    """Procesa pagos y actualiza estados de reserva según la fecha actual"""
+
+    hoy = date.today()
+
+    # 1️⃣ Pasar reservas CONFIRMADAS que comienzan HOY a VIGENTE
+    reservas_a_vigente = Reservation.query.filter(
+        Reservation.start_date == hoy,
         Reservation.status == 'Confirmada'
+    ).all()
+
+    for reserva in reservas_a_vigente:
+        reserva.status = 'Vigente'
+        print(f"🟢 Reserva {reserva.id} marcada como VIGENTE (inicio: {reserva.start_date})")
+
+    # 2️⃣ Pasar reservas VIGENTES cuya fecha de fin fue AYER a TERMINADA
+    reservas_a_terminar = Reservation.query.filter(
+        Reservation.end_date == hoy - timedelta(days=1),
+        Reservation.status == 'Vigente'
     ).all()
 
     for reserva in reservas_a_terminar:
         reserva.status = 'Terminada'
-        print(f"Reserva {reserva.id} marcada como TERMINADA (fecha fin: {reserva.end_date})")
+        print(f"✅ Reserva {reserva.id} marcada como TERMINADA (fin: {reserva.end_date})")
 
-    if reservas_a_terminar:
+    if reservas_a_vigente or reservas_a_terminar:
         db.session.commit()
-        
-        
-    hoy = date.today()
+
+    # 3️⃣ Procesar cobros para reservas que empiezan MAÑANA y están PENDIENTES
     fecha_mañana = hoy + timedelta(days=1)
 
     reservas_pendientes = Reservation.query.filter(
@@ -35,17 +47,16 @@ def procesar_pagos_pendientes():
     ).all()
 
     if not reservas_pendientes:
-        print("No hay reservas pendientes para procesar.")
+        print("📭 No hay reservas pendientes para procesar.")
         return
-    
+
     for reserva in reservas_pendientes:
         try:
             alquiler = db.session.get(Rental, reserva.rental_id)
-
             usuario = reserva.user
 
             if not usuario.stripe_payment_method_id:
-                print(f"Usuario {usuario.id} sin método de pago. Reserva {reserva.id} no procesada.")
+                print(f"⚠️ Usuario {usuario.id} sin método de pago. Reserva {reserva.id} no procesada.")
                 continue
 
             # Buscar cliente Stripe por email
@@ -53,7 +64,7 @@ def procesar_pagos_pendientes():
             if clientes:
                 cliente = clientes[0]
             else:
-                print(f"⚠ Cliente Stripe no encontrado para usuario {usuario.email}. Reserva {reserva.id} no procesada.")
+                print(f"⚠️ Cliente Stripe no encontrado para usuario {usuario.email}. Reserva {reserva.id} no procesada.")
                 continue
 
             noches = (reserva.end_date - reserva.start_date).days + 1
@@ -66,8 +77,8 @@ def procesar_pagos_pendientes():
                 monto_a_cobrar = monto_total
                 descripcion = f"Pago completo de reserva #{reserva.id}"
 
-            cotizacion_usd = 1000  # Ajustá según tu cotización real
-            monto_usd = int((monto_a_cobrar / cotizacion_usd) * 100)  # Stripe recibe centavos
+            cotizacion_usd = 1000  # Ajustar según valor real
+            monto_usd = int((monto_a_cobrar / cotizacion_usd) * 100)  # Stripe usa centavos
 
             intento_pago = stripe.PaymentIntent.create(
                 amount=monto_usd,
@@ -82,7 +93,7 @@ def procesar_pagos_pendientes():
             if intento_pago.status == 'succeeded':
                 reserva.status = 'Confirmada'
                 db.session.commit()
-                print(f"✅ Pago exitoso | Reserva {reserva.id} | Localidad y Direccion {reserva.rental.property.localidad.nombre} {reserva.rental.property.direccion} | Monto: ${monto_a_cobrar:.2f}")
+                print(f"💰 Pago exitoso | Reserva {reserva.id} | {reserva.rental.property.localidad.nombre} {reserva.rental.property.direccion} | Monto: ${monto_a_cobrar:.2f}")
             else:
                 print(f"❌ Error en pago | Reserva {reserva.id} | Estado: {intento_pago.status}")
 
@@ -92,6 +103,8 @@ def procesar_pagos_pendientes():
         except Exception as e:
             print(f"⚠️ Error inesperado | Reserva {reserva.id} | Error: {str(e)}")
             db.session.rollback()
+
+
 
 if __name__ == "__main__":
     app = create_app()

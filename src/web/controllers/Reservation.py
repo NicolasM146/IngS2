@@ -307,8 +307,8 @@ def alquilar(rental_id):
                 confirm=True,
                 description=f"Reserva inmueble {rental.id} - Usuario {current_user.id}",
                 )
-            nueva_reserva.stripe_payment_intent_id = intent.id  # 💾 Guardás el ID del pago
-            db.session.commit()
+                nueva_reserva.stripe_payment_intent_id = intent.id  # 💾 Guardás el ID del pago
+                db.session.commit()
 
             flash("Reserva Exitosa", "success")
             return redirect(url_for("home"))
