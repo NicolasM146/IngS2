@@ -374,8 +374,7 @@ def mis_reservas():
     estado = request.args.get('estado')
 
     query = Reservation.query.filter(
-        Reservation.user_id == current_user.id,
-        Reservation.end_date >= hoy
+        Reservation.user_id == current_user.id
     )
 
     if estado:
