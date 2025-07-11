@@ -366,10 +366,18 @@ def acompanantes_usuario(user_id):
         for c in acompañantes
     ]
     return {"acompañantes": data}
-
+from flask_login import current_user
+from src.web.controllers.login import logout
 @bp.route("/mis-reservas")
 @login_required
 def mis_reservas():
+    user_id = current_user.id
+    user = User.query.get(user_id)
+    if(user.is_locked == True):
+        flash("Tu cuenta Fue bloqueada","error")
+        logout()
+        return redirect(url_for("login.login"))
+
     hoy = datetime.utcnow().date()
     estado = request.args.get('estado')
 
