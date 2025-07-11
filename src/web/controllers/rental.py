@@ -115,7 +115,7 @@ def enviar_mail_upgrade(cliente, upgrade_request):
     fecha_inicio = upgrade_request.old_reservation.start_date
     fecha_a_mostrar = fecha_inicio if fecha_inicio >= hoy else hoy
 
-    msg = Message("Solicitud de Upgrade de Reserva",
+    msg = Message("Solicitud de Mejora de Reserva",
                   sender="noreply@tualquiler.com",
                   recipients=[cliente.email])
 
@@ -210,7 +210,7 @@ def upgrade_confirmar(request_id):
         # Confirmar todos los cambios
         db.session.commit()
 
-        flash('Upgrade confirmado y reserva actualizada.', 'success')
+        flash('Mejora confirmada y reserva actualizada.', 'success')
 
     except StaleDataError:
         db.session.rollback()
@@ -254,13 +254,13 @@ def upgrade_cancelar(request_id):
             if dias_para_inicio > 7 and reserva.has_refund:
                 try:
                     stripe.Refund.create(payment_intent=reserva.stripe_payment_intent_id)
-                    flash('Upgrade rechazado. Se canceló la reserva original y se reintegró el pago anticipado.', 'info')
+                    flash('Mejora rechazada. Se canceló la reserva original y se reintegró el pago anticipado.', 'info')
                 except Exception as e:
                     flash(f'No se pudo realizar el reintegro: {e}', 'warning')
             else:
-                flash('Upgrade rechazado. No se puede reintegrar porque faltan menos de 7 días para el inicio de la reserva.', 'info')
+                flash('Mejora rechazada. No se puede reintegrar porque faltan menos de 7 días para el inicio de la reserva.', 'info')
         else:
-            flash('Upgrade rechazado. Se canceló la reserva original.', 'info')
+            flash('Mejora rechazada. Se canceló la reserva original.', 'info')
 
         # Eliminar la reserva original
         # Cambiar el estado de la reserva original a "Cancelada"
@@ -318,7 +318,7 @@ def upgrade_reservation(reservation_id):
 
         enviar_mail_upgrade(reserva.user, solicitud)
 
-        flash('Se envió un correo al cliente para confirmar el upgrade.', 'info')
+        flash('Se envió un correo al cliente para confirmar la mejora.', 'info')
         return redirect(url_for('rental.index'))
 
     return render_template('Alquileres/upgrade_form.html',
