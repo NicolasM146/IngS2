@@ -386,7 +386,7 @@ def create():
             property_id=property_id,
             creation_date=datetime.utcnow(),
             price=price_float,
-            description="",
+            description="publicado",
             is_active=True,
             advance_payment=advance_payment,
             has_refund=has_refund  # nuevo campo
