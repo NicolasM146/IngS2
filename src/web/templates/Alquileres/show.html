@@ -6,7 +6,8 @@
         <h2>Detalle del Alquiler</h2>
         <div class="d-flex flex-wrap align-items-center gap-2"> <!-- Contenedor flexible con espaciado uniforme -->
             {% if current_user.tiene_permiso('rentals_update') %}
-            <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id, origin=origin) }}" class="btn btn-info">
+            <a href="{{ url_for('rental.listado_de_reservas', rental_id=alquiler.id, origin=origin) }}"
+                class="btn btn-info">
                 <i class="fas fa-calendar-alt"></i> Ver Reservas
             </a>
             {% endif %}
@@ -26,7 +27,8 @@
             </form>
             {% endif %}
 
-            {% if current_user.tiene_permiso('rentals_update') and alquiler.description != "removed" %}
+            {% if current_user.tiene_permiso('rentals_update') and alquiler.description != "removed" and
+            alquiler.property.user_id == current_user.id %}
             {% if alquiler.is_active %}
             <form action="{{ url_for('rental.lock', rental_id=alquiler.id) }}" method="POST" class="ms-2">
                 <button type="submit" class="btn btn-secondary"
@@ -43,6 +45,7 @@
             </form>
             {% endif %}
             {% endif %}
+
             {% if alquiler.is_active and current_user.tiene_permiso('rentals_update') %}
             <form method="post" action="{{ url_for('rental.unpublish', rental_id=alquiler.id) }}"
                 style="display:inline;"
