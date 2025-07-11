@@ -31,11 +31,14 @@ def index():
 
     alquileres = []
 
-    # Localidades para el select
     localidades = Localidad.query.order_by(Localidad.nombre).all()
 
     if request.args:
         query = Rental.query.join(Property)
+
+        # ✅ Excluir despublicados si no se pidió incluirlos
+        if not incluir_despublicados:
+            query = query.filter(Rental.description != "removed")
 
         if direccion:
             query = query.filter(Property.direccion.ilike(f"%{direccion}%"))
@@ -60,18 +63,19 @@ def index():
         else:
             alquileres = query.all()
 
-        # 💡 Agregamos des-publicados si se pidió
+        # ✅ Agregar despublicados si se pidió, sin duplicar
         if incluir_despublicados:
-            despub_query = Rental.query.join(Property).filter(
-                Rental.description == "removed"
-            )
+            despub_query = Rental.query.join(Property).filter(Rental.description == "removed")
             if direccion:
                 despub_query = despub_query.filter(Property.direccion.ilike(f"%{direccion}%"))
             if localidad_id:
                 despub_query = despub_query.filter(Property.localidad_id == int(localidad_id))
 
-            alquileres += despub_query.all()
-
+            # Evitar duplicados: usar diccionario por ID
+            alquileres_dict = {a.id: a for a in alquileres}
+            for despub in despub_query.all():
+                alquileres_dict[despub.id] = despub
+            alquileres = list(alquileres_dict.values())
 
     return render_template(
         "Alquileres/index.html",
