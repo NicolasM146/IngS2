@@ -63,8 +63,7 @@ def index():
         # 💡 Agregamos des-publicados si se pidió
         if incluir_despublicados:
             despub_query = Rental.query.join(Property).filter(
-                Rental.is_active == False,
-                Rental.description != "locked"
+                Rental.description == "removed"
             )
             if direccion:
                 despub_query = despub_query.filter(Property.direccion.ilike(f"%{direccion}%"))
@@ -72,6 +71,7 @@ def index():
                 despub_query = despub_query.filter(Property.localidad_id == int(localidad_id))
 
             alquileres += despub_query.all()
+
 
     return render_template(
         "Alquileres/index.html",
